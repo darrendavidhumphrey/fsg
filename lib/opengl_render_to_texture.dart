@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_angle/desktop/angle.dart';
 import 'package:provider/provider.dart';
 import 'frame_counter.dart';
 import 'gl_common/flutter_angle_manager.dart';
@@ -55,10 +56,13 @@ class OpenGLRenderToTextureWidgetState
         builder: (context, counter, child) {
           return LayoutBuilder(
             builder: (context, constraints) {
-              if (FlutterAngleManager().textureInitialized) {
-                bool firstPaint = !FlutterAngleManager().sceneInitialized;
+              FlutterAngleTexture? textureId = FlutterAngleManager().scenes[widget.scene];
+
+              if (textureId != null) {
+                bool firstPaint = !widget.scene.isInitialized;
                 if (firstPaint) {
                   FlutterAngleManager().initScene(context, widget.scene);
+
                   logTrace(
                     "Start RenderToTexture Ticker for scene of type ${widget.scene.runtimeType}",
                   );
@@ -81,6 +85,8 @@ class OpenGLRenderToTextureWidgetState
                   logTrace(
                     "Scheduling a refresh because texture is not initialized",
                   );
+
+                  FlutterAngleManager().allocTextureForScene(widget.scene);
                   Provider.of<FrameCounterModel>(
                     context,
                     listen: false,

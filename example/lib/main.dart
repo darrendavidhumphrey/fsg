@@ -27,10 +27,32 @@ class TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final scene = SimpleExampleCanvas();
     final OrbitView orbitView = OrbitView();
+
+    final OrbitView orbitView2 = OrbitView();
+    final scene2 = SimpleExampleCanvas();
     FlutterAngleManager().initPlatformState(context, scene);
+    FlutterAngleManager().allocTextureForScene(scene2);
     return MaterialApp(
         title: 'test',
-        home: NavigationWidget(navigationDelegate: orbitView, scene: scene)
+        home: Stack(
+          children: [
+
+            Positioned(
+              left: 0,
+              child: SizedBox(
+                width: 500,
+                  height: 500,
+                  child: NavigationWidget(navigationDelegate: orbitView, scene: scene)),
+            ),
+            Positioned(
+              left: 500,
+              child: SizedBox(
+                  width: 500,
+                  height: 500,
+                  child: NavigationWidget(navigationDelegate: orbitView2, scene: scene2)),
+            ),
+          ],
+        )
     );
   }
 }

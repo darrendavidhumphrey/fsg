@@ -45,7 +45,7 @@ class SimpleExampleCanvas extends OpenGLScene {
     BitmapFontManager().createDefaultFont();
 
     gridVbo.makeTexturedUnitQuad(
-      Rect.fromLTWH(0, 0, gridExtents.width, gridExtents.height),
+      Rect.fromLTWH(-gridExtents.width/2, -gridExtents.height/2, gridExtents.width, gridExtents.height),
       0.1,
     );
   }

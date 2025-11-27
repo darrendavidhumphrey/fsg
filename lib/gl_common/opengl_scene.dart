@@ -18,6 +18,7 @@ abstract class OpenGLScene with LoggableClass {
 
   bool forceRepaint = true;
   FlutterAngleTexture? renderToTextureId;
+  bool isInitialized = false;
 
   final Stopwatch stopwatch = Stopwatch();
   int frameCount=0;
@@ -36,6 +37,7 @@ abstract class OpenGLScene with LoggableClass {
     this.gl = gl;
     mvMatrix = Matrix4.identity();
     gl.clearColor(0, 1, 0, 1);
+    isInitialized = true;
   }
 
   Size _viewportSize = Size.zero;
