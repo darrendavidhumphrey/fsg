@@ -102,6 +102,7 @@ abstract class AngleScene with LoggableClass {
 
     // TODO: Repaint is forced to always on
     forceRepaint = true;
+
     if (timingEnabled || forceRepaint ||  needsRebuild()) {
 
       if (timingEnabled) {

@@ -29,44 +29,37 @@ class OrbitViewState extends State<InteractiveRenderToTexture> {
 
     // TODO: Force the initial update
     // TODO: Handle all other events
-    return Focus(
-      autofocus: true,
-      focusNode: _focusNode,
-      onKeyEvent: (node, event) {
-        // TODO: Handle keyboard event
-        return KeyEventResult.ignored;
-      },
-      child: Listener(
-        onPointerSignal: (event) {
-          if (!_focusNode.hasFocus) {
-            _focusNode.requestFocus();
-          }
-          if (event is PointerScrollEvent) {
-            widget.navigationDelegate.onPointerScroll(event);
-          }
-        },
-        onPointerDown: (event) {
-          if (!_focusNode.hasFocus) {
-            _focusNode.requestFocus();
-          }
-          if (event.kind == PointerDeviceKind.mouse) {
-            if (event.buttons == kPrimaryButton) {
-              widget.navigationDelegate.onPointerDown(event);
-            }
-          }
-        },
-        onPointerMove: (event) {
-          if (!_focusNode.hasFocus) {
-            _focusNode.requestFocus();
-          }
-          if (event.kind == PointerDeviceKind.mouse) {
-            if (event.buttons == kPrimaryButton) {
-              widget.navigationDelegate.onPointerMove(event);
-            }
-          }
-        },
 
-        child: RenderToTexture(scene: widget.scene),
+    return GestureDetector(
+      onTapDown: (TapDownDetails event) {
+        widget.navigationDelegate.onTapDown(event);
+      },
+      child: Focus(
+        autofocus: true,
+        focusNode: _focusNode,
+        onKeyEvent: (node, event) {
+          // TODO: Handle keyboard event
+          return KeyEventResult.ignored;
+        },
+        child: Listener(
+          onPointerSignal: (event) {
+            if (!_focusNode.hasFocus) {
+              _focusNode.requestFocus();
+            }
+            if (event is PointerScrollEvent) {
+              widget.navigationDelegate.onPointerScroll(event);
+            }
+          },
+
+          onPointerMove: (event) {
+            if (!_focusNode.hasFocus) {
+              _focusNode.requestFocus();
+            }
+            widget.navigationDelegate.onPointerMove(event);
+          },
+
+          child: RenderToTexture(scene: widget.scene),
+        ),
       ),
     );
   }

@@ -72,11 +72,21 @@ class OrbitView implements AngleSceneNavigationDelegate {
 
   @override
   void onPointerDown(PointerDownEvent event) {
+    print("onPointerDown");
     _dragStart = event.localPosition;
     _yawStart = yaw;
     _pitchStart = pitch;
     updateSceneMatrices();
   }
+
+  @override
+  void onTapDown(TapDownDetails event) {
+    _dragStart = event.localPosition;
+    _yawStart = yaw;
+    _pitchStart = pitch;
+    updateSceneMatrices();
+  }
+
   @override
   void onPointerMove(PointerMoveEvent event) {
     final deltaX = _dragStart.dx - event.localPosition.dx;

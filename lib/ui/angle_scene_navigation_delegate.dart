@@ -5,6 +5,7 @@ abstract class AngleSceneNavigationDelegate {
 
   void setScene(AngleScene scene);
 
+  void onTapDown(TapDownDetails event);
   void onPointerDown(PointerDownEvent event);
   void onPointerMove(PointerMoveEvent event);
   void onPointerScroll(PointerScrollEvent event);
