@@ -2,16 +2,8 @@
 import 'bitmap_font.dart';
 part 'built_in_font.dart';
 
-class BitmapFontManager {
+class BitmapFontList {
   final Map<String,BitmapFont> fonts={};
-  static final BitmapFontManager _singleton = BitmapFontManager._internal();
-
-  factory BitmapFontManager() {
-    return _singleton;
-  }
-
-  BitmapFontManager._internal();
-
 
   void registerFont(String name,BitmapFont font) {
     fonts[name]=font;

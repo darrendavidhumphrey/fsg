@@ -3,7 +3,7 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../gl_program.dart';
-import 'built_in_shaders.dart';
+import 'shaders.dart';
 
 const String _vertexShader = """
 #version 300 es
@@ -157,9 +157,9 @@ class OneLightShader extends GlslShader {
         _fragmentShader,
         _vertexShader,
         [
-          BuiltInShaders.v3Attrib,
-          BuiltInShaders.t2Attrib,
-          BuiltInShaders.n3Attrib,
+          ShaderList.v3Attrib,
+          ShaderList.t2Attrib,
+          ShaderList.n3Attrib,
         ],
         [
           uLightPos,
@@ -175,8 +175,8 @@ class OneLightShader extends GlslShader {
           uDrawFill,
           uOutlineColor,
           uOutlineWidth,
-          BuiltInShaders.uModelView,
-          BuiltInShaders.uProj,
+          ShaderList.uModelView,
+          ShaderList.uProj,
         ],
       );
 

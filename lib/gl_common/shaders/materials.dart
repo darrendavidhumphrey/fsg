@@ -8,15 +8,7 @@ class GlMaterial {
   GlMaterial(this.ambient, this.diffuse, this.specular, this.shininess);
 }
 
-class GlMaterialManager {
-
-  static final GlMaterialManager _singleton = GlMaterialManager._internal();
-
-  factory GlMaterialManager() {
-    return _singleton;
-  }
-
-  GlMaterialManager._internal();
+class MaterialList {
 
   final Map<String, GlMaterial> materials = {};
   GlMaterial getMaterial(String name) {

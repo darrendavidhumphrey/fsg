@@ -1,9 +1,9 @@
 import 'package:flutter/gestures.dart';
-import '../gl_common/angle_scene.dart';
+import '../gl_common/scene.dart';
 
 abstract class AngleSceneNavigationDelegate {
 
-  void setScene(AngleScene scene);
+  void setScene(Scene scene);
 
   void onTapDown(TapDownDetails event);
   void onPointerDown(PointerDownEvent event);

@@ -1,34 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/built_in_shaders.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/gl_materials.dart';
+import 'package:flutter_angle_jig/gl_common/shaders/shaders.dart';
+import 'package:flutter_angle_jig/gl_common/shaders/materials.dart';
 import 'package:flutter_angle_jig/gl_common/texture_manager.dart';
 import '../frame_counter.dart';
 import '../logging.dart';
 import 'bitmap_fonts/bitmap_font_manager.dart';
-import 'angle_scene.dart';
+import 'scene.dart';
 
-class FlutterAngleJig with LoggableClass {
+class FSG with LoggableClass {
   FlutterAngle angle = FlutterAngle();
   bool isInitialized = false;
   bool glIsInitialized = false;
-
   bool contextInitialized = false;
 
-  static final double renderToTextureSize = 4096;
-  final Map<AngleScene, FlutterAngleTexture> scenes = {};
-
+  static double renderToTextureSize = 4096;
+  final Map<Scene, FlutterAngleTexture> scenes = {};
+  final shaders = ShaderList();
   final textures = <FlutterAngleTexture>[];
+  final materials = MaterialList();
+  final fonts = BitmapFontList();
 
-  static final FlutterAngleJig _singleton = FlutterAngleJig._internal();
+  static final FSG _singleton = FSG._internal();
 
   late FrameCounterModel frameCounter;
 
-  factory FlutterAngleJig() {
+  factory FSG() {
     return _singleton;
   }
 
-  FlutterAngleJig._internal();
+  FSG._internal();
 
   Future<bool> init() async {
     if (!isInitialized) {
@@ -43,7 +44,6 @@ class FlutterAngleJig with LoggableClass {
 
   Future<FlutterAngleTexture?> allocTexture(AngleOptions options) async {
     if (glIsInitialized) {
-
       var newTexture = await angle.createTexture(options);
       textures.add(newTexture);
       return newTexture;
@@ -51,7 +51,7 @@ class FlutterAngleJig with LoggableClass {
     return null;
   }
 
-  void initScene(BuildContext context, AngleScene scene) {
+  void initScene(BuildContext context, Scene scene) {
     if (!scene.isInitialized) {
       scene.init(context, scene.renderToTextureId!.getContext());
     }
@@ -66,24 +66,23 @@ class FlutterAngleJig with LoggableClass {
     Color defaultSpecular = Colors.black;
     const double defaultShininess = 5;
 
-    GlMaterialManager().setDefaultMaterial(
+    materials.setDefaultMaterial(
       GlMaterial(defaultGrey, defaultGrey, defaultSpecular, defaultShininess),
     );
   }
 
   void initContext(RenderingContext gl) {
-
     if (!contextInitialized) {
       TextureManager().init(gl);
       initDefaultMaterial();
 
-      BuiltInShaders().init(gl);
-      BitmapFontManager().createDefaultFont();
+      shaders.init(gl);
+      BitmapFontList().createDefaultFont();
       contextInitialized = true;
     }
   }
 
-  Future<bool> allocTextureForScene(AngleScene scene) async {
+  Future<bool> allocTextureForScene(Scene scene) async {
     final options = AngleOptions(
       width: scene.textureWidth(),
       height: scene.textureHeight(),

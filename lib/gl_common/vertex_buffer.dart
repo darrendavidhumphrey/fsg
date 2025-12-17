@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/built_in_shaders.dart';
+import 'package:flutter_angle_jig/gl_common/shaders/shaders.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 import '../float32_array_filler.dart';
@@ -9,10 +9,10 @@ import '../float32_array_filler.dart';
 /// Represents the possible components a vertex can have.
 /// Each component is associated with an OpenGL attribute location.
 enum VertexComponent {
-  position(3, BuiltInShaders.v3Attrib), // Location 0, 3 floats,
-  normal(3, BuiltInShaders.n3Attrib), // Location 1, 3 floats,
-  texCoord(2, BuiltInShaders.t2Attrib), // Location 2, 2 floats
-  color(4, BuiltInShaders.c4Attrib); // Location 3, 4 floats (RGBA)
+  position(3, ShaderList.v3Attrib), // Location 0, 3 floats,
+  normal(3, ShaderList.n3Attrib), // Location 1, 3 floats,
+  texCoord(2, ShaderList.t2Attrib), // Location 2, 2 floats
+  color(4, ShaderList.c4Attrib); // Location 3, 4 floats (RGBA)
 
   final int size; // Number of float components (e.g., 3 for vec3)
   final String shaderAttributeName;

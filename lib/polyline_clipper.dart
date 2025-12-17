@@ -185,7 +185,7 @@ class PolylineClipper {
     }
 
     // Get the list of good vertices
-    List<int> indices = result.testForDegenerateVerts();
+    List<int> indices = result.testForDegenerateVertices();
 
     // If length not the same, then there were degenerate vertices
     if (indices.length != result.length) {

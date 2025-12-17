@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter_angle/flutter_angle.dart';
 import '../gl_program.dart';
-import 'built_in_shaders.dart';
+import 'shaders.dart';
 
 String _vertexShader = '''
 #version 300 es
@@ -63,16 +63,16 @@ class CheckerBoardShader extends GlslShader {
     _fragmentShader,
     _vertexShader,
     [
-      BuiltInShaders.v3Attrib,
-      BuiltInShaders.t2Attrib,
-      BuiltInShaders.n3Attrib,
+      ShaderList.v3Attrib,
+      ShaderList.t2Attrib,
+      ShaderList.n3Attrib,
     ],
     [
       uPatternColor1,
       uPatternColor2,
       uPatternScale,
-      BuiltInShaders.uModelView,
-      BuiltInShaders.uProj,
+      ShaderList.uModelView,
+      ShaderList.uProj,
     ],
   );
 

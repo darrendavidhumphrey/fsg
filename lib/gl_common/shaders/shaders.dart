@@ -92,28 +92,19 @@ String testVertexShader = '''
           }
         ''';
 
-class BuiltInShaders {
+class ShaderList {
   late GlslShader v3c4;
   late GlslShader v3t2;
 
   late GlslShader v3t3n4;
 
-  late BasicLightingShader lighting;
+  late BasicLightingShader basicLighting;
 
   late OneLightShader oneLight;
 
   late GridShader grid;
 
   late CheckerBoardShader checkerBoard;
-
-  static final BuiltInShaders _singleton = BuiltInShaders._internal();
-
-  factory BuiltInShaders() {
-    return _singleton;
-  }
-
-  BuiltInShaders._internal();
-
 
   static const String v3Attrib = 'aVertexPosition';
   static const String c4Attrib = 'aVertexColor';
@@ -125,6 +116,8 @@ class BuiltInShaders {
   static String uModelView = 'uMVMatrix';
   static String textureSamplerAttrib = 'uSampler';
 
+  final Map<String,GlslShader> _shaders = {};
+
   void init(RenderingContext gl) {
 
     v3c4 = GlslShader(
@@ -135,6 +128,7 @@ class BuiltInShaders {
       [uModelView, uProj],
     );
     gl.useProgram(v3c4.program);
+    _shaders["v3c4"] = v3c4;
 
     v3t2 = GlslShader(
       gl,
@@ -144,6 +138,7 @@ class BuiltInShaders {
       [uModelView, uProj, textureSamplerAttrib],
     );
     gl.useProgram(v3t2.program);
+    _shaders["v3t2"] = v3t2;
 
     v3t3n4 = GlslShader(
       gl,
@@ -153,28 +148,46 @@ class BuiltInShaders {
       [uModelView, uProj],
     );
     gl.useProgram(v3t3n4.program);
+    _shaders["v3t3n4"] = v3t3n4;
 
-    lighting = BasicLightingShader(gl);
-    gl.useProgram(lighting.program);
+    basicLighting = BasicLightingShader(gl);
+    gl.useProgram(basicLighting.program);
+    _shaders["basicLighting"] = basicLighting;
 
     grid = GridShader(gl);
     gl.useProgram(grid.program);
+    _shaders["grid"] = grid;
 
     oneLight = OneLightShader(gl);
     gl.useProgram(oneLight.program);
+    _shaders["oneLight"] = oneLight;
 
     checkerBoard = CheckerBoardShader(gl);
     gl.useProgram(checkerBoard.program);
+    _shaders["checkerBoard"] = checkerBoard;
+  }
+
+  bool addShader(String shaderName,GlslShader shader) {
+    if (_shaders.containsKey(shaderName)) {
+      return false;
+    }
+
+    _shaders[shaderName] = shader;
+    return true;
+  }
+
+  GlslShader? get(String shaderName) {
+    return _shaders[shaderName];
   }
 
   static void setMatrixUniforms(GlslShader shader,Matrix4 pMatrix, Matrix4 mvMatrix) {
     shader.gl.uniformMatrix4fv(
-      shader.uniforms[BuiltInShaders.uProj]!,
+      shader.uniforms[ShaderList.uProj]!,
       false,
       pMatrix.storage,
     );
     shader.gl.uniformMatrix4fv(
-      shader.uniforms[BuiltInShaders.uModelView]!,
+      shader.uniforms[ShaderList.uModelView]!,
       false,
       mvMatrix.storage,
     );

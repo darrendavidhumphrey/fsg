@@ -1,12 +1,12 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_angle_jig/gl_common/angle_scene.dart';
+import 'package:flutter_angle_jig/gl_common/scene.dart';
 import 'package:flutter_angle_jig/ui/render_to_texture.dart';
 import 'package:flutter_angle_jig/ui/angle_scene_navigation_delegate.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 class InteractiveRenderToTexture extends StatefulWidget {
-  final AngleScene scene;
+  final Scene scene;
   final AngleSceneNavigationDelegate navigationDelegate;
   final bool automaticallyPause;
   const InteractiveRenderToTexture({
@@ -83,3 +83,5 @@ class OrbitViewState extends State<InteractiveRenderToTexture> {
     );
   }
 }
+
+

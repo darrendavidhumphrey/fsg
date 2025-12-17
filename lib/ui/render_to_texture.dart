@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:provider/provider.dart';
 import '../frame_counter.dart';
-import '../gl_common/flutter_angle_jig.dart';
-import '../gl_common/angle_scene.dart';
+import '../gl_common/fsg.dart';
+import '../gl_common/scene.dart';
 import '../logging.dart';
 
 class RenderToTexture extends StatefulWidget {
-  final AngleScene scene;
+  final Scene scene;
   const RenderToTexture({required this.scene, super.key});
   @override
   RenderToTextureState createState() =>
@@ -51,17 +51,17 @@ class RenderToTextureState
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
-      value: FlutterAngleJig().frameCounter,
+      value: FSG().frameCounter,
       child: Consumer<FrameCounterModel>(
         builder: (context, counter, child) {
           return LayoutBuilder(
             builder: (context, constraints) {
-              FlutterAngleTexture? textureId = FlutterAngleJig().scenes[widget.scene];
+              FlutterAngleTexture? textureId = FSG().scenes[widget.scene];
 
               if (textureId != null) {
                 bool firstPaint = !widget.scene.isInitialized;
                 if (firstPaint) {
-                  FlutterAngleJig().initScene(context, widget.scene);
+                  FSG().initScene(context, widget.scene);
 
                   logTrace(
                     "Start RenderToTexture Ticker for scene of type ${widget.scene.runtimeType}",
@@ -86,7 +86,7 @@ class RenderToTextureState
                     "Scheduling a refresh because texture is not initialized",
                   );
 
-                  FlutterAngleJig().allocTextureForScene(widget.scene);
+                  FSG().allocTextureForScene(widget.scene);
                   Provider.of<FrameCounterModel>(
                     context,
                     listen: false,

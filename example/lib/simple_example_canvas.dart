@@ -1,66 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:flutter_angle_jig/gl_common/angle_scene.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/built_in_shaders.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/grid_shader.dart';
-import 'package:flutter_angle_jig/gl_common/vertex_buffer.dart';
+import 'package:flutter_angle_jig/fsg.dart';
 
-class SimpleExampleCanvas extends AngleScene {
-  SimpleExampleCanvas() : outerEdgeVbo = VertexBuffer.v3c4(),
-        gridVbo = VertexBuffer.v3t2();
+class SimpleExampleCanvas extends Scene {
+  SimpleExampleCanvas() :
+        exampleVbo = VertexBuffer.v3t2();
 
-  final VertexBuffer outerEdgeVbo;
-  final VertexBuffer gridVbo;
-  final Size gridExtents = Size(500, 500);
+  final VertexBuffer exampleVbo;
+  final Size quadExtents = Size(500, 500);
 
-  final Color majorGridColor = Color(0xFFFF0000);
-  final Color minorGridColor = Color(0xFF00FF00);
-  final Color mmLineColor  = Color(0xFF0000FF);
-
-
+  final Color color1 = Color(0xFFFF0000);
+  final Color color2 = Color(0xFF00FF00);
 
   @override
   void init(BuildContext context, RenderingContext gl) {
     super.init(context, gl);
+    exampleVbo.init(gl);
 
-
-    gridVbo.init(gl);
-    outerEdgeVbo.init(gl);
-
-    gridVbo.makeTexturedUnitQuad(
-      Rect.fromLTWH(-gridExtents.width/2, -gridExtents.height/2, gridExtents.width, gridExtents.height),
+    exampleVbo.makeTexturedUnitQuad(
+      Rect.fromLTWH(-quadExtents.width/2, -quadExtents.height/2, quadExtents.width, quadExtents.height),
       0.1,
     );
   }
 
-
   @override
   void dispose() {}
 
-  void drawGrid(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    GridShader gridShader = BuiltInShaders().grid;
-    gl.useProgram(gridShader.program);
-    BuiltInShaders.setMatrixUniforms(gridShader, pMatrix, mvMatrix);
+  void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
+    var shader = FSG().shaders.checkerBoard;
+    gl.useProgram(shader.program);
+    ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
     gl.enable(WebGL.DEPTH_TEST);
 
-    gridShader.setResolutionMM(gridExtents.width, gridExtents.height);
-    gridShader.setScale(0.1);
-    gridShader.setMajorLineSpacingMM(25);
-    gridShader.setMinorLineSpacingMM(5);
-    gridShader.setMajorLineThickness(0.5);
-    gridShader.setMinorLineThickness(0.25);
-    gridShader.setMmLineThickness(0.025);
-    gridShader.setMajorLineColor(majorGridColor);
-    gridShader.setMinorLineColor(minorGridColor);
-    gridShader.setMmLineColor( mmLineColor );
-    gridVbo.drawSetup();
-    gridVbo.drawTriangles();
-    gridVbo.drawTeardown();
+    shader.setPatternColor1(color1);
+    shader.setPatternColor2(color2);
+    shader.setPatternScale(4);
+
+    exampleVbo.drawSetup();
+    exampleVbo.drawTriangles();
+    exampleVbo.drawTeardown();
   }
 
   @override
   void drawScene() {
-    gl.clearColor(1.0, 0.0, 1.0, 1.0);
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
     gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
     gl.enable(WebGL.DEPTH_TEST);
@@ -70,7 +53,7 @@ class SimpleExampleCanvas extends AngleScene {
 
     mvPushMatrix();
     // Matrices are set from orbit view
-    drawGrid(pMatrix, mvMatrix);
+    drawVBO(pMatrix, mvMatrix);
 
     mvPopMatrix();
 

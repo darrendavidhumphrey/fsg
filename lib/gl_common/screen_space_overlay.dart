@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import '../logging.dart';
-import 'angle_scene_layer.dart';
+import 'scene_layer.dart';
 
-abstract class ScreenSpaceOverlay extends AngleSceneLayer with LoggableClass {
+abstract class ScreenSpaceOverlay extends SceneLayer with LoggableClass {
   final double textureSize;
   final double? top;
   final double? left;

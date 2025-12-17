@@ -1,8 +1,8 @@
 import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:vector_math/vector_math_64.dart';
-import '../gl_common/angle_scene.dart';
-import '../gl_common/angle_util.dart';
+import '../gl_common/scene.dart';
+import '../gl_common/util.dart';
 import '../util.dart';
 import 'angle_scene_navigation_delegate.dart';
 
@@ -33,7 +33,7 @@ class OrbitView implements AngleSceneNavigationDelegate {
   final Matrix4 _projectionMatrix = Matrix4.identity();
   Matrix4 _viewMatrix = Matrix4.identity();
 
-  AngleScene? scene;
+  Scene? scene;
 
 
   OrbitView() {
@@ -65,7 +65,7 @@ class OrbitView implements AngleSceneNavigationDelegate {
   }
 
   @override
-  void setScene(AngleScene scene) {
+  void setScene(Scene scene) {
     this.scene = scene;
     updateSceneMatrices();
   }

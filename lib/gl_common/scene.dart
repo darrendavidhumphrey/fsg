@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import '../logging.dart';
-import 'flutter_angle_jig.dart';
-import 'angle_scene_layer.dart';
+import 'fsg.dart';
+import 'scene_layer.dart';
 
-abstract class AngleScene with LoggableClass {
+abstract class Scene with LoggableClass {
   late RenderingContext gl;
   /// Perspective matrix
   late Matrix4 pMatrix;
@@ -12,9 +12,9 @@ abstract class AngleScene with LoggableClass {
   /// Model-View matrix.
   late Matrix4 mvMatrix;
 
-  final List<AngleSceneLayer> layers =[];
+  final List<SceneLayer> layers =[];
   List<Matrix4> mvStack = <Matrix4>[];
-  AngleScene();
+  Scene();
 
   bool forceRepaint = true;
   FlutterAngleTexture? renderToTextureId;
@@ -28,15 +28,15 @@ abstract class AngleScene with LoggableClass {
 
 
   int textureWidth() {
-    return FlutterAngleJig.renderToTextureSize.toInt();
+    return FSG.renderToTextureSize.toInt();
   }
   int textureHeight() {
-    return FlutterAngleJig.renderToTextureSize.toInt();
+    return FSG.renderToTextureSize.toInt();
   }
 
   void init(BuildContext context, RenderingContext gl) {
     this.gl = gl;
-    FlutterAngleJig().initContext(gl);
+    FSG().initContext(gl);
     mvMatrix = Matrix4.identity();
     gl.clearColor(0, 1, 0, 1);
     isInitialized = true;
@@ -65,24 +65,24 @@ abstract class AngleScene with LoggableClass {
   /// Pop the last matrix off the stack and set the Model View matrix.
   void mvPopMatrix() => mvMatrix = mvStack.removeLast();
 
-  void addLayer(AngleSceneLayer layer) {
+  void addLayer(SceneLayer layer) {
     layers.add(layer);
     layer.parent = this;
   }
 
   void rebuildLayers(RenderingContext gl,DateTime now) {
-    for (AngleSceneLayer layer in layers) {
+    for (SceneLayer layer in layers) {
       layer.rebuild(gl,now);
     }
   }
   void drawLayers() {
-    for (AngleSceneLayer layer in layers) {
+    for (SceneLayer layer in layers) {
       layer.draw(pMatrix, mvMatrix);
     }
   }
 
   bool needsRebuild() {
-    for (AngleSceneLayer layer in layers) {
+    for (SceneLayer layer in layers) {
       if (layer.needsRebuild) {
         return true;
       }

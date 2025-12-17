@@ -2,7 +2,7 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../gl_program.dart';
-import 'built_in_shaders.dart';
+import 'shaders.dart';
 
 const String _lightingVertexShader = """
 #version 300 es
@@ -57,11 +57,11 @@ class BasicLightingShader extends GlslShader {
         _lightingFragmentShader,
         _lightingVertexShader,
         [
-          BuiltInShaders.v3Attrib,
-          BuiltInShaders.t2Attrib,
-          BuiltInShaders.n3Attrib,
+          ShaderList.v3Attrib,
+          ShaderList.t2Attrib,
+          ShaderList.n3Attrib,
         ],
-        [uKd, uLd, uLightPos, BuiltInShaders.uModelView, BuiltInShaders.uProj],
+        [uKd, uLd, uLightPos, ShaderList.uModelView, ShaderList.uProj],
       );
 
   void setLightPos(Vector3 v) {

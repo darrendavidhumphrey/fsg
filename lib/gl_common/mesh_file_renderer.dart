@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/built_in_shaders.dart';
-import 'package:flutter_angle_jig/gl_common/shaders/gl_materials.dart';
+import 'package:flutter_angle_jig/gl_common/shaders/shaders.dart';
+import 'package:flutter_angle_jig/gl_common/shaders/materials.dart';
 import 'package:flutter_angle_jig/gl_common/shaders/one_light_shader.dart';
 import 'package:flutter_angle_jig/gl_common/vertex_buffer.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 import '../float32_array_filler.dart';
+import 'fsg.dart';
 import 'index_buffer.dart';
 import 'obj_loader.dart';
 
+// TODO: refactor/rename
 class MeshFileRenderer {
 
   VertexBuffer? vbo;
@@ -79,9 +81,9 @@ class MeshFileRenderer {
   }
 
   void enableLightingShader(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    OneLightShader lightingShader = BuiltInShaders().oneLight;
+    OneLightShader lightingShader = ShaderList().oneLight;
     gl.useProgram(lightingShader.program);
-    BuiltInShaders.setMatrixUniforms(lightingShader, pMatrix, mvMatrix);
+    ShaderList.setMatrixUniforms(lightingShader, pMatrix, mvMatrix);
 
     lightingShader.setLightPos(Vector3(40,0,-200));
     lightingShader.setNMatrix(Matrix3.identity());
@@ -90,8 +92,8 @@ class MeshFileRenderer {
     lightingShader.setSpecularLight(Colors.white);
   }
   void setMaterial(String materialName) {
-    GlMaterial material = GlMaterialManager().getMaterial(materialName);
-    OneLightShader shader = BuiltInShaders().oneLight;
+    GlMaterial material = FSG().materials.getMaterial(materialName);
+    OneLightShader shader = ShaderList().oneLight;
     shader.setMaterialAmbient(material.ambient);
     shader.setMaterialDiffuse(material.diffuse);
     shader.setMaterialSpecular(material.specular);

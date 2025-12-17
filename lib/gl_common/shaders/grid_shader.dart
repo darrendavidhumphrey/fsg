@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter_angle/flutter_angle.dart';
 import '../gl_program.dart';
-import 'built_in_shaders.dart';
+import 'shaders.dart';
 
 String _gridVertexShader = '''
 #version 300 es
@@ -118,9 +118,9 @@ class GridShader extends GlslShader {
         gl,
         _gridFragmentShader,
         _gridVertexShader,
-        [BuiltInShaders.v3Attrib, BuiltInShaders.t2Attrib],
+        [ShaderList.v3Attrib, ShaderList.t2Attrib],
         [
-          BuiltInShaders.uModelView, BuiltInShaders.uProj,
+          ShaderList.uModelView, ShaderList.uProj,
           uResolution,
           uScale,
           uMajorLineSpacingMM,

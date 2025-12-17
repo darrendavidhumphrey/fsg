@@ -132,7 +132,7 @@ class Polyline {
     return true; // Point is inside the polygon
   }
 
-  List<int> testForDegenerateVerts() {
+  List<int> testForDegenerateVertices() {
     List<int> result = [];
     double minDistance = 0.0001;
 
