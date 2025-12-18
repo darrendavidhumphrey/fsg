@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:fsg/fsg.dart';
 import 'package:flutter/material.dart';
+import 'package:fsg_examples/animated_checkerboard_scene.dart';
 import 'checkerboard_scene.dart';
 import 'checkerboard_uniforms_scene.dart';
 
@@ -53,7 +54,7 @@ class TestAppState extends State<TestApp> {
                     children: [
                       RenderToTexture(scene: checkerBoardScene),
                       CheckerBoardUniformsExample(),
-                      Container(decoration: BoxDecoration(color: Colors.green)),
+                      AnimatedCheckerBoardExample(),
                     ],
                   ),
                   LayoutBuilder(
@@ -80,7 +81,7 @@ class TestAppState extends State<TestApp> {
                               value: 1,
                               label: 'Example 2: Driving Shader Uniforms',
                             ),
-                            DropdownMenuEntry(value: 2, label: 'Green'),
+                            DropdownMenuEntry(value: 2, label: 'Example 3: Animated Shader Uniforms'),
                           ],
                         ),
                       );

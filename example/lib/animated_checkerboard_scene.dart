@@ -3,8 +3,8 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-class CheckerBoardUniformsScene extends Scene {
-  CheckerBoardUniformsScene() :
+class AnimatedCheckerBoardScene extends Scene {
+  AnimatedCheckerBoardScene() :
         exampleVbo = VertexBuffer.v3t2();
 
   final VertexBuffer exampleVbo;
@@ -33,6 +33,7 @@ class CheckerBoardUniformsScene extends Scene {
     gl.useProgram(shader.program);
     ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
     gl.enable(WebGL.DEPTH_TEST);
+
 
     shader.setPatternColor1(color1);
     shader.setPatternColor2(color2);
@@ -68,6 +69,25 @@ class CheckerBoardUniformsScene extends Scene {
     );
   }
 
+  Color getCyclingColor({
+    required double timeInSeconds,
+    double cycleDurationSeconds =
+    10.0, // Default to 10 seconds for a full cycle
+    double saturation = 1.0,
+    double value = 1.0,
+  }) {
+    // Normalize time to a value between 0.0 and 1.0 based on cycleDuration
+    final double normalizedTime =
+        (timeInSeconds % cycleDurationSeconds) / cycleDurationSeconds;
+
+    // Map the normalized time to a hue angle (0.0 to 360.0 degrees)
+    final double hue = normalizedTime * 360.0;
+
+    // Create an HSVColor and convert it to a standard Color object
+    final HSVColor hsvColor = HSVColor.fromAHSV(1.0, hue, saturation, value);
+    return hsvColor.toColor();
+  }
+
   @override
   void drawScene() {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
@@ -80,6 +100,23 @@ class CheckerBoardUniformsScene extends Scene {
 
     createProjectionMatrix();
     createViewMatrix();
+    double cycleDuration = 2;
+
+    DateTime now = DateTime.now();
+    double timeInSeconds = now.millisecondsSinceEpoch / 1000.0;
+    Color cycleColor = getCyclingColor(
+      timeInSeconds: timeInSeconds,
+      cycleDurationSeconds: cycleDuration,
+    );
+    color1 = cycleColor;
+
+    Color cycleColor2 = getCyclingColor(
+      timeInSeconds: timeInSeconds + 1,
+      cycleDurationSeconds: cycleDuration,
+    );
+    color2 = cycleColor2;
+
+    // TODO: Animate the scale from 1 - 100
 
     mvPushMatrix();
     drawVBO(pMatrix, mvMatrix);
@@ -90,56 +127,28 @@ class CheckerBoardUniformsScene extends Scene {
   }
 }
 
-class CheckerBoardUniformsExample extends StatefulWidget {
-  const CheckerBoardUniformsExample({super.key});
+class AnimatedCheckerBoardExample extends StatefulWidget {
+  const AnimatedCheckerBoardExample({super.key});
 
   @override
-  CheckerBoardUniformsExampleState createState() => CheckerBoardUniformsExampleState();
+  AnimatedCheckerBoardExampleState createState() => AnimatedCheckerBoardExampleState();
 }
 
-class CheckerBoardUniformsExampleState extends State<CheckerBoardUniformsExample> {
-  late CheckerBoardUniformsScene checkerBoardUniformsScene;
+class AnimatedCheckerBoardExampleState extends State<AnimatedCheckerBoardExample> {
+  late AnimatedCheckerBoardScene scene;
 
   @override
   void initState() {
     super.initState();
-    checkerBoardUniformsScene = CheckerBoardUniformsScene();
-    FSG().registerSceneAndAllocateTexture(checkerBoardUniformsScene);
+    scene = AnimatedCheckerBoardScene();
+    FSG().registerSceneAndAllocateTexture(scene);
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        RenderToTexture(scene: checkerBoardUniformsScene),
-        Positioned(
-          bottom: 0,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text('Pattern Scale'),
-                    Slider(
-                      value: checkerBoardUniformsScene.patternScale,
-                      min: 1,
-                      max: 100,
-                      divisions: 99, // Creates discrete steps for 1, 2, 3... 100
-                      label: checkerBoardUniformsScene.patternScale.round().toString(),
-                      onChanged: (double value) {
-                        setState(() {
-                          checkerBoardUniformsScene.patternScale = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-
+        RenderToTexture(scene: scene),
       ],
     );
   }
