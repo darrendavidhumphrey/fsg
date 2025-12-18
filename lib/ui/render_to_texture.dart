@@ -86,7 +86,7 @@ class RenderToTextureState
                     "Scheduling a refresh because texture is not initialized",
                   );
 
-                  FSG().allocTextureForScene(widget.scene);
+                  FSG().registerSceneAndAllocateTexture(widget.scene);
                   Provider.of<FrameCounterModel>(
                     context,
                     listen: false,

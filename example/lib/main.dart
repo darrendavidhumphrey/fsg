@@ -34,13 +34,14 @@ class TestAppState extends State<TestApp> {
   void initState() {
     super.initState();
     checkerBoardScene = CheckerBoardScene();
-    FSG().allocTextureForScene(checkerBoardScene);
+    FSG().registerSceneAndAllocateTexture(checkerBoardScene);
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'test',
+      title: 'FSG Examples',
+     // showPerformanceOverlay: true,
       home: Scaffold(
         body: Row(
           children: [
@@ -58,7 +59,7 @@ class TestAppState extends State<TestApp> {
                   LayoutBuilder(
                     builder: (context, constraints) {
                       return Padding(
-                        padding: const EdgeInsets.all(8.0),
+                        padding: const EdgeInsets.only(top:8.0,left:8.0,right:8.0),
                         child: DropdownMenu<int>(
                           width: constraints.maxWidth,
                           initialSelection: _pageIndex,

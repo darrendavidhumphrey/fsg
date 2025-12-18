@@ -82,7 +82,10 @@ class FSG with LoggableClass {
     }
   }
 
-  Future<bool> allocTextureForScene(Scene scene) async {
+  // Use this method to register your scene with FSG and allocate a texture for the scene
+  // FSG scenes are rendered to a texture and then composited into flutter using either
+  // the RenderToTexture widget or InteractiveRenderToTextureWidget
+  Future<bool> registerSceneAndAllocateTexture(Scene scene) async {
     final options = AngleOptions(
       width: scene.textureWidth(),
       height: scene.textureHeight(),

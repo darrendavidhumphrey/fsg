@@ -104,7 +104,7 @@ class CheckerBoardUniformsExampleState extends State<CheckerBoardUniformsExample
   void initState() {
     super.initState();
     checkerBoardUniformsScene = CheckerBoardUniformsScene();
-    FSG().allocTextureForScene(checkerBoardUniformsScene);
+    FSG().registerSceneAndAllocateTexture(checkerBoardUniformsScene);
   }
 
   @override
