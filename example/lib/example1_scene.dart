@@ -34,7 +34,7 @@ class Example1Scene extends Scene {
 
     shader.setPatternColor1(color1);
     shader.setPatternColor2(color2);
-    shader.setPatternScale(4);
+    shader.setPatternScale(50);
 
     exampleVbo.drawSetup();
     exampleVbo.drawTriangles();

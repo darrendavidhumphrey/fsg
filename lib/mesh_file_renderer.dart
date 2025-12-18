@@ -42,8 +42,8 @@ class MeshFileRenderer {
 
   void rebuild() {
     if (model != null && needsRebuild) {
-      int numVerts = model!.vertices.length;
-      Float32Array? vertexData = vbo!.requestBuffer(numVerts);
+      int numberOfVertices = model!.vertices.length;
+      Float32Array? vertexData = vbo!.requestBuffer(numberOfVertices);
 
       if (vertexData != null) {
         Float32ArrayFiller filler = Float32ArrayFiller(vertexData);

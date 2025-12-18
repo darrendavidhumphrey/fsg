@@ -100,11 +100,16 @@ mixin class LoggableClass {
 ///
 ///
 class Logging {
-  /// The current log level
-  static LogLevel logLevel = LogLevel.warning;
+
+  // If the map contains an entry for a source, then the stored LogLevel is
+  // used as a filter
+  static Map<String,LogLevel> logLevelMap={};
 
   /// The current logger brevity setting
   static Brevity brevity = Brevity.normal;
+
+  // Whether or not to show log that haven't specified their filter level
+  static bool displayUnfilteredLogs = true;
 
   /// Install a console logging function, e.g.  use to the 'print' function
   /// Pass in a void function [func] that accepts a string like so:
@@ -121,42 +126,23 @@ class Logging {
     _customLogFunction = func;
   }
 
-  /// Set the log level from a string. Useful when the log level for
-  /// an application is stored in a configuration file.
+  /// Set the log level for a source from a string. Useful when the log level
+  /// for an application is stored in a configuration file.
   /// Takes a string parameter [level] to set the level
   /// A level of null is interpreted as verbose
-
-  static void setLogLevelFromString(String? level) {
+  static void setLogLevelFromString(String? level,String source) {
     if (level == null) {
-      logLevel = LogLevel.verbose;
+      logLevelMap[source] = LogLevel.verbose;
     } else {
-      logLevel = LogLevel.values.firstWhere(
+      logLevelMap[source] = LogLevel.values.firstWhere(
             (e) => e.toString() == 'LogLevel.$level',
       );
     }
   }
 
-  /// Enable a filter source
-  /// Takes a single parameter of [source]
-  ///
-  /// When there ANY number of filter sources, ONLY messages that match the
-  /// an enabled source will be logged
-  ///
-  /// If there are NO ACTIVE FILTERS, then ALL messages will be logged
-  static void enableSource(String source) {
-    _filters[source] = true;
-  }
-
-  /// Disable a filter source
-  /// Takes a single parameter of [source]
-  static void disableSource(String source) {
-    _filters.remove(source);
-  }
-
-  /// Clear all log filters. If there are no filters, all log messages will
-  /// be logged
-  static void clearFilters() {
-    _filters.clear();
+  // Set the log level for a source
+  static void setLogLevel(LogLevel level,String source) {
+      logLevelMap[source] = level;
   }
 
   /// Log a message with severity level of Error
@@ -211,10 +197,6 @@ class Logging {
   // Internal implementation
   //
   ////////////////////////////////////////////////////////////////////////////
-
-  /// Map of active filters
-  static final Map<String, bool> _filters = {};
-
   /// Console logging function installed by user code
   static void Function(String)? _consoleLogFunction;
 
@@ -222,9 +204,14 @@ class Logging {
   static void Function(String)? _customLogFunction;
 
   /// Helper function to determine if a log message should be emitted
-  static bool _shouldLogMessage(String tag, LogLevel level) {
-    return (logLevel.index >= level.index) &&
-        ((_filters.isEmpty) || (_filters[tag] != null));
+  static bool _shouldLogMessage(String source, LogLevel level) {
+    LogLevel? configuredLevel = logLevelMap[source];
+
+    if (configuredLevel != null) {
+      return (configuredLevel.index >= level.index);
+    } else {
+      return displayUnfilteredLogs;
+    }
   }
 
   static String _formatMessage(LogLevel level, String source, String message) {

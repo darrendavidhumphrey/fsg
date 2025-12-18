@@ -4,8 +4,16 @@ import 'package:flutter/material.dart';
 import 'example1_scene.dart';
 
 void main() async {
+  Logging.brevity = Brevity.detailed;
+  Logging.displayUnfilteredLogs = false;
+  Logging.setConsoleLogFunction((String message) {
+    print(message);
+  });
+  Logging.setLogLevel(LogLevel.pedantic,  "CheckerBoardShader");
+
   WidgetsFlutterBinding.ensureInitialized();
   FSG().initPlatformState();
+
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(TestApp());
 }

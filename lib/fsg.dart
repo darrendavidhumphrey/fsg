@@ -5,12 +5,12 @@ export 'bitmap_fonts/bitmap_text.dart';
 export 'shaders/materials.dart';
 export 'shaders/lighting_shader.dart';
 export 'shaders/one_light_shader.dart';
-export 'shaders/pattern_shaders.dart';
+export 'shaders/checkerboard_shader.dart';
 export 'shaders/shaders.dart';
 export 'shaders/grid_shader.dart';
 
 export 'fsg_singleton.dart';
-export 'gl_program.dart';
+export 'glsl_shader.dart';
 export 'index_buffer.dart';
 export 'obj_loader.dart';
 export 'scene.dart';
