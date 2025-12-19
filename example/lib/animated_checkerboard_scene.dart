@@ -88,6 +88,20 @@ class AnimatedCheckerBoardScene extends Scene {
     return hsvColor.toColor();
   }
 
+  double getCyclingScale({
+    required double timeInSeconds,
+    double cycleDurationSeconds =
+    10.0, // Default to 10 seconds for a full cycle
+    double saturation = 1.0,
+    double value = 1.0,
+  }) {
+    // Normalize time to a value between 0.0 and 1.0 based on cycleDuration
+    final double normalizedTime =
+        (timeInSeconds % cycleDurationSeconds) / cycleDurationSeconds;
+
+    return normalizedTime * 25;
+  }
+
   @override
   void drawScene() {
     gl.clearColor(1.0, 1.0, 1.0, 1.0);
@@ -104,19 +118,22 @@ class AnimatedCheckerBoardScene extends Scene {
 
     DateTime now = DateTime.now();
     double timeInSeconds = now.millisecondsSinceEpoch / 1000.0;
-    Color cycleColor = getCyclingColor(
+    color1 = getCyclingColor(
       timeInSeconds: timeInSeconds,
       cycleDurationSeconds: cycleDuration,
     );
-    color1 = cycleColor;
 
-    Color cycleColor2 = getCyclingColor(
+    color2 = getCyclingColor(
       timeInSeconds: timeInSeconds + 1,
       cycleDurationSeconds: cycleDuration,
     );
-    color2 = cycleColor2;
 
-    // TODO: Animate the scale from 1 - 100
+    patternScale= getCyclingScale(
+      timeInSeconds: timeInSeconds,
+      cycleDurationSeconds: cycleDuration,
+    );
+
+
 
     mvPushMatrix();
     drawVBO(pMatrix, mvMatrix);

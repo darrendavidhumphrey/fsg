@@ -13,7 +13,7 @@ and the Flutter guide for
 
 ## Getting started
 # FSG - Flutter Scene Graph
-A lightweight package for integrating interactive 3D content into your flutter apps. FSG is a layer on top of the the flutter_angle package.
+A lightweight package for integrating interactive 3D content into your flutter apps. FSG is a layer on top of the flutter_angle package.
 ## Why Does This Package Exist?
 As of 2025, Flutter STILL has no officially sanctioned method to integrate performant, cross-platform interactive 3D content into flutter apps.
 While Flutter_angle provides a low level API conformant with OpenGL ES, there is still quite a lot of additional code required to create interactive 3D content.
