@@ -7,17 +7,19 @@ import 'package:vector_math/vector_math_64.dart' hide Colors;
 import 'float32_array_filler.dart';
 
 /// Represents the possible components a vertex can have.
-/// Each component is associated with an OpenGL attribute location.
+/// Each component is associated with a specific, constant OpenGL attribute location.
 enum VertexComponent {
-  position(3, ShaderList.v3Attrib), // Location 0, 3 floats,
-  normal(3, ShaderList.n3Attrib), // Location 1, 3 floats,
-  texCoord(2, ShaderList.t2Attrib), // Location 2, 2 floats
-  color(4, ShaderList.c4Attrib); // Location 3, 4 floats (RGBA)
+  position(3, ShaderList.v3Attrib, 0), // Location 0, 3 floats
+  normal(3, ShaderList.n3Attrib, 1), // Location 1, 3 floats
+  texCoord(2, ShaderList.t2Attrib, 2), // Location 2, 2 floats
+  color(4, ShaderList.c4Attrib, 3); // Location 3, 4 floats (RGBA)
 
   final int size; // Number of float components (e.g., 3 for vec3)
   final String shaderAttributeName;
+  final int attributeLocation;
 
-  const VertexComponent(this.size, this.shaderAttributeName);
+  const VertexComponent(
+      this.size, this.shaderAttributeName, this.attributeLocation);
 
   /// Get the total size in bytes for this component.
   int get byteSize => size * Float32List.bytesPerElement;
@@ -27,144 +29,103 @@ enum VertexComponent {
 /// This allows combining multiple components using bitwise operations.
 class VertexComponentFlags {
   static const int none = 0;
-  static const int position = 0;
-  static const int normal = (1 << 1);
-  static const int texCoord = (1 << 2);
-  static const int color = (1 << 3);
+  static const int position = 1 << 0;
+  static const int normal = 1 << 1;
+  static const int texCoord = 1 << 2;
+  static const int color = 1 << 3;
 
   final int value;
 
   const VertexComponentFlags(this.value);
 
-  // Helper method to check if a flag is included
   bool contains(int other) {
     return (value & other) == other;
   }
 }
 
 class VertexBuffer {
-  Buffer? _vboId; // OpenGL Vertex Buffer Object ID
-  RenderingContext? _gl;
-  bool _isInitialized = false;
-
+  final RenderingContext _gl;
+  final Buffer _vboId;
   final VertexComponentFlags enabledComponents;
+
   int _activeVertexCount = 0;
-  int _allocatedVertexCount = 0;
-  int get allocatedVertexCount => _allocatedVertexCount;
+  int _capacity = 0;
+  final int _stride; // Total bytes per vertex
+  final int _componentCount; // Number of float components per vertex
 
   int get activeVertexCount => _activeVertexCount;
-  late int _stride; // Total bytes per vertex
+  int get capacity => _capacity;
   int get stride => _stride;
-
-  late int _componentCount; // Number of float components per vertex
   int get componentCount => _componentCount;
 
   Float32Array? vertexData;
 
-  /// Constructor for creating an OpenGLVertexBuffer.
-  ///
-  /// [enabledComponents]: A bitmask of [VertexComponentFlags] to specify which components are included.
-  VertexBuffer({required this.enabledComponents}) {
-    _stride = _calculateStride(enabledComponents);
-    _componentCount = _calculateComponentCount(enabledComponents);
-    clearVertexData();
-  }
+  VertexBuffer(this._gl, {required this.enabledComponents})
+      : _vboId = _gl.createBuffer(),
+        _stride = _calculateStride(enabledComponents),
+        _componentCount = _calculateComponentCount(enabledComponents);
 
-  VertexBuffer.v3c4()
-    : this(
-        enabledComponents: VertexComponentFlags(
-          VertexComponentFlags.position | VertexComponentFlags.color,
-        ),
-      );
+  VertexBuffer.v3c4(RenderingContext gl)
+      : this(gl,
+            enabledComponents: const VertexComponentFlags(
+              VertexComponentFlags.position | VertexComponentFlags.color,
+            ));
 
-  VertexBuffer.v3t2()
-    : this(
-        enabledComponents: VertexComponentFlags(
-          VertexComponentFlags.position | VertexComponentFlags.texCoord,
-        ),
-      );
+  VertexBuffer.v3t2(RenderingContext gl)
+      : this(gl,
+            enabledComponents: const VertexComponentFlags(
+              VertexComponentFlags.position | VertexComponentFlags.texCoord,
+            ));
 
-  VertexBuffer.v3n3()
-    : this(
-        enabledComponents: VertexComponentFlags(
-          VertexComponentFlags.position | VertexComponentFlags.normal,
-        ),
-      );
+  VertexBuffer.v3n3(RenderingContext gl)
+      : this(gl,
+            enabledComponents: const VertexComponentFlags(
+              VertexComponentFlags.position | VertexComponentFlags.normal,
+            ));
 
-  VertexBuffer.v3t2n3()
-    : this(
-        enabledComponents: VertexComponentFlags(
-          VertexComponentFlags.position |
-              VertexComponentFlags.normal |
-              VertexComponentFlags.texCoord,
-        ),
-      );
+  VertexBuffer.v3t2n3(RenderingContext gl)
+      : this(gl,
+            enabledComponents: const VertexComponentFlags(
+              VertexComponentFlags.position |
+                  VertexComponentFlags.normal |
+                  VertexComponentFlags.texCoord,
+            ));
 
   void setActiveVertexCount(int count) {
-    assert(count <= _allocatedVertexCount);
+    assert(count <= _capacity);
     _activeVertexCount = count;
 
     if ((_activeVertexCount > 0) && (vertexData != null)) {
-      _gl!.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
-      _gl!.bufferData(WebGL.ARRAY_BUFFER, vertexData, WebGL.STATIC_DRAW);
+      _gl.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
+      _gl.bufferData(WebGL.ARRAY_BUFFER, vertexData, WebGL.STATIC_DRAW);
     }
   }
 
   Float32Array? requestBuffer(int newVertexCount) {
-    bool needsToGrow = (newVertexCount > _allocatedVertexCount);
+    final bool needsReallocation =
+        newVertexCount > _capacity || (newVertexCount < _capacity / 2);
 
-    bool needsToShrink =
-        (vertexData != null) && (newVertexCount < _allocatedVertexCount / 2);
+    if (needsReallocation) {
+      vertexData?.dispose();
+      vertexData = newVertexCount > 0
+          ? Float32Array(newVertexCount * _componentCount)
+          : null;
+      _capacity = newVertexCount;
 
-    bool needsToFreeBuffer =
-        (needsToGrow || needsToShrink) && (vertexData != null);
-
-    if (needsToFreeBuffer) {
-      vertexData!.dispose();
-    }
-    bool needsToAlloc = (needsToGrow || needsToShrink);
-
-    if (needsToAlloc) {
-      if (newVertexCount > 0) {
-        vertexData = Float32Array(newVertexCount * _componentCount);
-      } else {
-        vertexData = null;
+      if (_activeVertexCount > _capacity) {
+        _activeVertexCount = _capacity;
       }
-    }
-    _allocatedVertexCount = newVertexCount;
-
-    // Ensure vertices stay in range when the buffer shrinks
-    if (needsToShrink) {
-      _activeVertexCount = newVertexCount;
     }
 
     return vertexData;
   }
 
-  void clearVertexData() {
-    _activeVertexCount = 0;
-    if (vertexData != null) {
-      vertexData!.dispose();
-    }
+  void dispose() {
+    _gl.deleteBuffer(_vboId);
+    vertexData?.dispose();
     vertexData = null;
   }
 
-  void init(RenderingContext gl) {
-    assert(!_isInitialized);
-    _gl = gl;
-    _vboId = _gl!.createBuffer();
-
-    _isInitialized = true;
-  }
-
-  void dispose() {
-    if (_vboId != null) {
-      _gl!.deleteBuffer(_vboId!);
-    }
-    clearVertexData();
-  }
-
-  /// Calculates the total stride (bytes per vertex) based on enabled components.
   static int _calculateStride(VertexComponentFlags flags) {
     int calculatedStride = 0;
     if (flags.contains(VertexComponentFlags.position)) {
@@ -199,94 +160,78 @@ class VertexBuffer {
     return count;
   }
 
-  // Enable the vertex components that are enabled
   void enableComponents() {
-    // Configure vertex attribute pointers based on enabled components
-    int offset = 0; // Current byte offset into the vertex data
-
-    // Dynamically assign attribute positions based on which attributes are present
-    // NOTE: This code assumes that shaders always declare attributes in the same order
-
-    int attribPosition = 0;
+    int offset = 0;
 
     if (enabledComponents.contains(VertexComponentFlags.position)) {
-      _gl!.enableVertexAttribArray(attribPosition);
-      _gl!.vertexAttribPointer(
-        attribPosition,
-        VertexComponent.position.size,
-        WebGL.FLOAT,
-        false,
-        _stride, // Total bytes per vertex
-        offset, // Byte offset for this attribute
-      );
-
-      offset += VertexComponent.position.byteSize;
-      attribPosition++;
-    }
-
-    if (enabledComponents.contains(VertexComponentFlags.texCoord)) {
-      _gl!.enableVertexAttribArray(attribPosition);
-
-      _gl!.vertexAttribPointer(
-        attribPosition,
-        VertexComponent.texCoord.size,
+      final comp = VertexComponent.position;
+      _gl.enableVertexAttribArray(comp.attributeLocation);
+      _gl.vertexAttribPointer(
+        comp.attributeLocation,
+        comp.size,
         WebGL.FLOAT,
         false,
         _stride,
         offset,
       );
-      offset += VertexComponent.texCoord.byteSize;
-      attribPosition++;
+      offset += comp.byteSize;
     }
 
     if (enabledComponents.contains(VertexComponentFlags.normal)) {
-      _gl!.enableVertexAttribArray(attribPosition);
-
-      _gl!.vertexAttribPointer(
-        attribPosition,
-        VertexComponent.normal.size,
+      final comp = VertexComponent.normal;
+      _gl.enableVertexAttribArray(comp.attributeLocation);
+      _gl.vertexAttribPointer(
+        comp.attributeLocation,
+        comp.size,
         WebGL.FLOAT,
         false,
         _stride,
         offset,
       );
-      offset += VertexComponent.normal.byteSize;
-      attribPosition++;
+      offset += comp.byteSize;
     }
 
-    if (enabledComponents.contains(VertexComponentFlags.color)) {
-      _gl!.enableVertexAttribArray(attribPosition);
-      _gl!.vertexAttribPointer(
-        attribPosition++,
-        VertexComponent.color.size,
-        WebGL.FLOAT, // Colors are floats (0.0-1.0)
+    if (enabledComponents.contains(VertexComponentFlags.texCoord)) {
+      final comp = VertexComponent.texCoord;
+      _gl.enableVertexAttribArray(comp.attributeLocation);
+      _gl.vertexAttribPointer(
+        comp.attributeLocation,
+        comp.size,
+        WebGL.FLOAT,
         false,
         _stride,
         offset,
       );
+      offset += comp.byteSize;
+    }
 
-      offset += VertexComponent.color.byteSize;
-      attribPosition++;
+    if (enabledComponents.contains(VertexComponentFlags.color)) {
+      final comp = VertexComponent.color;
+      _gl.enableVertexAttribArray(comp.attributeLocation);
+      _gl.vertexAttribPointer(
+        comp.attributeLocation,
+        comp.size,
+        WebGL.FLOAT,
+        false,
+        _stride,
+        offset,
+      );
+      offset += comp.byteSize;
     }
   }
 
   void disableComponents() {
-    int attribPosition = 0;
     if (enabledComponents.contains(VertexComponentFlags.position)) {
-      _gl!.disableVertexAttribArray(attribPosition);
-      attribPosition++;
-    }
-    if (enabledComponents.contains(VertexComponentFlags.texCoord)) {
-      _gl!.disableVertexAttribArray(attribPosition);
-      attribPosition++;
+      _gl.disableVertexAttribArray(VertexComponent.position.attributeLocation);
     }
     if (enabledComponents.contains(VertexComponentFlags.normal)) {
-      _gl!.disableVertexAttribArray(attribPosition);
-      attribPosition++;
+      _gl.disableVertexAttribArray(VertexComponent.normal.attributeLocation);
+    }
+    if (enabledComponents.contains(VertexComponentFlags.texCoord)) {
+      _gl.disableVertexAttribArray(VertexComponent.texCoord.attributeLocation);
     }
     if (enabledComponents.contains(VertexComponentFlags.color)) {
-      _gl!.disableVertexAttribArray(attribPosition);
-      attribPosition++;
+      _gl.disableVertexAttribArray(VertexComponent.color.attributeLocation);
     }
   }
 
@@ -310,13 +255,13 @@ class VertexBuffer {
   }
 
   void bindVbo() {
-    _gl!.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
+    _gl.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
   }
 
   void drawSetup() {
-    _gl!.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
+    _gl.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
     enableComponents();
-    _gl!.activeTexture(WebGL.TEXTURE0);
+    _gl.activeTexture(WebGL.TEXTURE0);
   }
 
   void drawTeardown() {
@@ -325,7 +270,7 @@ class VertexBuffer {
 
   void drawTriangles() {
     if (activeVertexCount > 0) {
-      _gl!.drawArrays(WebGL.TRIANGLES, 0, activeVertexCount);
+      _gl.drawArrays(WebGL.TRIANGLES, 0, activeVertexCount);
     }
   }
 }

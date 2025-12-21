@@ -63,10 +63,7 @@ class BitmapText {
   void rebuild(RenderingContext gl, DateTime now) {
     rebuildQuads();
 
-    if (vbo == null) {
-      vbo = VertexBuffer.v3t2();
-      vbo!.init(gl);
-    }
+    vbo ??= VertexBuffer.v3t2(gl);
 
     int vertexCount = _text.length * 6; // Two triangles per character quad
 

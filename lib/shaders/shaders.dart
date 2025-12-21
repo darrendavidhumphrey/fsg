@@ -19,9 +19,9 @@ String flatFragmentShader = '''
           }
         ''';
 String flatVertexShader = '''
-          #version 300 es
-          in vec3 aVertexPosition;
-          in vec4 aVertexColor;
+          #version 300 es       
+          layout(location = 0) in vec3 aVertexPosition;
+          layout (location = 3) in vec4 aVertexColor; 
 
           uniform mat4 uMVMatrix;
           uniform mat4 uPMatrix;
@@ -50,8 +50,8 @@ void main(void) {
 
 String texturedVertexShader = '''
 #version 300 es
-in vec3 aVertexPosition;
-in vec2 aTextureCoord;
+layout(location = 0) in vec3 aVertexPosition;
+layout (location = 2) in vec2 aTextureCoord;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;

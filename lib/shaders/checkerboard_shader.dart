@@ -9,8 +9,8 @@ String _vertexShader = '''
 precision highp float;
 #endif
 
-in vec3 aVertexPosition;
-in vec2 aTextureCoord;
+layout(location = 0) in vec3 aVertexPosition;
+layout (location = 2) in vec2 aTextureCoord;
 
 uniform mat4 uMVMatrix;
 uniform mat4 uPMatrix;

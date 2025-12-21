@@ -8,9 +8,9 @@ const String _lightingVertexShader = """
 #version 300 es
 precision highp float; // You can adjust this based on your needs
 
-in vec3 aVertexPosition;
-in vec2 aTextureCoord;
-in vec3 aNormal; 
+layout(location = 0) in vec3 aVertexPosition;
+layout (location = 2) in vec2 aTextureCoord;
+layout (location = 1) in vec3 aNormal; 
 
 out vec2 vTextureCoord;
 out vec3 LightIntensity;

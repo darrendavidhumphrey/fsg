@@ -3,17 +3,16 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
 
 class OrbitViewScene extends Scene {
-  OrbitViewScene() :
-        exampleVbo = VertexBuffer.v3t2();
+  OrbitViewScene();
 
-  final VertexBuffer exampleVbo;
+  late VertexBuffer exampleVbo;
   final Size quadExtents = Size(500, 500);
 
 
   @override
   void init(BuildContext context, RenderingContext gl) {
     super.init(context, gl);
-    exampleVbo.init(gl);
+    exampleVbo = VertexBuffer.v3t2(gl);
 
     // TODO: make cube
     exampleVbo.makeTexturedUnitQuad(

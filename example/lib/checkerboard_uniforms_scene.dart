@@ -4,10 +4,9 @@ import 'package:fsg/fsg.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class CheckerBoardUniformsScene extends Scene {
-  CheckerBoardUniformsScene() :
-        exampleVbo = VertexBuffer.v3t2();
+  CheckerBoardUniformsScene();
 
-  final VertexBuffer exampleVbo;
+  late VertexBuffer exampleVbo;
   final Size quadExtents = Size(500, 500);
 
   Color color1 = Colors.blue;
@@ -17,8 +16,7 @@ class CheckerBoardUniformsScene extends Scene {
   @override
   void init(BuildContext context, RenderingContext gl) {
     super.init(context, gl);
-    exampleVbo.init(gl);
-
+    exampleVbo = VertexBuffer.v3t2(gl);
     exampleVbo.makeTexturedUnitQuad(
       Rect.fromLTWH(-quadExtents.width/2, -quadExtents.height/2, quadExtents.width, quadExtents.height),
       0.1,

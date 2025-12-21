@@ -14,9 +14,9 @@ precision highp float;
 #endif
 
 // Input vertex attributes
-layout(location = 0) in vec3 aVertexPosition; // Vertex position
-layout(location = 1) in vec2 aTextureCoord;   // Texture coordinates
-layout(location = 2) in vec3 aNormal;         // Vertex normal
+layout(location = 0) in vec3 aVertexPosition;
+layout (location = 2) in vec2 aTextureCoord;
+layout (location = 1) in vec3 aNormal; 
 
 // Output to fragment shader
 out vec2 vTextureCoord;   // Interpolated texture coordinate

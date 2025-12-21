@@ -28,10 +28,8 @@ class MeshFileRenderer {
     this.gl = gl;
 
     // TODO: These never get disposed
-    vbo = VertexBuffer.v3t2n3();
-    ibo = IndexBuffer();
-    vbo!.init(gl);
-    ibo!.init(gl);
+    vbo = VertexBuffer.v3t2n3(gl);
+    ibo = IndexBuffer(gl);
     _initialized = true;
   }
 
