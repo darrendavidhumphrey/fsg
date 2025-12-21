@@ -8,45 +8,29 @@ import 'package:vector_math/vector_math_64.dart';
 
 import 'float32_array_filler.dart';
 
-class VertexAttributeCombination {
-  int positionIndex;
-  int texCoordIndex;
-  int normalIndex;
+/// A record type representing a unique combination of position, texture coordinate,
+/// and normal indices. Used as a key to de-duplicate vertices.
+typedef _VertexCombo = (int, int, int);
 
-  VertexAttributeCombination(
-    this.positionIndex,
-    this.texCoordIndex,
-    this.normalIndex,
-  );
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is VertexAttributeCombination &&
-          runtimeType == other.runtimeType &&
-          positionIndex == other.positionIndex &&
-          texCoordIndex == other.texCoordIndex &&
-          normalIndex == other.normalIndex;
-
-  @override
-  int get hashCode => Object.hash(positionIndex, texCoordIndex, normalIndex);
-}
-
+/// Represents a single face from the OBJ file, which can be a triangle or a polygon.
 class Face {
-  List<int> corners; // A face is defined a list of corner indices
+  /// A list of vertex indices that form one or more triangles.
+  final List<int> corners;
 
+  /// Creates a Face and immediately triangulates it if it's a polygon.
   Face(List<int> faceCorners) : corners = toTriangleIndices(faceCorners);
 
-  // Wavefront objects can contain faces with more than 3 corners (n-gons).
-  // This function converts an n-gon into a list of triangles using a simple
-  // fan triangulation method, which works well for convex polygons.
+  /// Converts a polygon (an n-gon) into a list of triangles.
+  ///
+  /// This uses a simple fan triangulation method, which works well for convex
+  /// polygons but may produce incorrect results for concave ones.
   static List<int> toTriangleIndices(List<int> faceCorners) {
     if (faceCorners.length == 3) {
-      return faceCorners;
+      return faceCorners; // Already a triangle
     }
 
     List<int> result = [];
-
+    // Create a triangle fan from the first vertex.
     for (int i = 0; i < faceCorners.length - 2; i++) {
       result.add(faceCorners[0]);
       result.add(faceCorners[i + 1]);
@@ -56,11 +40,20 @@ class Face {
   }
 }
 
+/// Represents a sub-mesh within the OBJ model.
+///
+/// A mesh is a collection of faces that share the same material.
 class Mesh {
+  /// The name of the material applied to this mesh.
   String? materialName;
+
+  /// The flat list of vertex indices that form the triangles of this mesh.
   final List<int> triangleIndices = [];
+
+  /// The starting offset of this mesh's indices in the final Index Buffer Object.
   final int bufferOffset;
 
+  /// Creates a mesh from a list of faces.
   Mesh(List<Face> faces, {required this.bufferOffset, this.materialName}) {
     for (var face in faces) {
       triangleIndices.addAll(face.corners);
@@ -68,16 +61,27 @@ class Mesh {
   }
 }
 
+/// Represents a 3D model loaded from a Wavefront OBJ file.
+///
+/// This class handles parsing the OBJ file content, de-duplicating vertices,
+/// building the vertex and index data, and organizing the model into meshes
+/// based on the materials defined in the file.
 class WavefrontObjModel {
+  /// The vertex buffer containing the unique, interleaved vertex data for the model.
   late final VertexBuffer vertexBuffer;
+
+  /// A list of sub-meshes, each corresponding to a different material.
   List<Mesh> meshes = [];
+
+  /// The rendering context used to create the vertex buffer.
   final RenderingContext gl;
 
-  // State for parsing
+  // Internal state for parsing.
   List<Face> _currentMeshFaces = [];
   String _currentMaterialName = 'defaultMaterial';
   int _iboOffset = 0;
 
+  /// Finalizes the current mesh being parsed and adds it to the `meshes` list.
   void _finalizeCurrentMesh() {
     if (_currentMeshFaces.isNotEmpty) {
       final newMesh = Mesh(
@@ -91,15 +95,24 @@ class WavefrontObjModel {
     }
   }
 
+  /// Parses the OBJ file content from a string.
+  ///
+  /// This method uses an efficient two-pass approach:
+  /// 1. A pre-scan pass counts the number of unique vertices to pre-allocate the
+  ///    [VertexBuffer] with the exact required size.
+  /// 2. The main pass parses all vertex attributes, populates the vertex buffer,
+  ///    builds the face indices, and groups them into meshes.
   void loadFromString(String objFileContent) {
+    // Temporary lists to hold the raw attribute data from the file.
     List<Vector3> tempPositions = [];
     List<Vector2> tempTextureCoordinates = [];
     List<Vector3> tempNormals = [];
 
-    HashMap<VertexAttributeCombination, int> uniqueVertexMap = HashMap();
+    HashMap<_VertexCombo, int> uniqueVertexMap = HashMap();
     int nextAvailableIndex = 0;
 
-    // Pre-scan to determine the number of unique vertices needed.
+    // --- PRE-SCAN PASS ---
+    // Pre-scan the file to determine the exact number of unique vertices needed.
     // This is more efficient than incrementally growing the buffer.
     List<String> lines = LineSplitter().convert(objFileContent);
     for (String line in lines) {
@@ -108,19 +121,22 @@ class WavefrontObjModel {
         for (int i = 1; i < parts.length; i++) {
           List<String> indicesStr = parts[i].split('/');
           if (indicesStr.length == 3) {
-            final combo = VertexAttributeCombination(
-              int.parse(indicesStr[0]) - 1,
-              int.parse(indicesStr[1]) - 1,
-              int.parse(indicesStr[2]) - 1,
+            final combo = (
+              int.parse(indicesStr[0]) - 1, // pos
+              int.parse(indicesStr[1]) - 1, // tex
+              int.parse(indicesStr[2]) - 1, // norm
             );
+            // If this combination of attributes is new, assign it a new index.
             uniqueVertexMap.putIfAbsent(combo, () => nextAvailableIndex++);
           }
         }
       }
     }
 
-    // Allocate the vertex buffer with the final size.
-    vertexBuffer = VertexBuffer.v3t2n3(gl); // Assumes a global or passed-in GL context
+    // --- MAIN PARSING PASS ---
+
+    // Allocate the vertex buffer with the final, correct size.
+    vertexBuffer = VertexBuffer.v3t2n3(gl);
     final vboData = vertexBuffer.requestBuffer(uniqueVertexMap.length)!;
     final filler = Float32ArrayFiller(vboData);
 
@@ -157,24 +173,23 @@ class WavefrontObjModel {
         for (int i = 1; i < parts.length; i++) {
           List<String> indicesStr = parts[i].split('/');
           if (indicesStr.length == 3) {
-            final currentCombination = VertexAttributeCombination(
-              int.parse(indicesStr[0]) - 1,
-              int.parse(indicesStr[1]) - 1,
-              int.parse(indicesStr[2]) - 1,
+            final currentCombination = (
+              int.parse(indicesStr[0]) - 1, // pos
+              int.parse(indicesStr[1]) - 1, // tex
+              int.parse(indicesStr[2]) - 1, // norm
             );
 
-            if (!uniqueVertexMap.containsKey(currentCombination)) {
+            int vertexIndex = uniqueVertexMap.putIfAbsent(currentCombination, () {
               final newIndex = nextAvailableIndex++;
-              uniqueVertexMap[currentCombination] = newIndex;
-
-              // Write vertex data directly to the Float32Array
+              // This is a new, unique vertex. Write its data to the buffer.
               filler.addV3T2N3(
-                tempPositions[currentCombination.positionIndex],
-                tempTextureCoordinates[currentCombination.texCoordIndex],
-                tempNormals[currentCombination.normalIndex],
+                tempPositions[currentCombination.$1],
+                tempTextureCoordinates[currentCombination.$2],
+                tempNormals[currentCombination.$3],
               );
-            }
-            faceCorners.add(uniqueVertexMap[currentCombination]!);
+              return newIndex;
+            });
+            faceCorners.add(vertexIndex);
           }
         }
         _currentMeshFaces.add(Face(faceCorners));
@@ -187,17 +202,21 @@ class WavefrontObjModel {
     vertexBuffer.setActiveVertexCount(uniqueVertexMap.length);
   }
 
+  /// Creates a model and initializes it with the rendering context.
   WavefrontObjModel(this.gl);
 
-  /// Creates a [WavefrontObjModel] from an asset file.
-  static Future<WavefrontObjModel> fromAsset(String assetPath,RenderingContext gl) async {
+  /// Creates a [WavefrontObjModel] by loading and parsing a file from the
+  /// application's asset bundle.
+  static Future<WavefrontObjModel> fromAsset(
+      String assetPath, RenderingContext gl) async {
     try {
       final objFileContent = await rootBundle.loadString(assetPath);
       final objModel = WavefrontObjModel(gl);
       objModel.loadFromString(objFileContent);
       return objModel;
-    } catch (e) {
-      throw Exception('Failed to load OBJ asset from "$assetPath": $e');
+    } catch (e, s) {
+      // Re-throw with more context for easier debugging.
+      throw Exception('Failed to load OBJ asset from "$assetPath": $e\n$s');
     }
   }
 }

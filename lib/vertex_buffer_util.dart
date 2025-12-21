@@ -72,14 +72,14 @@ void addTexturedTriFan(Float32ArrayFiller filler,Polyline outline,bool generateN
   Vector3 normal = Vector3.zero();
 
   if (outline.planeIsValid) {
-    normal = outline.plane!.normal;
+    normal = outline.plane.normal;
   }
 
-  List<Vector2> bounds = outline.getBounds2D();
-  double w = bounds[1].x - bounds[0].x;
-  double h = bounds[1].y - bounds[0].y;
-  double x = bounds[0].x;
-  double y = bounds[0].y;
+  final bounds = outline.getBounds2D();
+  double w = bounds.max.x - bounds.min.x;
+  double h = bounds.max.y - bounds.min.y;
+  double x = bounds.min.x;
+  double y = bounds.min.y;
 
   for (int j=0; j < numTris; j++) {
     Vector3 v1 = outline.getVector3(j+1);
@@ -171,4 +171,3 @@ void addTexturedTriFan(Float32ArrayFiller filler,Polyline outline,bool generateN
   }
 
 */
-

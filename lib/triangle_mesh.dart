@@ -178,11 +178,11 @@ class TriangleMesh {
   int addOutlineAsTriFan(Polyline outline,int currentTriangle) {
     int numTris = outline.length-2;
 
-    List<Vector2> bounds = outline.getBounds2D();
-    double w = bounds[1].x - bounds[0].x;
-    double h = bounds[1].y - bounds[0].y;
-    double x = bounds[0].x;
-    double y = bounds[0].y;
+    final bounds = outline.getBounds2D();
+    double w = bounds.max.x - bounds.min.x;
+    double h = bounds.max.y - bounds.min.y;
+    double x = bounds.min.x;
+    double y = bounds.min.y;
 
     Vector3 v0 = outline.getVector3(0);
     for (int i=0; i < numTris; i++) {
@@ -207,11 +207,11 @@ class TriangleMesh {
   int addOutlineAsReverseTriFan(Polyline outline,Vector3 normal,int currentTriangle,Vector3 depth) {
     int numTris = outline.length-2;
 
-    List<Vector2> bounds = outline.getBounds2D();
-    double w = bounds[1].x - bounds[0].x;
-    double h = bounds[1].y - bounds[0].y;
-    double x = bounds[0].x;
-    double y = bounds[0].y;
+    final bounds = outline.getBounds2D();
+    double w = bounds.max.x - bounds.min.x;
+    double h = bounds.max.y - bounds.min.y;
+    double x = bounds.min.x;
+    double y = bounds.min.y;
 
     Vector3 v0 = outline.getVector3(0);
     v0 += depth;

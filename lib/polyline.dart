@@ -3,75 +3,87 @@ import 'dart:math';
 import 'package:fsg/util.dart';
 import 'package:vector_math/vector_math_64.dart';
 
+/// An immutable class representing a 3D polyline (a connected sequence of line segments).
+///
+/// This class assumes the vertices form a closed, co-planar polygon. Its methods,
+/// such as `containsPoint`, are based on this assumption.
 class Polyline {
-  late Float32List vertices;
-  int get length => vertices.length ~/ 3;
+  /// The raw vertex data, stored as a flat list of coordinates (x, y, z, ...).
+  final Float32List _vertices;
 
-  Plane? plane;
-  bool planeIsValid = false;
-  Vector3? get normal {
-    if (planeIsValid) {
-      return plane!.normal;
-    }
-    return null;
+  /// The number of vertices in the polyline.
+  int get length => _vertices.length ~/ 3;
+
+  /// The plane on which the polyline is defined.
+  /// This is calculated once at construction time.
+  late final Plane plane;
+
+  /// A flag indicating whether the calculated plane is valid.
+  /// A plane is invalid if the polyline has fewer than 3 vertices or if its
+  /// first three vertices are collinear.
+  late final bool planeIsValid;
+
+  /// The normal vector of the polyline's plane. Returns null if the plane is invalid.
+  Vector3? get normal => planeIsValid ? plane.normal : null;
+
+  /// A read-only view of the raw vertex data.
+  Float32List get vertices => _vertices;
+
+  /// Internal constructor for creating a Polyline from a vertex list.
+  /// This is the single point where the plane is calculated.
+  Polyline._internal(this._vertices) {
+    _calculatePlane();
   }
 
-  Polyline.fromVector2(List<Vector2> points,{bool computePlane=true}) {
-    vertices = Float32List(points.length * 3);
-    for (int i = 0, j = 0; i < points.length; i++, j += 3) {
-      vertices[j] = points[i].x;
-      vertices[j + 1] = points[i].y;
-      vertices[j + 2] = 0;
-    }
-    if (computePlane) {
-      setPlane();
-    }
-  }
+  /// Creates a Polyline from a list of 2D points, assuming they lie on the XY plane (z=0).
+  Polyline.fromVector2(List<Vector2> points)
+      : this._internal(Float32List.fromList(
+          points.expand((v) => [v.x, v.y, 0.0]).toList(growable: false),
+        ));
 
-  Polyline.fromVector3(List<Vector3> points,{bool computePlane=true}) {
-    vertices = Float32List(points.length * 3);
-    for (int i = 0, j = 0; i < points.length; i++, j += 3) {
-      vertices[j] = points[i].x;
-      vertices[j + 1] = points[i].y;
-      vertices[j + 2] = points[i].z;
-    }
-    if (computePlane) {
-      setPlane();
-    }
-  }
+  /// Creates a Polyline from a list of 3D points.
+  Polyline.fromVector3(List<Vector3> points)
+      : this._internal(Float32List.fromList(
+          points.expand((v) => [v.x, v.y, v.z]).toList(growable: false),
+        ));
 
-  Polyline.fromPolyline(Polyline other) {
-    vertices = Float32List(other.vertices.length);
-    for (int i = 0; i < other.vertices.length; i++) {
-      vertices[i] = other.vertices[i];
-    }
-    setPlane();
-  }
+  /// Creates a new polyline by copying another.
+  Polyline.fromPolyline(Polyline other)
+      : this._internal(Float32List.fromList(other._vertices));
 
-  // Copy from another polyline, but only copy the valid vertices that are
-  // provided in the validIndices list.
-  Polyline.fromDegenerate(Polyline other,List<int> validIndices) {
-    vertices = Float32List(validIndices.length * 3);
-    for (int i = 0,j=0; i < validIndices.length; i++,j+=3) {
-      int srcIndex = validIndices[i]*3;
-      vertices[j] = other.vertices[srcIndex];
-      vertices[j+1] = other.vertices[srcIndex+1];
-      vertices[j+2] = other.vertices[srcIndex+2];
-    }
-    setPlane();
-  }
+  /// Creates a new polyline by copying a subset of vertices from another polyline
+  /// based on a list of valid indices.
+  Polyline.fromIndices(Polyline other, List<int> validIndices)
+      : this._internal(Float32List.fromList(validIndices.expand((index) {
+          final srcIndex = index * 3;
+          return [
+            other._vertices[srcIndex],
+            other._vertices[srcIndex + 1],
+            other._vertices[srcIndex + 2],
+          ];
+        }).toList(growable: false)));
 
+  /// Gets the vertex at the specified [index] as a [Vector2], ignoring the z-coordinate.
   Vector2 getVector2(int index) {
     final int j = index * 3;
-    return Vector2(vertices[j], vertices[j + 1]);
+    return Vector2(_vertices[j], _vertices[j + 1]);
   }
 
+  /// Gets the vertex at the specified [index] as a [Vector3].
   Vector3 getVector3(int index) {
     final int j = index * 3;
-    return Vector3(vertices[j], vertices[j + 1], vertices[j + 2]);
+    return Vector3(_vertices[j], _vertices[j + 1], _vertices[j + 2]);
   }
 
-  void setPlane() {
+  /// Calculates the plane of the polyline from its first three vertices.
+  /// This method is called once during construction.
+  void _calculatePlane() {
+    if (length < 3) {
+      plane = Plane.components(0, 0, 1, 0); // Default plane
+      planeIsValid = false;
+      return;
+    }
+
     Plane? p = makePlaneFromVertices(
       getVector3(0),
       getVector3(1),
@@ -79,7 +91,6 @@ class Polyline {
     );
     if (p != null) {
       plane = p;
-
       planeIsValid = true;
     } else {
       plane = Plane.components(0, 0, 1, 0);
@@ -87,13 +98,16 @@ class Polyline {
     }
   }
 
+  /// Checks if a given 3D [point] is inside the area defined by the closed polyline.
+  ///
+  /// This method projects the point onto the polyline's plane and uses the cross-product
+  /// method to determine if it lies on the same side of all edges. Returns `false`
+  /// if the polyline's plane is not valid.
   bool containsPoint(Vector3 point) {
     if (!planeIsValid) {
       return false;
     }
 
-    // Check the orientation of the point relative to each edge using the 3D cross product.
-    // All cross products (edge x (point - start_of_edge)) should have the same direction relative to the polygon's normal.
     double? referenceDotProductSign;
 
     for (int i = 0; i < length; i++) {
@@ -103,36 +117,33 @@ class Polyline {
       final Vector3 edge = p2 - p1;
       final Vector3 pointToEdgeStart = point - p1;
 
-      // Compute the cross product in 3D
       final Vector3 crossProductResult = edge.cross(pointToEdgeStart);
+      final double dotProductWithNormal = crossProductResult.dot(plane.normal);
 
-      // Check the direction of the cross product relative to the polygon's normal.
-      // If the polygon is consistently wound (e.g., counter-clockwise) and the point is inside,
-      // all cross products will point "out of the plane" or "into the plane" consistently.
-      // The dot product with the polygon's normal determines this orientation.
-      final double dotProductWithNormal = crossProductResult.dot(plane!.normal);
-
+      // If the point is collinear with the edge, skip to the next edge.
       if (dotProductWithNormal.abs() < 1e-6) {
-        // The point is collinear with the edge or very close to it.
-        // For simplicity, we'll continue. You might want to check if it's on the segment itself.
         continue;
       }
 
       final double currentSign = dotProductWithNormal.sign;
 
+      // If the sign is different from previous edges, the point is outside.
       if (referenceDotProductSign == null) {
         referenceDotProductSign = currentSign;
       } else if (referenceDotProductSign != currentSign) {
-        // The point is on a different side of this edge compared to the previous ones.
-        // Therefore, it's outside the convex polygon.
         return false;
       }
     }
 
-    return true; // Point is inside the polygon
+    // If the point is on the same side of all edges, it is inside.
+    return true;
   }
 
-  List<int> testForDegenerateVertices() {
+  /// Returns a list of vertex indices that are not degenerate.
+  ///
+  /// A vertex is considered degenerate if it is too close to the next vertex
+  /// in the sequence.
+  List<int> getValidVertexIndices() {
     List<int> result = [];
     double minDistance = 0.0001;
 
@@ -147,70 +158,63 @@ class Polyline {
     return result;
   }
 
-  void transform(Vector3 origin3D, Vector3 xAxis, Vector3 yAxis) {
+  /// Returns a new, transformed [Polyline] by applying a 2D transformation
+  /// in 3D space, defined by an origin and basis vectors.
+  Polyline transform(Vector3 origin3D, Vector3 xAxis, Vector3 yAxis) {
+    final newVertices = Float32List(length * 3);
     for (int i = 0, j = 0; i < length; i++, j += 3) {
       Vector3 v = getVector3(i);
       v = origin3D + (xAxis * v.x) + (yAxis * v.y);
-      vertices[j] = v.x;
-      vertices[j + 1] = v.y;
-      vertices[j + 2] = v.z;
+      newVertices[j] = v.x;
+      newVertices[j + 1] = v.y;
+      newVertices[j + 2] = v.z;
     }
-
-    // Update plane equation
-    setPlane();
+    return Polyline._internal(newVertices);
   }
 
+  /// Calculates the intersection point of a [pickRay] with the plane of this polyline.
+  ///
+  /// Returns the intersection point if it is within the bounds of the polyline,
+  /// otherwise returns `null`.
   Vector3? rayIntersect(Ray pickRay) {
     if (!planeIsValid) {
       return null;
     }
 
-    // 1. Ray-Plane Intersection
-    // Calculate the 't' value for intersection with the plane of the polygon
-    final double denominator = plane!.normal.dot(pickRay.direction);
+    final double denominator = plane.normal.dot(pickRay.direction);
 
-    // If the ray is parallel to the plane, no intersection unless the ray is in the plane.
+    // Check if the ray is parallel to the plane.
     if (denominator.abs() < 1e-6) {
-      // Check if the ray is within the plane itself
-      final double originToPlaneDistance =
-          plane!.normal.dot(pickRay.origin) - plane!.constant;
-
-      if (originToPlaneDistance.abs() < 1e-6) {
-        // Ray is in the plane. We need to check if the origin is inside the polygon
-        // and if the ray direction points towards the inside. This is more complex
-        // and usually handled by other methods (e.g., shooting a 2D ray on the plane).
-        // For a simple hit, we'll assume no intersection for parallel rays for now.
-        return null;
-      }
-      return null; // Ray is parallel and not in the plane
+      return null;
     }
 
-    // Calculate t (distance along the ray)
     final double t =
-        -(plane!.normal.dot(pickRay.origin) - plane!.constant) / denominator;
+        -(plane.normal.dot(pickRay.origin) - plane.constant) / denominator;
 
-    // If t is negative, the intersection point is behind the ray origin.
+    // A negative t means the intersection is behind the ray's origin.
     if (t < 0) {
       return null;
     }
 
     final Vector3 intersectionPoint = pickRay.origin + pickRay.direction * t;
 
-    // 2. Point-in-Polygon Test (using the ConvexPolyline's containsPoint method)
+    // Finally, check if the intersection point is inside the polygon.
     if (containsPoint(intersectionPoint)) {
-      return intersectionPoint; // Ray hits the polyline
+      return intersectionPoint;
     } else {
-      return null; // Ray hits the plane but misses the polyline
+      return null;
     }
   }
 
-  List<Vector2> getBounds2D() {
+  /// Calculates the 2D bounding box of the polyline on the XY plane.
+  /// Returns a record containing the minimum and maximum corner points.
+  ({Vector2 min, Vector2 max}) getBounds2D() {
     double minX = double.infinity;
     double maxX = double.negativeInfinity;
     double minY = double.infinity;
     double maxY = double.negativeInfinity;
 
-    for (int i=0; i < length; i++) {
+    for (int i = 0; i < length; i++) {
       Vector2 v = getVector2(i);
       minX = min(minX, v.x);
       minY = min(minY, v.y);
@@ -218,6 +222,24 @@ class Polyline {
       maxY = max(maxY, v.y);
     }
 
-    return [Vector2(minX, minY), Vector2(maxX, maxY)];
+    return (min: Vector2(minX, minY), max: Vector2(maxX, maxY));
   }
+
+  /// Checks for value equality. Two [Polyline] instances are considered equal
+  /// if their vertex lists are identical.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! Polyline) return false;
+    if (_vertices.length != other._vertices.length) return false;
+
+    for (int i = 0; i < _vertices.length; i++) {
+      if (_vertices[i] != other._vertices[i]) return false;
+    }
+    return true;
+  }
+
+  /// Provides a hash code consistent with value equality.
+  @override
+  int get hashCode => Object.hashAll(_vertices);
 }
