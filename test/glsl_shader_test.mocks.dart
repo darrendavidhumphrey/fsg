@@ -139,6 +139,76 @@ class MockGlslShaderContext extends _i1.Mock implements _i3.GlslShaderContext {
     Invocation.method(#checkError, [label]),
     returnValueForMissingStub: null,
   );
+
+  @override
+  void uniform1f(_i2.UniformLocation? location, double? v0) =>
+      super.noSuchMethod(
+        Invocation.method(#uniform1f, [location, v0]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void uniform1i(_i2.UniformLocation? location, int? v0) => super.noSuchMethod(
+    Invocation.method(#uniform1i, [location, v0]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void uniform2f(_i2.UniformLocation? location, double? v0, double? v1) =>
+      super.noSuchMethod(
+        Invocation.method(#uniform2f, [location, v0, v1]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void uniform3f(
+    _i2.UniformLocation? location,
+    double? v0,
+    double? v1,
+    double? v2,
+  ) => super.noSuchMethod(
+    Invocation.method(#uniform3f, [location, v0, v1, v2]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void uniform4f(
+    _i2.UniformLocation? location,
+    double? v0,
+    double? v1,
+    double? v2,
+    double? v3,
+  ) => super.noSuchMethod(
+    Invocation.method(#uniform4f, [location, v0, v1, v2, v3]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void uniform4fv(_i2.UniformLocation? location, List<double>? value) =>
+      super.noSuchMethod(
+        Invocation.method(#uniform4fv, [location, value]),
+        returnValueForMissingStub: null,
+      );
+
+  @override
+  void uniformMatrix3fv(
+    _i2.UniformLocation? location,
+    bool? transpose,
+    List<double>? value,
+  ) => super.noSuchMethod(
+    Invocation.method(#uniformMatrix3fv, [location, transpose, value]),
+    returnValueForMissingStub: null,
+  );
+
+  @override
+  void uniformMatrix4fv(
+    _i2.UniformLocation? location,
+    bool? transpose,
+    List<double>? value,
+  ) => super.noSuchMethod(
+    Invocation.method(#uniformMatrix4fv, [location, transpose, value]),
+    returnValueForMissingStub: null,
+  );
 }
 
 /// A class which mocks [Program].

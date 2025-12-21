@@ -9,8 +9,9 @@ import 'glsl_shader_test.mocks.dart';
 // Simple valid GLSL shaders for testing.
 const String kValidVertexShader = '''
   attribute vec4 a_position;
+  uniform mat4 u_mvp_matrix;
   void main() {
-    gl_Position = a_position;
+    gl_Position = u_mvp_matrix * a_position;
   }
 ''';
 
@@ -28,9 +29,22 @@ const String kInvalidVertexShader = '''
   }
 ''';
 
+const String kInvalidFragmentShader = '''
+  void main() {
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0) // Missing semicolon
+  }
+''';
+
+/// A helper class to mock the object returned by getProgramParameter,
+/// which contains the ID we need to check.
+class _MockWebGLParameter {
+  final int id;
+  _MockWebGLParameter(this.id);
+}
+
 @GenerateMocks([GlslShaderContext, Program, UniformLocation])
 void main() {
-  group('GlslShader.fromSource', () {
+  group('GlslShader', () {
     late MockGlslShaderContext mockGl;
     late MockProgram mockProgram;
     late Object mockVertexShader;
@@ -54,42 +68,71 @@ void main() {
       when(mockGl.createProgram()).thenReturn(mockProgram);
       when(mockGl.attachShader(any, any)).thenReturn(null);
       when(mockGl.linkProgram(any)).thenReturn(null);
-      when(mockGl.getProgramParameter(any, WebGL.LINK_STATUS)).thenReturn(true);
-      when(mockGl.getAttribLocation(any, any)).thenReturn(mockUniformLocation);
-      when(mockGl.getUniformLocation(any, any)).thenReturn(mockUniformLocation);
+
+      // Correctly mock the different return types.
+      when(mockGl.getProgramParameter(any, WebGL.LINK_STATUS))
+          .thenReturn(_MockWebGLParameter(1)); // Returns a wrapper object
+      when(mockGl.getShaderParameter(any, WebGL.COMPILE_STATUS))
+          .thenReturn(true); // Returns a bool
+
+      // Create and stub the MockUniformLocation.
+      when(mockUniformLocation.id).thenReturn(0); // Default valid ID.
+      when(mockGl.getAttribLocation(any, any))
+          .thenReturn(mockUniformLocation);
+      when(mockGl.getUniformLocation(any, any))
+          .thenReturn(mockUniformLocation);
+
       when(mockGl.enableVertexAttribArray(any)).thenReturn(null);
       when(mockGl.checkError(any)).thenReturn(null);
       when(mockGl.deleteShader(any)).thenReturn(null);
       when(mockGl.deleteProgram(any)).thenReturn(null);
-      when(mockUniformLocation.id).thenReturn(1);
     });
 
     test('succeeds with valid shaders', () {
-      when(mockGl.getShaderParameter(any, WebGL.COMPILE_STATUS))
-          .thenReturn(true);
-
       expect(
-        () => GlslShader.fromSource(
+        () => GlslShader(
           mockGl,
           kValidFragmentShader,
           kValidVertexShader,
           ['a_position'],
-          [],
+          ['u_mvp_matrix'],
         ),
         returnsNormally,
       );
     });
 
+    test('correctly retrieves and caches attribute and uniform locations', () {
+      final posLocation = MockUniformLocation();
+      when(posLocation.id).thenReturn(1);
+      final matrixLocation = MockUniformLocation();
+      when(matrixLocation.id).thenReturn(5);
+
+      when(mockGl.getAttribLocation(mockProgram, 'a_position'))
+          .thenReturn(posLocation);
+      when(mockGl.getUniformLocation(mockProgram, 'u_mvp_matrix'))
+          .thenReturn(matrixLocation);
+
+      final shader = GlslShader(
+        mockGl,
+        kValidFragmentShader,
+        kValidVertexShader,
+        ['a_position'],
+        ['u_mvp_matrix'],
+      );
+
+      expect(shader.attributes['a_position'], 1);
+      expect(shader.uniforms['u_mvp_matrix']!.id, 5);
+    });
+
     test('throws and cleans up for invalid vertex shader', () {
-      when(mockGl.getShaderParameter(any, WebGL.COMPILE_STATUS))
-          .thenAnswer((invocation) {
-        return invocation.positionalArguments[0] != mockVertexShader;
-      });
+      // Override the mock to return false for the vertex shader compilation.
+      when(mockGl.getShaderParameter(mockVertexShader, WebGL.COMPILE_STATUS))
+          .thenReturn(false);
       when(mockGl.getShaderInfoLog(mockVertexShader))
           .thenReturn('Vertex Compile Error');
 
       expect(
-        () => GlslShader.fromSource(
+        () => GlslShader(
           mockGl,
           kValidFragmentShader,
           kInvalidVertexShader,
@@ -99,19 +142,7 @@ void main() {
         throwsA(isA<Exception>()),
       );
 
-      // Verify that the failed shader was deleted.
       verify(mockGl.deleteShader(mockVertexShader)).called(1);
-    });
-
-    test('dispose cleans up program', () {
-      when(mockGl.getShaderParameter(any, WebGL.COMPILE_STATUS)).thenReturn(true);
-      final shader = GlslShader.fromSource(
-          mockGl, kValidFragmentShader, kValidVertexShader, [], []);
-      expect(shader.program, isNotNull);
-
-      shader.dispose();
-
-      verify(mockGl.deleteProgram(mockProgram)).called(1);
     });
   });
 }

@@ -53,7 +53,7 @@ class BasicLightingShader extends GlslShader {
 
   BasicLightingShader(RenderingContext gl)
     : super(
-        gl,
+        RenderingContextWrapper(gl),
         _lightingFragmentShader,
         _lightingVertexShader,
         [

@@ -4,8 +4,8 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'logging.dart';
 
 /// Defines an abstract interface for the WebGL rendering context methods needed
-/// by the [GlslShader] class. This allows for easier testing by mocking this
-/// interface instead of the complex [RenderingContext].
+/// by the [GlslShader] class and its subclasses. This allows for easier testing
+/// by mocking this interface instead of the complex [RenderingContext].
 abstract class GlslShaderContext {
   dynamic createShader(int type);
   void shaderSource(dynamic shader, String source);
@@ -23,11 +23,20 @@ abstract class GlslShaderContext {
   UniformLocation getUniformLocation(Program program, String name);
   void enableVertexAttribArray(int index);
   void checkError(String label);
+
+  // Uniform methods needed by subclasses
+  void uniform1f(UniformLocation? location, double v0);
+  void uniform1i(UniformLocation? location, int v0);
+  void uniform2f(UniformLocation? location, double v0, double v1);
+  void uniform3f(UniformLocation? location, double v0, double v1, double v2);
+  void uniform4f(UniformLocation? location, double v0, double v1, double v2, double v3);
+  void uniform4fv(UniformLocation? location, List<double> value);
+  void uniformMatrix3fv(UniformLocation? location, bool transpose, List<double> value);
+  void uniformMatrix4fv(UniformLocation? location, bool transpose, List<double> value);
 }
 
 /// A concrete implementation of [GlslShaderContext] that wraps a real
-/// [RenderingContext] from the `flutter_angle` package. Your application will
-/// use this class at runtime.
+/// [RenderingContext]. Your application will use this class at runtime.
 class RenderingContextWrapper implements GlslShaderContext {
   final RenderingContext _gl;
 
@@ -36,25 +45,21 @@ class RenderingContextWrapper implements GlslShaderContext {
   @override
   dynamic createShader(int type) => _gl.createShader(type);
   @override
-  void shaderSource(dynamic shader, String source) =>
-      _gl.shaderSource(shader, source);
+  void shaderSource(dynamic shader, String source) => _gl.shaderSource(shader, source);
   @override
   void compileShader(dynamic shader) => _gl.compileShader(shader);
   @override
-  dynamic getShaderParameter(dynamic shader, int pname) =>
-      _gl.getShaderParameter(shader, pname);
+  dynamic getShaderParameter(dynamic shader, int pname) => _gl.getShaderParameter(shader, pname);
   @override
   String? getShaderInfoLog(dynamic shader) => _gl.getShaderInfoLog(shader);
   @override
   Program createProgram() => _gl.createProgram();
   @override
-  void attachShader(Program program, dynamic shader) =>
-      _gl.attachShader(program, shader);
+  void attachShader(Program program, dynamic shader) => _gl.attachShader(program, shader);
   @override
   void linkProgram(Program program) => _gl.linkProgram(program);
   @override
-  dynamic getProgramParameter(Program program, int pname) =>
-      _gl.getProgramParameter(program, pname);
+  dynamic getProgramParameter(Program program, int pname) => _gl.getProgramParameter(program, pname);
   @override
   String? getProgramInfoLog(Program program) => _gl.getProgramInfoLog(program);
   @override
@@ -62,16 +67,75 @@ class RenderingContextWrapper implements GlslShaderContext {
   @override
   void deleteProgram(Program program) => _gl.deleteProgram(program);
   @override
-  UniformLocation getAttribLocation(Program program, String name) =>
-      _gl.getAttribLocation(program, name);
+  UniformLocation getAttribLocation(Program program, String name) => _gl.getAttribLocation(program, name);
   @override
-  UniformLocation getUniformLocation(Program program, String name) =>
-      _gl.getUniformLocation(program, name);
+  UniformLocation getUniformLocation(Program program, String name) => _gl.getUniformLocation(program, name);
   @override
   void enableVertexAttribArray(int index) => _gl.enableVertexAttribArray(index);
   @override
   void checkError(String label) => _gl.checkError(label);
+
+  // Uniform methods
+  @override
+  void uniform1f(UniformLocation? location, double v0) {
+    if (location != null) {
+      _gl.uniform1f(location, v0);
+    }
+  }
+
+  @override
+  void uniform1i(UniformLocation? location, int v0) {
+    if (location != null) {
+      _gl.uniform1i(location, v0);
+    }
+  }
+
+  @override
+  void uniform2f(UniformLocation? location, double v0, double v1) {
+    if (location != null) {
+      _gl.uniform2f(location, v0, v1);
+    }
+  }
+
+  @override
+  void uniform3f(UniformLocation? location, double v0, double v1, double v2) {
+    if (location != null) {
+      _gl.uniform3f(location, v0, v1, v2);
+    }
+  }
+
+  @override
+  void uniform4f(
+      UniformLocation? location, double v0, double v1, double v2, double v3) {
+    if (location != null) {
+      _gl.uniform4f(location, v0, v1, v2, v3);
+    }
+  }
+
+  @override
+  void uniform4fv(UniformLocation? location, List<double> value) {
+    if (location != null) {
+      _gl.uniform4fv(location, Float32List.fromList(value));
+    }
+  }
+
+  @override
+  void uniformMatrix3fv(
+      UniformLocation? location, bool transpose, List<double> value) {
+    if (location != null) {
+      _gl.uniformMatrix3fv(location, transpose, Float32List.fromList(value));
+    }
+  }
+
+  @override
+  void uniformMatrix4fv(
+      UniformLocation? location, bool transpose, List<double> value) {
+    if (location != null) {
+      _gl.uniformMatrix4fv(location, transpose, Float32List.fromList(value));
+    }
+  }
 }
+
 
 /// A class that encapsulates a WebGL shader program.
 class GlslShader with LoggableClass {
@@ -87,26 +151,14 @@ class GlslShader with LoggableClass {
   Map<String, int> get attributes => UnmodifiableMapView(_attributes);
   Map<String, UniformLocation> get uniforms => UnmodifiableMapView(_uniforms);
 
-  /// Private constructor. Use the factory `fromSource`.
-  GlslShader._internal(
+  GlslShader(
     this.gl,
-    this.attributeNames,
-    this.uniformNames,
-    this._sourceHashCode,
-  );
-
-  /// Compiles shaders from source and creates a GlslShader instance.
-  static GlslShader fromSource(
-    GlslShaderContext gl,
     String fragSrc,
     String vertSrc,
-    List<String> attributeNames,
-    List<String> uniformNames,
-  ) {
-    final shader = GlslShader._internal(
-        gl, attributeNames, uniformNames, Object.hash(fragSrc, vertSrc));
-    shader._compileAndLink(fragSrc, vertSrc);
-    return shader;
+    this.attributeNames,
+    this.uniformNames,
+  ) : _sourceHashCode = Object.hash(fragSrc, vertSrc) {
+    _compileAndLink(fragSrc, vertSrc);
   }
 
   void _compileAndLink(String fragSrc, String vertSrc) {
@@ -122,7 +174,7 @@ class GlslShader with LoggableClass {
       gl.attachShader(p, fragShader);
       gl.linkProgram(p);
 
-      if (!(gl.getProgramParameter(p, WebGL.LINK_STATUS) as bool)) {
+      if (gl.getProgramParameter(p, WebGL.LINK_STATUS).id != 1) {
         throw Exception(
             'Shader program linking failed: ${gl.getProgramInfoLog(p) ?? ''}');
       }
@@ -143,7 +195,7 @@ class GlslShader with LoggableClass {
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
 
-    if (!(gl.getShaderParameter(shader, WebGL.COMPILE_STATUS) as bool)) {
+    if (gl.getShaderParameter(shader, WebGL.COMPILE_STATUS) != true) {
       final error =
           'Shader compilation failed (${type == WebGL.VERTEX_SHADER ? 'Vertex' : 'Fragment'}): ${gl.getShaderInfoLog(shader) ?? ''}';
       gl.deleteShader(shader);
@@ -187,9 +239,9 @@ class GlslShader with LoggableClass {
 
   @override
   int get hashCode => Object.hash(
-        gl,
-        _sourceHashCode,
-        Object.hashAll(attributeNames),
-        Object.hashAll(uniformNames),
-      );
+    gl,
+    _sourceHashCode,
+    Object.hashAll(attributeNames),
+    Object.hashAll(uniformNames),
+  );
 }

@@ -153,7 +153,7 @@ class OneLightShader extends GlslShader {
 
   OneLightShader(RenderingContext gl)
     : super(
-        gl,
+        RenderingContextWrapper(gl),
         _fragmentShader,
         _vertexShader,
         [

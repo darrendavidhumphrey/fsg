@@ -59,7 +59,7 @@ class CheckerBoardShader extends GlslShader {
   static String uPatternScale = "uPatternScale";
   CheckerBoardShader(RenderingContext gl)
       : super(
-    gl,
+    RenderingContextWrapper(gl),
     _fragmentShader,
     _vertexShader,
     [

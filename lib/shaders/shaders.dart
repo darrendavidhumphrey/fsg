@@ -121,7 +121,7 @@ class ShaderList {
   void init(RenderingContext gl) {
 
     v3c4 = GlslShader(
-      gl,
+      RenderingContextWrapper(gl),
       flatFragmentShader,
       flatVertexShader,
       [v3Attrib, c4Attrib],
@@ -131,7 +131,7 @@ class ShaderList {
     _shaders["v3c4"] = v3c4;
 
     v3t2 = GlslShader(
-      gl,
+      RenderingContextWrapper(gl),
       texturedFragmentShader,
       texturedVertexShader,
       [v3Attrib, t2Attrib],
@@ -141,7 +141,7 @@ class ShaderList {
     _shaders["v3t2"] = v3t2;
 
     v3t3n4 = GlslShader(
-      gl,
+      RenderingContextWrapper(gl),
       testFragmentShader,
       testVertexShader,
       [v3Attrib, t2Attrib, n3Attrib],

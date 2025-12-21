@@ -115,7 +115,7 @@ class GridShader extends GlslShader {
 
   GridShader(RenderingContext gl)
     : super(
-        gl,
+      RenderingContextWrapper(gl),
         _gridFragmentShader,
         _gridVertexShader,
         [ShaderList.v3Attrib, ShaderList.t2Attrib],
