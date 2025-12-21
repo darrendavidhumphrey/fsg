@@ -119,7 +119,6 @@ class ShaderList {
   final Map<String,GlslShader> _shaders = {};
 
   void init(RenderingContext gl) {
-
     v3c4 = GlslShader(
       RenderingContextWrapper(gl),
       flatFragmentShader,
@@ -158,10 +157,11 @@ class ShaderList {
     gl.useProgram(grid.program);
     _shaders["grid"] = grid;
 
+    print("BEFORE INITIALIZING ONE LIGHT!");
     oneLight = OneLightShader(gl);
     gl.useProgram(oneLight.program);
     _shaders["oneLight"] = oneLight;
-
+    print("AFTER INITIALIZING ONE LIGHT! Type is ${oneLight.runtimeType}");
     checkerBoard = CheckerBoardShader(gl);
     gl.useProgram(checkerBoard.program);
     _shaders["checkerBoard"] = checkerBoard;

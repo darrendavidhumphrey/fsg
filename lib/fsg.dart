@@ -30,6 +30,7 @@ export 'ui/scene_navigation_delegate.dart';
 export 'edge.dart';
 export 'float32_array_filler.dart';
 export 'logging.dart';
+export 'mesh_file_renderer.dart';
 export 'polyline.dart';
 export 'polyline_clipper.dart';
 export 'reference_box.dart';
