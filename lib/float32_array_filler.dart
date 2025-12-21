@@ -72,8 +72,8 @@ class Float32ArrayFiller {
   /// Adds a [Vector3] for position, a [Vector2] for texture coordinates, and a [Vector3] for the normal.
   void addV3T2N3(Vector3 v, Vector2 tc, Vector3 n) {
     addV3(v);
-    addV2(tc);
     addV3(n);
+    addV2(tc);
   }
 
   /// Adds a triangle defined by three vertices ([v1], [v2], [v3]) to the array,
