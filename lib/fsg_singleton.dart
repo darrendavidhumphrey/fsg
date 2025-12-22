@@ -8,11 +8,16 @@ import 'logging.dart';
 import 'bitmap_fonts/bitmap_font_manager.dart';
 import 'scene.dart';
 
+// Enum to manage the initialization state of the FSG singleton.
+enum _FsgState {
+  uninitialized,
+  glInitialized,
+  contextInitialized,
+}
+
 class FSG with LoggableClass {
   FlutterAngle angle = FlutterAngle();
-  bool isInitialized = false;
-  bool glIsInitialized = false;
-  bool contextInitialized = false;
+  _FsgState _state = _FsgState.uninitialized;
 
   static double renderToTextureSize = 4096;
   final Map<Scene, FlutterAngleTexture> scenes = {};
@@ -32,36 +37,43 @@ class FSG with LoggableClass {
 
   FSG._internal();
 
+  /// Initializes the core FlutterAngle engine.
+  /// This must be called once before any other operations.
   Future<bool> init() async {
-    if (!isInitialized) {
-      isInitialized = true;
-      await angle.init();
-      glIsInitialized = true;
-
-      return true;
+    if (_state != _FsgState.uninitialized) {
+      return false;
     }
-    return false;
+    await angle.init();
+    _state = _FsgState.glInitialized;
+    return true;
   }
 
-  Future<FlutterAngleTexture?> allocTexture(AngleOptions options,{double textureSize=4096}) async {
-    if (glIsInitialized) {
-      var newTexture = await angle.createTexture(options);
-      renderToTextureList.add(newTexture);
-      return newTexture;
+  /// Allocates a new FlutterAngleTexture with the given options.
+  Future<FlutterAngleTexture?> allocTexture(AngleOptions options,
+      {double textureSize = 4096}) async {
+    if (_state == _FsgState.uninitialized) {
+      logWarning("allocTexture called before FSG is initialized.");
+      return null;
     }
-    return null;
+    var newTexture = await angle.createTexture(options);
+    renderToTextureList.add(newTexture);
+    return newTexture;
   }
 
-  void initScene(BuildContext context, Scene scene) {
+  /// Initializes a [Scene] with its rendering context.
+  void initScene(Scene scene) {
     if (!scene.isInitialized) {
       scene.init(scene.renderToTextureId!.getContext());
     }
   }
+
+  /// Initializes platform-specific state, including the frame counter and the engine.
   void initPlatformState() {
-   frameCounter = FrameCounterModel();
-   init();
+    frameCounter = FrameCounterModel();
+    init();
   }
 
+  /// Initializes the default material used for rendering.
   void initDefaultMaterial() {
     Color defaultGrey = Colors.grey[200]!;
     Color defaultSpecular = Colors.black;
@@ -72,14 +84,36 @@ class FSG with LoggableClass {
     );
   }
 
+  /// Initializes shared context-specific resources like shaders and textures.
   void initContext(RenderingContext gl) {
-    if (!contextInitialized) {
-      textureManager.initializeGl(gl);
-      initDefaultMaterial();
+    if (_state == _FsgState.contextInitialized) {
+      return;
+    }
+    textureManager.initializeGl(gl);
+    initDefaultMaterial();
 
-      shaders.init(gl);
-      BitmapFontList().createDefaultFont();
-      contextInitialized = true;
+    shaders.init(gl);
+    BitmapFontList().createDefaultFont();
+    _state = _FsgState.contextInitialized;
+  }
+
+  /// Disposes all scenes, textures, shaders, and other GPU resources.
+  Future<void> dispose() async {
+    for (var scene in scenes.keys) {
+      scene.dispose();
+    }
+
+    // TODO: Dispose textures
+
+    scenes.clear();
+    renderToTextureList.clear();
+
+    shaders.dispose();
+    await textureManager.dispose();
+
+    // After disposing context-specific resources, we revert to the GL-initialized state.
+    if (_state == _FsgState.contextInitialized) {
+      _state = _FsgState.glInitialized;
     }
   }
 

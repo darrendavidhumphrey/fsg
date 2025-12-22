@@ -68,21 +68,21 @@ class MeshFileRenderer {
 
   /// Configures and enables the lighting shader for drawing.
   void enableLightingShader(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    var lightingShader = FSG().shaders.oneLight;
-    gl.useProgram(lightingShader.program);
-    ShaderList.setMatrixUniforms(lightingShader, pMatrix, mvMatrix);
+    var shader = FSG().shaders.getShader("oneLight");
+    gl.useProgram(shader.program);
+    ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
 
-    lightingShader.setLightPos(Vector3(40, 0, -200));
-    lightingShader.setNMatrix(Matrix3.identity());
-    lightingShader.setAmbientLight(Colors.grey[900]!);
-    lightingShader.setDiffuseLight(Colors.white);
-    lightingShader.setSpecularLight(Colors.white);
+    shader.setLightPos(Vector3(40, 0, -200));
+    shader.setNMatrix(Matrix3.identity());
+    shader.setAmbientLight(Colors.grey[900]!);
+    shader.setDiffuseLight(Colors.white);
+    shader.setSpecularLight(Colors.white);
   }
 
   /// Sets the material properties on the currently active shader.
   void setMaterial(String materialName) {
     GlMaterial material = FSG().materials.getMaterial(materialName);
-    OneLightShader shader = FSG().shaders.oneLight;
+    var shader = FSG().shaders.getShader("oneLight");
     shader.setMaterialAmbient(material.ambient);
     shader.setMaterialDiffuse(material.diffuse);
     shader.setMaterialSpecular(material.specular);

@@ -27,14 +27,14 @@ class CheckerBoardScene extends Scene {
   void dispose() {}
 
   void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    var shader = FSG().shaders.checkerBoard;
+    var shader = FSG().shaders.getShader("checkerBoard");
     gl.useProgram(shader.program);
     ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
     gl.enable(WebGL.DEPTH_TEST);
 
     shader.setPatternColor1(color1);
     shader.setPatternColor2(color2);
-    shader.setPatternScale(50);
+    shader.setPatternScale(50.0);
 
     exampleVbo.bind();
     exampleVbo.drawTriangles();

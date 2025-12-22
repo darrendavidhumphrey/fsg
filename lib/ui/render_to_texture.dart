@@ -81,7 +81,7 @@ class RenderToTextureState extends State<RenderToTexture>
                 if (textureId != null) {
                   bool firstPaint = !widget.scene.isInitialized;
                   if (firstPaint) {
-                    FSG().initScene(context, widget.scene);
+                    FSG().initScene(widget.scene);
 
                     logTrace(
                       "Start RenderToTexture Ticker for scene of type ${widget.scene.runtimeType}",

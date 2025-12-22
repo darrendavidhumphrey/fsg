@@ -27,7 +27,7 @@ class OrbitViewScene extends Scene {
   void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
 
     // TODO: Use different shader
-    var shader = FSG().shaders.v3t2;
+    var shader = FSG().shaders.getShader("v3t2");
     gl.useProgram(shader.program);
     ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
     gl.enable(WebGL.DEPTH_TEST);
