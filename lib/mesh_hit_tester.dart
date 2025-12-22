@@ -1,7 +1,20 @@
-import 'dart:math';
-
 import 'package:fsg/triangle_mesh.dart';
 import 'package:vector_math/vector_math_64.dart';
+
+/// A data class containing detailed information about a ray-mesh intersection.
+class TriangleMeshHitDetails {
+  final TriangleMesh mesh;
+  final Vector3 hitPoint;
+  final int triangleIndex;
+  final double distance;
+
+  late final Vector3 normal;
+
+  TriangleMeshHitDetails(
+      this.mesh, this.hitPoint, this.triangleIndex, this.distance) {
+    normal = mesh.getNormal(triangleIndex);
+  }
+}
 
 /// A utility class that provides static methods for ray-casting against a [TriangleMesh].
 class MeshHitTester {
@@ -21,19 +34,28 @@ class MeshHitTester {
       return null;
     }
 
-    TriangleMeshHitDetails? closestHit;
+    double? closestDistance;
+    int? closestTriangleIndex;
 
     // If the ray hits the box, check each triangle for the closest intersection.
     for (int i = 0; i < mesh.triangleCount; i++) {
       Vector3? hit = _rayTriangleIntersect(mesh, i, ray, epsilon: epsilon);
       if (hit != null) {
         final distance = ray.origin.distanceTo(hit);
-        if (closestHit == null || distance < closestHit.distance) {
-          closestHit = TriangleMeshHitDetails(mesh, hit, i, distance);
+        if (closestDistance == null || distance < closestDistance) {
+          closestDistance = distance;
+          closestTriangleIndex = i;
         }
       }
     }
-    return closestHit;
+
+    if (closestTriangleIndex != null) {
+      final hitPoint = ray.origin + ray.direction * closestDistance!;
+      return TriangleMeshHitDetails(
+          mesh, hitPoint, closestTriangleIndex, closestDistance);
+    }
+
+    return null;
   }
 
   /// Performs a ray-triangle intersection using the Möller–Trumbore algorithm.

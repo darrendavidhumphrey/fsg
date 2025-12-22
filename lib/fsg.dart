@@ -29,8 +29,11 @@ export 'ui/scene_navigation_delegate.dart';
 
 export 'edge.dart';
 export 'float32_array_filler.dart';
+export 'gl_context_manager.dart';
 export 'logging.dart';
 export 'mesh_file_renderer.dart';
+export 'mesh_hit_tester.dart';
+export 'mesh_factory.dart';
 export 'polyline.dart';
 export 'polyline_clipper.dart';
 export 'reference_box.dart';

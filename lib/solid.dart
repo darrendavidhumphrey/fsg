@@ -1,3 +1,4 @@
+import 'package:fsg/mesh_factory.dart';
 import 'package:fsg/polyline.dart';
 import 'package:fsg/triangle_mesh.dart';
 import 'package:vector_math/vector_math_64.dart';
@@ -20,24 +21,9 @@ class Solid {
   late final TriangleMesh pickGeometry;
 
   /// Private constructor to create a solid from its constituent parts.
-  /// The pick geometry is generated upon construction.
+  /// The pick geometry is generated upon construction by the [MeshFactory].
   Solid._(this.faces, this.name, this.dimensions) {
-    // Safely calculate the exact number of triangles needed.
-    int triangleCount = 0;
-    for (var face in faces) {
-      // A convex polygon with N vertices tessellates into N-2 triangles.
-      if (face.length > 2) {
-        triangleCount += face.length - 2;
-      }
-    }
-
-    pickGeometry = TriangleMesh(triangleCount);
-
-    int currentTriangle = 0;
-    for (var face in faces) {
-      currentTriangle = pickGeometry.addOutlineAsTriFan(face, currentTriangle);
-    }
-    pickGeometry.recomputeBounds();
+    pickGeometry = MeshFactory.fromFaces(faces);
   }
 
   /// Creates a cube-shaped [Solid] centered at [center] with a given [size].
@@ -66,14 +52,14 @@ class Solid {
 
     // Define the 8 vertices relative to the center
     final v = [
-      Vector3(center.x - halfWidth, center.y - halfHeight, center.z - halfDepth), // 0: BLF
-      Vector3(center.x + halfWidth, center.y - halfHeight, center.z - halfDepth), // 1: BRF
-      Vector3(center.x + halfWidth, center.y + halfHeight, center.z - halfDepth), // 2: TRF
-      Vector3(center.x - halfWidth, center.y + halfHeight, center.z - halfDepth), // 3: TLF
-      Vector3(center.x - halfWidth, center.y - halfHeight, center.z + halfDepth), // 4: BLB
-      Vector3(center.x + halfWidth, center.y - halfHeight, center.z + halfDepth), // 5: BRB
-      Vector3(center.x + halfWidth, center.y + halfHeight, center.z + halfDepth), // 6: TRB
-      Vector3(center.x - halfWidth, center.y + halfHeight, center.z + halfDepth), // 7: TLB
+      Vector3(center.x - halfWidth, center.y - halfHeight, center.z - halfDepth),
+      Vector3(center.x + halfWidth, center.y - halfHeight, center.z - halfDepth),
+      Vector3(center.x + halfWidth, center.y + halfHeight, center.z - halfDepth),
+      Vector3(center.x - halfWidth, center.y + halfHeight, center.z - halfDepth),
+      Vector3(center.x - halfWidth, center.y - halfHeight, center.z + halfDepth),
+      Vector3(center.x + halfWidth, center.y - halfHeight, center.z + halfDepth),
+      Vector3(center.x + halfWidth, center.y + halfHeight, center.z + halfDepth),
+      Vector3(center.x - halfWidth, center.y + halfHeight, center.z + halfDepth),
     ];
 
     // Create faces with correct winding order for outward-facing normals

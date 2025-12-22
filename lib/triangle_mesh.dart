@@ -1,27 +1,15 @@
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_angle/native-array/index.dart';
-import 'package:fsg/polyline.dart';
-import 'package:fsg/util.dart';
 import 'package:vector_math/vector_math_64.dart'
-    show Vector3, Ray, Triangle, Vector2, Aabb3;
+    show Vector3, Triangle, Vector2, Aabb3;
 
 import 'vertex_buffer.dart';
 
-class TriangleMeshHitDetails {
-  final TriangleMesh mesh;
-  final Vector3 hitPoint;
-  final int triangleIndex;
-  final double distance;
-
-  late final Vector3 normal;
-
-  TriangleMeshHitDetails(
-      this.mesh, this.hitPoint, this.triangleIndex, this.distance) {
-    normal = mesh.getNormal(triangleIndex);
-  }
-}
-
+/// A data class that stores the geometry for a collection of triangles.
+///
+/// It holds a flat list of interleaved vertex data (position, texture coordinate,
+/// and normal) and provides methods for building and managing this data.
 class TriangleMesh {
   // Components are vertex[3], texCoord[2], normal[3]
   static const int componentCount = 8;
@@ -61,76 +49,6 @@ class TriangleMesh {
         Vector3(verts[i], verts[i + 1], verts[i + 2]),
         Vector3(verts[j], verts[j + 1], verts[j + 2]),
         Vector3(verts[k], verts[k + 1], verts[k + 2]));
-  }
-
-  Vector3? rayTriangleIntersect(int triangleIndex, Ray ray,
-      {double epsilon = 1e-6}) {
-    final int vertexIndex = triangleIndex * 3;
-    final point0 = getVertex(vertexIndex);
-    final edge1 = getVertex(vertexIndex + 1) - point0;
-    final edge2 = getVertex(vertexIndex + 2) - point0;
-
-    final h = ray.direction.cross(edge2);
-    final a = edge1.dot(h);
-
-    if (a > -epsilon && a < epsilon) {
-      return null; // Ray is parallel to the triangle.
-    }
-
-    final f = 1.0 / a;
-    final s = ray.origin - point0;
-    final u = f * s.dot(h);
-
-    if (u < 0.0 || u > 1.0) {
-      return null; // Intersection point is outside the triangle.
-    }
-
-    final q = s.cross(edge1);
-    final v = f * ray.direction.dot(q);
-
-    if (v < 0.0 || u + v > 1.0) {
-      return null; // Intersection point is outside the triangle.
-    }
-
-    final t = f * edge2.dot(q);
-
-    if (t > epsilon) {
-      return ray.origin + ray.direction * t;
-    } else {
-      return null; // Intersection is behind the ray's origin.
-    }
-  }
-
-  TriangleMeshHitDetails? rayIntersect(Ray ray, {double epsilon = 1e-6}) {
-    // First, perform a cheap check against the overall bounding box.
-    double? intersection = ray.intersectsWithAabb3(getBounds());
-    if (intersection == null || intersection < 0) {
-      return null;
-    }
-
-    double? closestDistance;
-    int? closestTriangleIndex;
-
-    // If the ray hits the box, check each triangle for the closest intersection.
-    for (int i = 0; i < triangleCount; i++) {
-      Vector3? hit = rayTriangleIntersect(i, ray);
-      if (hit != null) {
-        final distance = ray.origin.distanceTo(hit);
-        if (closestDistance == null || distance < closestDistance) {
-          closestDistance = distance;
-          closestTriangleIndex = i;
-        }
-      }
-    }
-
-    if (closestTriangleIndex != null) {
-      final hitPoint =
-          ray.origin + ray.direction * closestDistance!;
-      return TriangleMeshHitDetails(
-          this, hitPoint, closestTriangleIndex, closestDistance);
-    }
-
-    return null;
   }
 
   /// Computes the AABB for the entire mesh by iterating directly through the
@@ -185,53 +103,9 @@ class TriangleMesh {
     verts[meshIndex++] = normal.z;
   }
 
-  int addOutlineAsTriFan(Polyline outline, int currentTriangle) {
-    if (!outline.planeIsValid) return currentTriangle;
-    int numTris = outline.length - 2;
-
-    final bounds = outline.getBounds2D();
-    double w = bounds.max.x - bounds.min.x;
-    double h = bounds.max.y - bounds.min.y;
-    double x = bounds.min.x;
-    double y = bounds.min.y;
-
-    Vector3 v0 = outline.getVector3(0);
-    for (int i = 0; i < numTris; i++) {
-      Vector3 v1 = outline.getVector3(i + 2);
-      Vector3 v2 = outline.getVector3(i + 1);
-
-      List<Vector2> texCoord = computeTexCoords(v0, v1, v2, x, y, w, h);
-
-      currentTriangle = addTriangle(
-          v0, v1, v2, outline.normal!, texCoord, currentTriangle);
-    }
-    return currentTriangle;
-  }
-
-  int addOutlineAsReverseTriFan(
-      Polyline outline, Vector3 normal, int currentTriangle, Vector3 depth) {
-    if (!outline.planeIsValid) return currentTriangle;
-    int numTris = outline.length - 2;
-
-    final bounds = outline.getBounds2D();
-    double w = bounds.max.x - bounds.min.x;
-    double h = bounds.max.y - bounds.min.y;
-    double x = bounds.min.x;
-    double y = bounds.min.y;
-
-    Vector3 v0 = outline.getVector3(0) + depth;
-    for (int i = 0; i < numTris; i++) {
-      Vector3 v1 = outline.getVector3(i + 2) + depth;
-      Vector3 v2 = outline.getVector3(i + 1) + depth;
-
-      List<Vector2> texCoord = computeTexCoords(v2, v1, v0, x, y, w, h);
-
-      currentTriangle =
-          addTriangle(v2, v1, v0, normal, texCoord, currentTriangle);
-    }
-    return currentTriangle;
-  }
-
+  /// A low-level method to add a single triangle to the mesh data.
+  ///
+  /// This is intended to be used by geometry creation APIs like [MeshFactory].
   int addTriangle(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 normal,
       List<Vector2> texCoord, int currentTriangle) {
     int vertexIndex = currentTriangle * 3;
@@ -241,81 +115,11 @@ class TriangleMesh {
     return currentTriangle + 1;
   }
 
-  int makeSideFromEdge(
-      Polyline outline, int index, int currentTriangle, Vector3 depth) {
-    Vector3 p1 = outline.getVector3(index % outline.length);
-    Vector3 p2 = outline.getVector3((index + 1) % outline.length);
-    Vector3 normal = (p2 - p1).cross(depth).normalized();
-
-    Vector3 p1z = p1 + depth;
-    Vector3 p2z = p2 + depth;
-
-    // TODO: Calculate correct texture coordinates for sides.
-    List<Vector2> texCoord = [Vector2.zero(), Vector2(1, 0), Vector2(1, 1)];
-    currentTriangle = addTriangle(p1, p2, p2z, normal, texCoord, currentTriangle);
-
-    texCoord = [Vector2.zero(), Vector2(1, 1), Vector2(0, 1)];
-    currentTriangle = addTriangle(p1, p2z, p1z, normal, texCoord, currentTriangle);
-
-    return currentTriangle;
-  }
-
   void addToVbo(VertexBuffer vbo) {
     int count = triangleCount * 3;
     Float32Array? vertexTextureArray = vbo.requestBuffer(count);
     // Use set() for an efficient block-copy of the data.
     vertexTextureArray?.set(verts);
     vbo.setActiveVertexCount(triangleCount * 3);
-  }
-
-  static TriangleMesh extrude(List<Polyline> outlines, Vector3 depth) {
-    if (outlines.isEmpty) {
-      return TriangleMesh.empty();
-    }
-
-    int topCount = 0;
-    for (var outline in outlines) {
-      if (outline.length > 2) {
-        topCount += (outline.length - 2);
-      }
-    }
-
-    int sideCount = 0;
-    for (var outline in outlines) {
-      sideCount += (outline.length) * 2;
-    }
-
-    int extrudedTriangleCount = topCount * 2 + sideCount;
-    if (extrudedTriangleCount == 0) {
-      return TriangleMesh.empty();
-    }
-
-    TriangleMesh result = TriangleMesh(extrudedTriangleCount);
-    int currentTriangle = 0;
-
-    for (var outline in outlines) {
-      if (outline.planeIsValid) {
-        currentTriangle = result.addOutlineAsTriFan(outline, currentTriangle);
-      }
-    }
-
-    for (var outline in outlines) {
-      if (outline.planeIsValid) {
-        Vector3 bottomNormal = -outline.normal!;
-        currentTriangle = result.addOutlineAsReverseTriFan(
-            outline, bottomNormal, currentTriangle, depth);
-      }
-    }
-
-    for (var outline in outlines) {
-      for (int i = 0; i < outline.length; i++) {
-        currentTriangle =
-            result.makeSideFromEdge(outline, i, currentTriangle, depth);
-      }
-    }
-
-    result.recomputeBounds();
-
-    return result;
   }
 }
