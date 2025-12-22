@@ -1,96 +1,136 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
+import 'package:fsg/matrix_stack.dart';
 import 'package:fsg/performance_monitor.dart';
 import 'logging.dart';
 import 'fsg_singleton.dart';
 import 'scene_layer.dart';
 
+/// An abstract base class for a 3D scene, representing the root of a scene graph.
+///
+/// Manages the rendering context, a model-view matrix stack, a list of [SceneLayer]
+/// objects, and the main rendering loop. Subclasses must implement the [drawScene]
+/// method to define the actual rendering logic.
+///
+/// A [Scene] must be initialized with a [RenderingContext] via the [init] method
+/// before it can be used for drawing.
 abstract class Scene with LoggableClass {
-  late RenderingContext gl;
-  /// Perspective matrix
+  bool _isInitialized = false;
+
+  /// A flag indicating whether the scene has been initialized with a rendering context.
+  bool get isInitialized => _isInitialized;
+
+  late RenderingContext _gl;
+
+  /// The WebGL rendering context.
+  ///
+  /// Throws a [StateError] if accessed before the scene has been initialized via [init].
+  RenderingContext get gl {
+    if (!_isInitialized) {
+      throw StateError('Scene GL context accessed before it was initialized.');
+    }
+    return _gl;
+  }
+
+  /// The perspective projection matrix.
   Matrix4 pMatrix = Matrix4.identity();
 
-  /// Model-View matrix.
-  Matrix4 mvMatrix = Matrix4.identity();
+  /// A stack for managing the Model-View matrix, allowing for hierarchical transformations.
+  final MatrixStack mvMatrixStack = MatrixStack();
 
-  final List<SceneLayer> layers =[];
-  final List<Matrix4> mvStack = <Matrix4>[];
+  /// A convenience getter for the current Model-View matrix from the top of the stack.
+  Matrix4 get mvMatrix => mvMatrixStack.current;
+
+  /// The list of layers that compose this scene, drawn in order.
+  final List<SceneLayer> layers = [];
+
+  /// A helper for monitoring rendering performance.
   late final PerformanceMonitor performanceMonitor;
+
+  /// A flag to indicate that the scene needs to be redrawn.
   bool _needsRepaint = true;
+
+  /// The current size of the viewport.
   Size _viewportSize = Size.zero;
   Size get viewportSize => _viewportSize;
 
-
+  /// The texture that this scene will render its output to.
   FlutterAngleTexture? renderToTextureId;
-  bool isPaused = false;
-  bool isInitialized = false;
 
+  /// If true, the rendering loop is paused.
+  bool isPaused = false;
+
+  /// Creates a new scene and its associated performance monitor.
   Scene() {
-    print("Scene constructor and class name is ${runtimeType.toString()}");
     performanceMonitor = PerformanceMonitor(tag: runtimeType.toString());
   }
 
-
-  /// Add a copy of the current Model-View matrix to the the stack for future
-  /// restoration.
-  void _mvPushMatrix() => mvStack.add(Matrix4.copy(mvMatrix));
-
-  /// Pop the last matrix off the stack and set the Model View matrix.
-  void _mvPopMatrix() => mvMatrix = mvStack.removeLast();
-
+  /// Executes the provided [drawCommands] within a new, pushed matrix state.
+  ///
+  /// This is the safest way to apply hierarchical transformations, as it guarantees
+  /// that the matrix state is restored even if an error occurs.
   void withPushedMatrix(void Function() drawCommands) {
-    _mvPushMatrix();
-    try {
-      drawCommands();
-    } finally {
-      _mvPopMatrix();
-    }
+    mvMatrixStack.withPushed(drawCommands);
   }
 
+  /// The width of the render-to-texture target.
   int get textureWidth => FSG.renderToTextureSize.toInt();
+
+  /// The height of the render-to-texture target.
   int get textureHeight => FSG.renderToTextureSize.toInt();
 
+  /// Initializes the scene with the WebGL [RenderingContext].
+  /// This must be called before any drawing operations can occur.
   void init(RenderingContext gl) {
-    this.gl = gl;
-    FSG().initContext(gl);
-    mvMatrix = Matrix4.identity();
-    gl.clearColor(0, 1, 0, 1);
-    isInitialized = true;
+    _gl = gl;
+    FSG().initContext(_gl);
+    mvMatrixStack.current = Matrix4.identity();
+    _gl.clearColor(0, 1, 0, 1);
+    _isInitialized = true;
   }
 
+  /// Signals that the scene needs to be redrawn on the next frame.
+  ///
+  /// Animated scenes should call this in their [drawScene] method to ensure
+  /// continuous rendering.
   void requestRepaint() {
     _needsRepaint = true;
   }
 
+  /// Sets the viewport size for the scene and all its layers.
   void setViewportSize(Size size) {
-    logPedantic("setViewportSize: ${size.toString()}");
+    logPedantic("setViewportSize: \${size.toString()}");
     _viewportSize = size;
     for (var layer in layers) {
       layer.setViewportSize(size);
     }
   }
 
-  /// Render the scene to the [viewWidth], [viewHeight], and [aspect] ratio.
+  /// The core drawing logic to be implemented by subclasses.
+  /// This method is called within the rendering loop when a repaint is needed.
   void drawScene();
 
-  void dispose() {}
-
+  /// Adds a [SceneLayer] to this scene.
   void addLayer(SceneLayer layer) {
     layers.add(layer);
     layer.parent = this;
   }
 
-  void rebuildLayers(RenderingContext gl,DateTime now) {
+  /// Triggers a rebuild for all layers in the scene.
+  void rebuildLayers(RenderingContext gl, DateTime now) {
     for (SceneLayer layer in layers) {
-      layer.rebuild(gl,now);
+      layer.rebuild(gl, now);
     }
   }
+
+  /// Draws all layers in the scene.
   void drawLayers() {
     for (SceneLayer layer in layers) {
       layer.draw(pMatrix, mvMatrix);
     }
   }
 
+  /// Checks if any layer in the scene needs to be rebuilt.
   bool needsRebuild() {
     for (SceneLayer layer in layers) {
       if (layer.needsRebuild) {
@@ -100,6 +140,10 @@ abstract class Scene with LoggableClass {
     return false;
   }
 
+  /// The main entry point for the rendering loop.
+  ///
+  /// Renders the scene to the configured texture if a repaint has been requested
+  /// or if any layer needs to be rebuilt.
   Future<void> renderSceneToTexture(_) async {
     if (renderToTextureId == null) {
       return;
@@ -109,8 +153,10 @@ abstract class Scene with LoggableClass {
       return;
     }
 
-    if (_needsRepaint ||  needsRebuild()) {
-      // Set to false at start of loop so drawScene() can re-enable it if desired
+    if (_needsRepaint || needsRebuild()) {
+      // Set [_needsRepaint] to false at the start of the loop.
+      // The [drawScene] implementation is expected to call [requestRepaint] if it
+      // needs to continue animating.
       _needsRepaint = false;
 
       renderToTextureId!.activate();
