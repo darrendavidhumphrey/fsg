@@ -113,13 +113,12 @@ abstract class Scene with LoggableClass {
   /// Adds a [SceneLayer] to this scene.
   void addLayer(SceneLayer layer) {
     layers.add(layer);
-    layer.parent = this;
   }
 
   /// Triggers a rebuild for all layers in the scene.
-  void rebuildLayers(RenderingContext gl, DateTime now) {
+  void rebuildLayers(DateTime now) {
     for (SceneLayer layer in layers) {
-      layer.rebuild(gl, now);
+      layer.rebuild(now);
     }
   }
 
