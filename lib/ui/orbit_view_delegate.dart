@@ -61,6 +61,7 @@ class OrbitView implements SceneNavigationDelegate {
     if (scene != null) {
       scene!.mvMatrix = createViewMatrix();
       scene!.pMatrix = createProjectionMatrix();
+      scene!.requestRepaint();
     }
   }
 

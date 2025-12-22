@@ -14,8 +14,8 @@ class CheckerBoardUniformsScene extends Scene {
   double patternScale = 5;
 
   @override
-  void init(BuildContext context, RenderingContext gl) {
-    super.init(context, gl);
+  void init(RenderingContext gl) {
+    super.init(gl);
     exampleVbo = VertexBuffer.v3t2(gl);
     exampleVbo.makeTexturedUnitQuad(
       Rect.fromLTWH(-quadExtents.width/2, -quadExtents.height/2, quadExtents.width, quadExtents.height),
@@ -79,10 +79,9 @@ class CheckerBoardUniformsScene extends Scene {
     createProjectionMatrix();
     createViewMatrix();
 
-    mvPushMatrix();
-    drawVBO(pMatrix, mvMatrix);
-
-    mvPopMatrix();
+    withPushedMatrix( () {
+      drawVBO(pMatrix, mvMatrix);
+    });
 
     gl.finish();
   }
@@ -96,20 +95,20 @@ class CheckerBoardUniformsExample extends StatefulWidget {
 }
 
 class CheckerBoardUniformsExampleState extends State<CheckerBoardUniformsExample> {
-  late CheckerBoardUniformsScene checkerBoardUniformsScene;
+  late CheckerBoardUniformsScene scene;
 
   @override
   void initState() {
     super.initState();
-    checkerBoardUniformsScene = CheckerBoardUniformsScene();
-    FSG().registerSceneAndAllocateTexture(checkerBoardUniformsScene);
+    scene = CheckerBoardUniformsScene();
+    FSG().registerSceneAndAllocateTexture(scene);
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        RenderToTexture(scene: checkerBoardUniformsScene),
+        RenderToTexture(scene: scene),
         Positioned(
           bottom: 0,
           child: Padding(
@@ -120,14 +119,15 @@ class CheckerBoardUniformsExampleState extends State<CheckerBoardUniformsExample
                   children: [
                     Text('Pattern Scale'),
                     Slider(
-                      value: checkerBoardUniformsScene.patternScale,
+                      value: scene.patternScale,
                       min: 1,
                       max: 100,
                       divisions: 99, // Creates discrete steps for 1, 2, 3... 100
-                      label: checkerBoardUniformsScene.patternScale.round().toString(),
+                      label: scene.patternScale.round().toString(),
                       onChanged: (double value) {
                         setState(() {
-                          checkerBoardUniformsScene.patternScale = value;
+                          scene.patternScale = value;
+                          scene.requestRepaint();
                         });
                       },
                     ),

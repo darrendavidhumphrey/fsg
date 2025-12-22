@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
+import 'package:fsg/performance_monitor.dart';
 import 'logging.dart';
 import 'fsg_singleton.dart';
 import 'scene_layer.dart';
@@ -13,28 +14,43 @@ abstract class Scene with LoggableClass {
   Matrix4 mvMatrix = Matrix4.identity();
 
   final List<SceneLayer> layers =[];
-  List<Matrix4> mvStack = <Matrix4>[];
-  Scene();
+  final List<Matrix4> mvStack = <Matrix4>[];
+  late final PerformanceMonitor performanceMonitor;
+  bool _needsRepaint = true;
+  Size _viewportSize = Size.zero;
+  Size get viewportSize => _viewportSize;
 
-  bool forceRepaint = true;
+
   FlutterAngleTexture? renderToTextureId;
-  bool isInitialized = false;
   bool isPaused = false;
+  bool isInitialized = false;
 
-  final Stopwatch stopwatch = Stopwatch();
-  int frameCount=0;
-  int totalMicroseconds=0;
-  bool timingEnabled = true;
-
-
-  int textureWidth() {
-    return FSG.renderToTextureSize.toInt();
-  }
-  int textureHeight() {
-    return FSG.renderToTextureSize.toInt();
+  Scene() {
+    print("Scene constructor and class name is ${runtimeType.toString()}");
+    performanceMonitor = PerformanceMonitor(tag: runtimeType.toString());
   }
 
-  void init(BuildContext context, RenderingContext gl) {
+
+  /// Add a copy of the current Model-View matrix to the the stack for future
+  /// restoration.
+  void _mvPushMatrix() => mvStack.add(Matrix4.copy(mvMatrix));
+
+  /// Pop the last matrix off the stack and set the Model View matrix.
+  void _mvPopMatrix() => mvMatrix = mvStack.removeLast();
+
+  void withPushedMatrix(void Function() drawCommands) {
+    _mvPushMatrix();
+    try {
+      drawCommands();
+    } finally {
+      _mvPopMatrix();
+    }
+  }
+
+  int get textureWidth => FSG.renderToTextureSize.toInt();
+  int get textureHeight => FSG.renderToTextureSize.toInt();
+
+  void init(RenderingContext gl) {
     this.gl = gl;
     FSG().initContext(gl);
     mvMatrix = Matrix4.identity();
@@ -42,8 +58,9 @@ abstract class Scene with LoggableClass {
     isInitialized = true;
   }
 
-  Size _viewportSize = Size.zero;
-  Size get viewportSize => _viewportSize;
+  void requestRepaint() {
+    _needsRepaint = true;
+  }
 
   void setViewportSize(Size size) {
     logPedantic("setViewportSize: ${size.toString()}");
@@ -57,13 +74,6 @@ abstract class Scene with LoggableClass {
   void drawScene();
 
   void dispose() {}
-
-  /// Add a copy of the current Model-View matrix to the the stack for future
-  /// restoration.
-  void mvPushMatrix() => mvStack.add(Matrix4.copy(mvMatrix));
-
-  /// Pop the last matrix off the stack and set the Model View matrix.
-  void mvPopMatrix() => mvMatrix = mvStack.removeLast();
 
   void addLayer(SceneLayer layer) {
     layers.add(layer);
@@ -91,7 +101,6 @@ abstract class Scene with LoggableClass {
   }
 
   Future<void> renderSceneToTexture(_) async {
-
     if (renderToTextureId == null) {
       return;
     }
@@ -100,31 +109,15 @@ abstract class Scene with LoggableClass {
       return;
     }
 
-    // TODO: Repaint is forced to always on
-    forceRepaint = true;
+    if (_needsRepaint ||  needsRebuild()) {
+      // Set to false at start of loop so drawScene() can re-enable it if desired
+      _needsRepaint = false;
 
-    if (timingEnabled || forceRepaint ||  needsRebuild()) {
-
-      if (timingEnabled) {
-        stopwatch..reset()..start();
-      }
       renderToTextureId!.activate();
-
+      performanceMonitor.beginFrame();
       drawScene();
       await renderToTextureId!.signalNewFrameAvailable();
-
-      if (timingEnabled) {
-        totalMicroseconds += stopwatch.elapsedMicroseconds;
-        frameCount++;
-
-        if (frameCount==100) {
-          double averageMilliseconds = (totalMicroseconds/frameCount)/1000.0;
-          logPedantic("Avg draw time: ${averageMilliseconds.toStringAsFixed(2)} ms");
-          frameCount = 0;
-          totalMicroseconds = 0;
-        }
-      }
-      forceRepaint = false;
+      performanceMonitor.endFrame();
     }
   }
 }

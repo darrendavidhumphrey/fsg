@@ -53,7 +53,7 @@ class FSG with LoggableClass {
 
   void initScene(BuildContext context, Scene scene) {
     if (!scene.isInitialized) {
-      scene.init(context, scene.renderToTextureId!.getContext());
+      scene.init(scene.renderToTextureId!.getContext());
     }
   }
   void initPlatformState() {
@@ -87,8 +87,8 @@ class FSG with LoggableClass {
   // the RenderToTexture widget or InteractiveRenderToTextureWidget
   Future<bool> registerSceneAndAllocateTexture(Scene scene) async {
     final options = AngleOptions(
-      width: scene.textureWidth(),
-      height: scene.textureHeight(),
+      width: scene.textureWidth,
+      height: scene.textureHeight,
       dpr: 1,
       antialias: true,
       useSurfaceProducer: true,

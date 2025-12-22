@@ -10,8 +10,8 @@ class OrbitViewScene extends Scene {
 
 
   @override
-  void init(BuildContext context, RenderingContext gl) {
-    super.init(context, gl);
+  void init(RenderingContext gl) {
+    super.init(gl);
     exampleVbo = VertexBuffer.v3t2(gl);
 
     // TODO: make cube
@@ -48,10 +48,9 @@ class OrbitViewScene extends Scene {
     gl.disable(WebGL.CULL_FACE);
     gl.depthFunc(WebGL.LESS);
 
-    mvPushMatrix();
-    drawVBO(pMatrix, mvMatrix);
-
-    mvPopMatrix();
+    withPushedMatrix( () {
+      drawVBO(pMatrix, mvMatrix);
+    });
 
     gl.finish();
   }

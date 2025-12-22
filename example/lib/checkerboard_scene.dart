@@ -13,8 +13,8 @@ class CheckerBoardScene extends Scene {
   final Color color2 = Colors.yellow;
 
   @override
-  void init(BuildContext context, RenderingContext gl) {
-    super.init(context, gl);
+  void init(RenderingContext gl) {
+    super.init(gl);
     exampleVbo = VertexBuffer.v3t2(gl);
 
     exampleVbo.makeTexturedUnitQuad(
@@ -79,10 +79,9 @@ class CheckerBoardScene extends Scene {
     createProjectionMatrix();
     createViewMatrix();
 
-    mvPushMatrix();
-    drawVBO(pMatrix, mvMatrix);
-
-    mvPopMatrix();
+    withPushedMatrix( () {
+      drawVBO(pMatrix, mvMatrix);
+    });
 
     gl.finish();
   }

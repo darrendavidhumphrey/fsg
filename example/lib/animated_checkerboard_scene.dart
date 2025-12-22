@@ -14,8 +14,8 @@ class AnimatedCheckerBoardScene extends Scene {
   double patternScale = 5;
 
   @override
-  void init(BuildContext context, RenderingContext gl) {
-    super.init(context, gl);
+  void init(RenderingContext gl) {
+    super.init(gl);
     exampleVbo = VertexBuffer.v3t2(gl);
 
     exampleVbo.makeTexturedUnitQuad(
@@ -132,14 +132,12 @@ class AnimatedCheckerBoardScene extends Scene {
       cycleDurationSeconds: cycleDuration,
     );
 
-
-
-    mvPushMatrix();
-    drawVBO(pMatrix, mvMatrix);
-
-    mvPopMatrix();
+    withPushedMatrix( () {
+      drawVBO(pMatrix, mvMatrix);
+    });
 
     gl.finish();
+    requestRepaint();
   }
 }
 
