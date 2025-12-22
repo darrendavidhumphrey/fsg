@@ -23,9 +23,6 @@ class CheckerBoardUniformsScene extends Scene {
     );
   }
 
-  @override
-  void dispose() {}
-
   void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
     var shader = FSG().shaders.checkerBoard;
     gl.useProgram(shader.program);
@@ -46,7 +43,7 @@ class CheckerBoardUniformsScene extends Scene {
     Vector3 orbitCenter = Vector3(0,0,0);
     Vector3 eyeLocation = Vector3(0,0,-500);
 
-    mvMatrixStack.current = createLookAtMatrix(eyeLocation, orbitCenter, up);
+    mvMatrixStack.current = makeViewMatrix(eyeLocation, orbitCenter, up);
     mvMatrix.translateByVector3(orbitCenter);
     mvMatrix.rotateZ(radians(180));
     mvMatrix.rotateY(radians(0));

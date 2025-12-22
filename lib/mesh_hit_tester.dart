@@ -89,7 +89,6 @@ class MeshHitTester {
     }
 
     final t = f * edge2.dot(q);
-
     if (t > epsilon) {
       return ray.origin + ray.direction * t;
     } else {

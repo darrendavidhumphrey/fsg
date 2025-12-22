@@ -133,9 +133,9 @@ class OrbitView implements SceneNavigationDelegate {
   Matrix4 createViewMatrix() {
     Vector3 up = Vector3(0, 1, 0);
     Vector3 orbitCenter = getOrbitCenter();
+    
+    _viewMatrix = makeViewMatrix(getEyeLocation(), orbitCenter, up);
 
-
-    _viewMatrix = createLookAtMatrix(getEyeLocation(), orbitCenter, up);
     _viewMatrix.translateByVector3(orbitCenter);
     _viewMatrix.rotateZ(radians(180));
     _viewMatrix.rotateY(radians(yaw));
@@ -152,7 +152,7 @@ class OrbitView implements SceneNavigationDelegate {
     return Vector3(0,0,0);
   }
 
-  Vector3 getLogicalCoordinates(Offset mousePosition) {
+  Vector3? getLogicalCoordinates(Offset mousePosition) {
     Ray ray = computePickRay(
       mousePosition,
       scene!.viewportSize,

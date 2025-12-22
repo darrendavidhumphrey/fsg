@@ -73,7 +73,7 @@ Plane? makePlaneFromVertices(Vector3 p1, Vector3 p2, Vector3 p3) {
 
   // 3. Calculate the 'd' value (Ax + By + Cz = D)
   //  Take any of the three points (e.g., p1) and use the dot product with the normal vector
-  double d = normal.dot(p1);
+  double d = -normal.dot(p1);
 
   return Plane.normalconstant(normal, d);
 }
@@ -268,60 +268,14 @@ List<Vector2> computeTexCoords(
   ];
 }
 
-Matrix4 createLookAtMatrix(Vector3 eye, Vector3 center, Vector3 up) {
-  // 1. Calculate the forward vector (Z-axis)
-  // This vector points from the camera's position (eye) towards the target (center).
-  // Remember to normalize the result of the vector subtraction, since we want a unit vector.
-  Vector3 zAxis = (eye - center)..normalize();
-
-  // 2. Calculate the right vector (X-axis)
-  // This vector is perpendicular to both the forward vector and the up vector.
-  // It represents the camera's horizontal axis.
-  Vector3 xAxis = up.cross(zAxis)..normalize();
-
-  // 3. Calculate the true up vector (Y-axis)
-  // This vector ensures the camera's up direction is truly orthogonal to the other two axes.
-  Vector3 yAxis = zAxis.cross(xAxis)..normalize();
-
-  // Create a new Matrix4 and set its values based on the calculated vectors.
-  // The view matrix transforms world coordinates into camera's view space.
-  // The first three columns typically represent the camera's local x, y, and z axes (right, up, and forward respectively),
-  // and the fourth column represents the camera's position.
-  // Note: The view matrix is the inverse of the camera's world transform,
-  // so the translation component is actually the negative dot product of the camera position with each of the basis vectors.
-
-
-  Matrix4 lookAtMatrix = Matrix4(
-    xAxis.x,
-    yAxis.x,
-    zAxis.x,
-    0.0, // Column 0 (Right vector)
-    xAxis.y,
-    yAxis.y,
-    zAxis.y,
-    0.0, // Column 1 (Up vector)
-    xAxis.z,
-    yAxis.z,
-    zAxis.z,
-    0.0, // Column 2 (Forward vector)
-    -xAxis.dot(eye),
-    -yAxis.dot(eye),
-    -zAxis.dot(eye),
-    1.0, // Column 3 (Translation)
-  );
-
-  return lookAtMatrix;
-}
-
-
 Vector3 unProject(Vector4 ndcVector,Matrix4 inverseCombinedMatrix) {
   final Vector4 homogeneousCoords = inverseCombinedMatrix.transform(
     ndcVector,
   );
 
   // Un-project the point
-  if (homogeneousCoords.w == 0.0) {
-    // Avoid division by zero, indicates an invalid unprojection
+  if ( homogeneousCoords.w.abs() < 1e-9) {
+    // Avoid division by very small value, indicates an invalid unprojection
     return Vector3.zero();
   }
 
@@ -358,11 +312,11 @@ Ray computePickRay(Offset mousePosition,Size viewportSize,Matrix4 projection,Mat
   return Ray.originDirection(nearResult, direction);
 }
 
-Vector3 intersectRayWithPlane(Ray ray,Plane plane) {
+Vector3? intersectRayWithPlane(Ray ray,Plane plane) {
   double denominator = plane.normal.dot(ray.direction);
 
   if (denominator.abs()  < 0.0001) {
-    return Vector3.zero();
+    return null;
   }
 
   double t = -(plane.normal.dot(ray.origin) - plane.constant) / denominator;
@@ -373,7 +327,7 @@ Vector3 intersectRayWithPlane(Ray ray,Plane plane) {
     return intersectionPoint;
   }
 
-  return Vector3.zero();
+  return null;
 }
 
 Vector3? intersectRayPlaneFromPointAndNormal(
