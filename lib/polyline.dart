@@ -100,11 +100,16 @@ class Polyline {
 
   /// Checks if a given 3D [point] is inside the area defined by the closed polyline.
   ///
-  /// This method projects the point onto the polyline's plane and uses the cross-product
-  /// method to determine if it lies on the same side of all edges. Returns `false`
-  /// if the polyline's plane is not valid.
+  /// This method first checks if the point lies on the polyline's plane. If it does,
+  /// it uses the cross-product method to determine if the point lies on the same
+  /// side of all edges.
   bool containsPoint(Vector3 point) {
     if (!planeIsValid) {
+      return false;
+    }
+
+    // First, check if the point is on the plane of the polyline.
+    if (plane.distanceToVector3(point).abs() > 1e-6) {
       return false;
     }
 
@@ -181,29 +186,13 @@ class Polyline {
       return null;
     }
 
-    final double denominator = plane.normal.dot(pickRay.direction);
+    final Vector3? intersectionPoint = intersectRayWithPlane(pickRay, plane);
 
-    // Check if the ray is parallel to the plane.
-    if (denominator.abs() < 1e-6) {
-      return null;
-    }
-
-    final double t =
-        -(plane.normal.dot(pickRay.origin) - plane.constant) / denominator;
-
-    // A negative t means the intersection is behind the ray's origin.
-    if (t < 0) {
-      return null;
-    }
-
-    final Vector3 intersectionPoint = pickRay.origin + pickRay.direction * t;
-
-    // Finally, check if the intersection point is inside the polygon.
-    if (containsPoint(intersectionPoint)) {
+    if (intersectionPoint != null && containsPoint(intersectionPoint)) {
       return intersectionPoint;
-    } else {
-      return null;
     }
+
+    return null;
   }
 
   /// Calculates the 2D bounding box of the polyline on the XY plane.

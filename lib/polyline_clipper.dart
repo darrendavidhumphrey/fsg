@@ -23,11 +23,12 @@ class PolylineClipper {
   static const double epsilon = 1e-4;
 
   /// Precomputes the four clipping edges from the boundaries of a rectangle.
+  /// Assumes a Y-up coordinate system where `top` > `bottom`.
   static List<ClipEdge> _precomputeClipEdgesFromRect(
     double left,
-    double top,
+    double top, // The maximum Y value
     double right,
-    double bottom,
+    double bottom, // The minimum Y value
   ) {
     return [
       // Left edge, normal points left (outward).
@@ -150,7 +151,7 @@ class PolylineClipper {
     }
   }
 
-  /// Creates a clipper for a given rectangular boundary.
-  PolylineClipper(double left, double top, double right, double bottom)
+  /// Creates a clipper for a given rectangular boundary in a Y-up coordinate system.
+  PolylineClipper({required double left, required double bottom, required double right, required double top})
       : clipEdges = _precomputeClipEdgesFromRect(left, top, right, bottom);
 }
