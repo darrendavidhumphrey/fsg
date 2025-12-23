@@ -72,11 +72,13 @@ class OrbitView implements SceneNavigationDelegate {
     _dragStart = event.localPosition;
     _yawStart = yaw;
     _pitchStart = pitch;
+    updateSceneMatrices();
   }
 
   @override
   void onPointerUp(PointerUpEvent event) {
     _dragStart = Offset.zero;
+    updateSceneMatrices();
   }
 
   @override

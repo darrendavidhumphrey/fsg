@@ -27,10 +27,13 @@ class OrbitViewScene extends Scene {
   void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
 
     // TODO: Use different shader
-    var shader = FSG().shaders.getShader("v3t2");
+    CheckerBoardShader shader = FSG().shaders.getShader("checkerBoard");
     gl.useProgram(shader.program);
     ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
     gl.enable(WebGL.DEPTH_TEST);
+    shader.setPatternScale(4.0);
+    shader.setPatternColor1(Colors.red);
+    shader.setPatternColor2(Colors.blue);
 
 
     exampleVbo.bind();

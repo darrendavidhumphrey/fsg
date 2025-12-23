@@ -56,6 +56,7 @@ class InteractiveRenderToTextureState
   @override
   void dispose() {
     // Dispose the FocusNode to prevent memory leaks.
+    widget.navigationDelegate?.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -66,28 +67,34 @@ class InteractiveRenderToTextureState
     final core = RenderToTextureCore(
       scene: widget.scene,
       automaticallyPause: widget.automaticallyPause,
-      // The child is a stack of gesture detectors that capture user input.
-      child: GestureDetector(
-        onTapDown: (TapDownDetails event) {
+      // The child is a Listener that captures all user input.
+      child: Listener(
+        behavior: HitTestBehavior.opaque,
+        onPointerDown: (event) {
+          // Request focus on tap down to enable keyboard events.
           _focusNode.requestFocus();
-          widget.navigationDelegate?.onTapDown(event);
+          widget.navigationDelegate?.onPointerDown(event);
         },
-        child: Listener(
-          onPointerSignal: (event) {
-            if (event is PointerScrollEvent) {
-              widget.navigationDelegate?.onPointerScroll(event);
-            }
-          },
-          onPointerMove: (event) {
-            widget.navigationDelegate?.onPointerMove(event);
-          },
-        ),
+        onPointerUp: (event) {
+          widget.navigationDelegate?.onPointerUp(event);
+        },
+        onPointerCancel: (event) {
+          widget.navigationDelegate?.onPointerCancel(event);
+        },
+        onPointerSignal: (event) {
+          if (event is PointerScrollEvent) {
+            widget.navigationDelegate?.onPointerScroll(event);
+          }
+        },
+        onPointerMove: (event) {
+          widget.navigationDelegate?.onPointerMove(event);
+        },
       ),
     );
 
     // The Focus widget wraps everything to capture keyboard events.
     return Focus(
-      autofocus: true,
+      autofocus: widget.navigationDelegate != null,
       focusNode: _focusNode,
       onKeyEvent: (node, event) {
         return widget.navigationDelegate?.onKeyEvent(event) ??

@@ -82,7 +82,7 @@ abstract class Scene with LoggableClass, GlContextManager {
 
   /// Sets the viewport size for the scene and all its layers.
   void setViewportSize(Size size) {
-    logPedantic("setViewportSize: \${size.toString()}");
+    logPedantic("setViewportSize: ${size.toString()}");
     _viewportSize = size;
     for (var layer in layers) {
       layer.setViewportSize(size);
