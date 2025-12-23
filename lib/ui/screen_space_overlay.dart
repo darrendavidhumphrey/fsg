@@ -3,13 +3,41 @@ import 'package:flutter_angle/flutter_angle.dart';
 import '../logging.dart';
 import '../scene_layer.dart';
 
+/// An abstract base class for a [SceneLayer] that is rendered in 2D screen space
+/// rather than 3D world space.
+///
+/// This class manages the positioning and scissoring required to create a 2D
+/// overlay on top of the main 3D scene. The position is defined by anchoring
+/// the overlay to one vertical edge (top or bottom) and one horizontal edge
+/// (left or right) of the parent viewport.
 abstract class ScreenSpaceOverlay extends SceneLayer with LoggableClass {
+  /// The total size of the render-to-texture target. This is used to convert
+  /// screen pixels to texture pixels for GL operations like `scissor` and `viewport`.
   final double textureSize;
+
+  /// The distance in screen pixels from the top edge of the parent viewport.
+  /// Must be provided if [bottom] is null.
   final double? top;
+
+  /// The distance in screen pixels from the left edge of the parent viewport.
+  /// Must be provided if [right] is null.
   final double? left;
+
+  /// The distance in screen pixels from the right edge of the parent viewport.
+  /// Must be provided if [left] is null.
   final double? right;
+
+  /// The distance in screen pixels from the bottom edge of the parent viewport.
+  /// Must be provided if [top] is null.
   final double? bottom;
+
+  /// The size of the overlay in screen-space pixels.
   final Size screenSpaceSize;
+
+  /// Creates a screen-space overlay.
+  ///
+  /// An overlay must be anchored by providing either [top] or [bottom], and
+  /// either [left] or [right], but not both in the same axis.
   ScreenSpaceOverlay({
     this.top,
     this.left,
@@ -18,82 +46,57 @@ abstract class ScreenSpaceOverlay extends SceneLayer with LoggableClass {
     required this.screenSpaceSize,
     required this.textureSize,
   }) {
-    // User must set one and only one of left and right
-    assert(!(left == null && bottom == right));
-    if (left != null) {
-      assert(right == null);
-    } else if (right != null) {
-      assert(left == null);
-    }
-
-    // User must set one and only one of top and bottom
-    assert(!(top == null && bottom == null));
-    if (top != null) {
-      assert(bottom == null);
-    } else if (bottom != null) {
-      assert(top == null);
-    }
+    // Use XOR to assert that exactly one horizontal and one vertical anchor is set.
+    assert((left == null) != (right == null),
+        'Must provide either left or right, but not both.');
+    assert((top == null) != (bottom == null),
+        'Must provide either top or bottom, but not both.');
   }
 
-  Offset screenToViewport(Offset screen) {
-    double x = screen.dx;
-    double y = screen.dy;
-    if (left != null) {
-      x = x - left!;
-    } else if (right != null) {
-      double leftEdge = viewportSize.width - screenSpaceSize.width - right!;
-      x -= leftEdge;
-    }
-    if (top != null) {
-      y = y - top!;
-    } else if (bottom != null) {
-      double bottomEdge =
-          viewportSize.height - screenSpaceSize.height - bottom!;
-      y = y - bottomEdge;
-    }
+  /// Calculates the top-left corner of this overlay within the parent viewport.
+  Offset get _topLeftInViewport {
+    final double x = left ?? (viewportSize.width - screenSpaceSize.width - right!);
+    final double y = top ?? (viewportSize.height - screenSpaceSize.height - bottom!);
     return Offset(x, y);
   }
 
-  bool isPointInViewport(Offset point) {
-    Offset viewportRelative = screenToViewport(point);
-    bool result =
-        viewportRelative.dx >= 0 &&
-        viewportRelative.dx <= viewportSize.width &&
-        viewportRelative.dy >= 0 &&
-        viewportRelative.dy <= viewportSize.height;
-
-    return result;
+  /// Converts a global screen coordinate into a local coordinate within this overlay.
+  Offset screenToViewport(Offset screen) {
+    final origin = _topLeftInViewport;
+    return screen - origin;
   }
 
+  /// Checks if a global screen coordinate is within the bounds of this overlay.
+  bool isPointInViewport(Offset point) {
+    final viewportRelative = screenToViewport(point);
+    // Check against the overlay's own size, not the parent's viewportSize.
+    return viewportRelative.dx >= 0 &&
+        viewportRelative.dx <= screenSpaceSize.width &&
+        viewportRelative.dy >= 0 &&
+        viewportRelative.dy <= screenSpaceSize.height;
+  }
+
+  /// Converts a horizontal value from screen space to texture space.
   double textureToScreenX(double x) {
     return (x / viewportSize.width.toDouble()) * textureSize;
   }
 
+  /// Converts a vertical value from screen space to texture space.
   double textureToScreenY(double y) {
     return (y / viewportSize.height.toDouble()) * textureSize;
   }
 
+  /// Enables scissoring and sets the GL viewport to the bounds of this overlay.
+  ///
+  /// This is called before drawing the overlay to ensure it only renders within
+  /// its designated rectangular area, clipping any content that would draw
+  /// outside of it.
   void enableScissor() {
-    double windowWidth = textureToScreenX(screenSpaceSize.width);
-    double windowHeight = textureToScreenY(screenSpaceSize.height);
-
-    double startX = 0;
-    if (right != null) {
-      startX = textureToScreenX(
-        viewportSize.width - screenSpaceSize.width - right!,
-      );
-    } else if (left != null) {
-      startX = textureToScreenX(left!);
-    }
-
-    double startY = 0;
-    if (bottom != null) {
-      startY = textureToScreenY(
-        viewportSize.height - screenSpaceSize.height - bottom!,
-      );
-    } else if (top != null) {
-      startY = textureToScreenY(top!);
-    }
+    final origin = _topLeftInViewport;
+    final startX = textureToScreenX(origin.dx);
+    final startY = textureToScreenY(origin.dy);
+    final windowWidth = textureToScreenX(screenSpaceSize.width);
+    final windowHeight = textureToScreenY(screenSpaceSize.height);
 
     gl.enable(WebGL.SCISSOR_TEST);
     gl.scissor(
