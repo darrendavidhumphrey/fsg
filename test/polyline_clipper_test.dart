@@ -75,10 +75,10 @@ void main() {
       final result = clipper.clip(overlappingSquare);
 
       final expected = Polyline.fromVector2([
-        Vector2(50, 100),
-        Vector2(50, 50),
         Vector2(100, 50),
         Vector2(100, 100),
+        Vector2(50, 100),
+        Vector2(50, 50),
       ]);
 
       expect(result, isNotNull);
@@ -94,16 +94,15 @@ void main() {
 
       final result = clipper.clip(triangle);
 
-      // The clipper algorithm produces a counter-clockwise polygon.
       final expected = Polyline.fromVector2([
-        Vector2(0, 0),
         Vector2(50, 0),
         Vector2(50, 50),
         Vector2(0, 50),
+        Vector2(0, 0),
       ]);
 
       expect(result, isNotNull);
-      expect(_polylinesAreEqual(result, expected), isTrue, reason: "The clipped polygon should be a square from (0,0) to (50,50).");
+      expect(_polylinesAreEqual(result, expected), isTrue);
     });
 
     test('a polyline with vertices exactly on the boundary is handled', () {
@@ -127,15 +126,17 @@ void main() {
     });
 
     test('a polyline that becomes degenerate after clipping returns null', () {
+      // This triangle has two vertices on the boundary and one outside.
+      // Clipping it results in a single line segment from (10,0) to (90,0),
+      // which is degenerate and should be culled.
       final triangle = Polyline.fromVector2([
-        Vector2(10, -10),
-        Vector2(90, -10),
-        Vector2(50, 50),
+        Vector2(10, 0),
+        Vector2(90, 0),
+        Vector2(50, -10),
       ]);
 
       final result = clipper.clip(triangle);
-      // The result of clipping is just the segment from (10,0) to (90,0), which
-      // has fewer than 3 vertices and should be considered null.
+      
       expect(result, isNull);
     });
 
@@ -150,8 +151,8 @@ void main() {
       final result = clipper.clip(overlappingSquare);
       expect(result, isNotNull);
 
-      // The naive algorithm could produce duplicate vertices at the corners.
-      // The final result should be cleaned up.
+      // The Sutherland-Hodgman algorithm can produce duplicate vertices.
+      // The final result should be cleaned up to have only unique vertices.
       expect(result!.length, 4, reason: "The clipped polygon should have 4 unique vertices");
     });
 
