@@ -7,11 +7,8 @@ import 'shaders.dart';
 
 const String _vertexShader = """
 #version 300 es
-
 // Define precision for floating-point variables
-#ifdef GL_ES
-precision highp float;
-#endif
+precision mediump float;
 
 // Input vertex attributes
 layout(location = 0) in vec3 aVertexPosition;
@@ -87,9 +84,7 @@ const String _fragmentShader = """
 #version 300 es
 
 // Define precision for floating-point variables
-#ifdef GL_ES
 precision mediump float; // Fragment shaders often use mediump for performance
-#endif
 
 // Input from vertex shader (interpolated across the primitive)
 in vec2 vTextureCoord;
@@ -213,8 +208,8 @@ class OneLightShader extends GlslShader {
     gl.uniform3f(uniforms[uMaterialSpecular]!, color.r, color.g, color.b);
   }
 
-  void setShininess(double shininess) {
-    gl.uniform1f(uniforms[uMaterialShininess]!, shininess);
+  void setShininess(num shininess) {
+    gl.uniform1f(uniforms[uMaterialShininess]!, shininess.toDouble());
   }
 
   void setOutlineEnabled(bool enabled) {
@@ -229,7 +224,7 @@ class OneLightShader extends GlslShader {
     gl.uniform4f(uniforms[uOutlineColor]!, color.r, color.g, color.b, color.a);
   }
 
-  void setOutlineWidth(double width) {
-    gl.uniform1f(uniforms[uOutlineWidth]!, width);
+  void setOutlineWidth(num width) {
+    gl.uniform1f(uniforms[uOutlineWidth]!, width.toDouble());
   }
 }

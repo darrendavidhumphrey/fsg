@@ -134,32 +134,32 @@ class GridShader extends GlslShader {
         ],
       );
 
-  void setResolutionMM(double width, double height) {
-    gl.uniform2f(uniforms[uResolution]!, width*10, height*10);
+  void setResolutionMM(num width, num height) {
+    gl.uniform2f(uniforms[uResolution]!, width.toDouble()*10, height.toDouble()*10);
   }
 
-  void setScale(double scale) {
-    gl.uniform1f(uniforms[uScale]!, 0.1);
+  void setScale(num scale) {
+    gl.uniform1f(uniforms[uScale]!, scale.toDouble());
   }
 
-  void setMajorLineSpacingMM(double spacing) {
-    gl.uniform1f(uniforms[uMajorLineSpacingMM]!, spacing);
+  void setMajorLineSpacingMM(num spacing) {
+    gl.uniform1f(uniforms[uMajorLineSpacingMM]!, spacing.toDouble());
   }
 
-  void setMinorLineSpacingMM(double spacing) {
-    gl.uniform1f(uniforms[uMinorLineSpacingMM]!, spacing);
+  void setMinorLineSpacingMM(num spacing) {
+    gl.uniform1f(uniforms[uMinorLineSpacingMM]!, spacing.toDouble());
   }
 
-  void setMajorLineThickness(double thickness) {
-    gl.uniform1f(uniforms[uMajorLineThickness]!, thickness);
+  void setMajorLineThickness(num thickness) {
+    gl.uniform1f(uniforms[uMajorLineThickness]!, thickness.toDouble());
   }
 
-  void setMinorLineThickness(double thickness) {
-    gl.uniform1f(uniforms[uMinorLineThickness]!, thickness);
+  void setMinorLineThickness(num thickness) {
+    gl.uniform1f(uniforms[uMinorLineThickness]!, thickness.toDouble());
   }
 
-  void setMmLineThickness(double thickness) {
-    gl.uniform1f(uniforms[ummLineThickness]!, thickness);
+  void setMmLineThickness(num thickness) {
+    gl.uniform1f(uniforms[ummLineThickness]!, thickness.toDouble());
   }
 
   void setMajorLineColor(Color color) {

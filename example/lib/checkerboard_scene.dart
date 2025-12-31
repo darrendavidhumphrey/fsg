@@ -34,7 +34,7 @@ class CheckerBoardScene extends Scene {
 
     shader.setPatternColor1(color1);
     shader.setPatternColor2(color2);
-    shader.setPatternScale(50.0);
+    shader.setPatternScale(50);
 
     exampleVbo.bind();
     exampleVbo.drawTriangles();

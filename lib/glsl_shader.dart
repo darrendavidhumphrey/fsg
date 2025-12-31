@@ -173,8 +173,16 @@ class GlslShader with LoggableClass {
       gl.attachShader(p, vertShader);
       gl.attachShader(p, fragShader);
       gl.linkProgram(p);
+      bool success = false;
+      var successVal = gl.getProgramParameter(p, WebGL.LINK_STATUS).id;
 
-      if (gl.getProgramParameter(p, WebGL.LINK_STATUS).id != 1) {
+      if (successVal is bool) {
+        success = gl.getProgramParameter(p, WebGL.LINK_STATUS).id;
+      } else {
+        success = (gl.getProgramParameter(p, WebGL.LINK_STATUS).id == 1);
+      }
+
+      if (!success) {
         throw Exception(
             'Shader program linking failed: ${gl.getProgramInfoLog(p) ?? ''}');
       }

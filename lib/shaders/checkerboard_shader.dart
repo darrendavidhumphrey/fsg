@@ -82,7 +82,7 @@ class CheckerBoardShader extends GlslShader {
   void setPatternColor2(Color color) {
     gl.uniform4f(uniforms[uPatternColor2]!, color.r, color.g, color.b, color.a);
   }
-  void setPatternScale(double scale) {
-    gl.uniform1f(uniforms[uPatternScale]!, scale);
+  void setPatternScale(num scale) {
+    gl.uniform1f(uniforms[uPatternScale]!, scale.toDouble());
   }
 }
