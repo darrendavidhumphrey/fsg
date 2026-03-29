@@ -17,6 +17,7 @@ void main() async {
   FSG().initPlatformState();
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(TestApp());
 }
 

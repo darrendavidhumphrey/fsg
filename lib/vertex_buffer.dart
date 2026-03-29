@@ -43,6 +43,9 @@ class VertexComponentFlags {
   static const int texCoord = 1 << 2;
   static const int color = 1 << 3;
 
+  static const int all = position | normal | texCoord | color;
+
+
   final int value;
 
   const VertexComponentFlags(this.value);
@@ -110,6 +113,7 @@ class VertexBuffer {
         _stride = _calculateStride(enabledComponents),
         _componentCount = _calculateComponentCount(enabledComponents);
 
+
   /// A convenience constructor for a buffer with position and color (V3C4).
   VertexBuffer.v3c4(RenderingContext gl)
       : this(gl,
@@ -137,9 +141,17 @@ class VertexBuffer {
             enabledComponents: const VertexComponentFlags(
               VertexComponentFlags.position |
                   VertexComponentFlags.normal |
-                  VertexComponentFlags.texCoord,
+                  VertexComponentFlags.texCoord
             ));
 
+/* TODO: Add back in
+  VertexBuffer.all(RenderingContext gl)
+      : this(gl,
+      enabledComponents: const VertexComponentFlags(
+          VertexComponentFlags.all
+      ));
+
+ */
   /// Updates the GPU buffer with the data from the local [Float32Array] and
   /// sets the number of active vertices to be drawn.
   void setActiveVertexCount(int count) {
@@ -179,6 +191,7 @@ class VertexBuffer {
     vertexData = null;
   }
 
+  // TODO: Possibly obsolete if buffers always have all components
   /// Calculates the stride in bytes for a vertex with the given [flags].
   static int _calculateStride(VertexComponentFlags flags) {
     int calculatedStride = 0;
@@ -313,6 +326,7 @@ class VertexBuffer {
   }
 
   /// Binds this buffer to the `ARRAY_BUFFER` target.
+  /// but does NOT enable the vertex components.
   void bindVbo() {
     _gl.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
   }

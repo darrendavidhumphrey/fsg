@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
@@ -13,7 +14,7 @@ import '../logging.dart';
 /// - Using a [LayoutBuilder] to get the viewport size.
 /// - Using a [VisibilityDetector] to automatically pause the scene when it's not visible.
 /// - Registering the scene with the [FSG] singleton and getting a texture ID.
-/// - Displaying the final texture via a [Texture] widget.
+/// - Displaying the final texture via a [Texture] widget (mobile/desktop) or [AngleView] (web).
 ///
 /// This widget is not intended for direct use. It is wrapped by [RenderToTexture]
 /// and [InteractiveRenderToTexture] to provide a simpler public API.
@@ -102,10 +103,21 @@ class RenderToTextureCoreState extends State<RenderToTextureCore>
                   widget.scene.setViewportSize(screenSize);
                 }
 
-                final textureWidget = Texture(
-                  textureId: texture.textureId,
-                  filterQuality: FilterQuality.medium,
-                );
+                final Widget textureWidget;
+                if (kIsWeb) {
+                  // Wrap in SizedBox to provide explicit dimensions and avoid console warnings.
+                  textureWidget = SizedBox(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    child: HtmlElementView(viewType: texture.textureId.toString()),
+                  );
+                } else {
+                  // On mobile/desktop, we use the standard Texture widget with the textureId.
+                  textureWidget = Texture(
+                    textureId: texture.textureId,
+                    filterQuality: FilterQuality.medium,
+                  );
+                }
 
                 // If a child is provided (e.g., gesture detectors), stack it on top.
                 if (widget.child != null) {
