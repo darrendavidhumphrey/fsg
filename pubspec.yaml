@@ -13,7 +13,7 @@ dependencies:
   flutter_angle: ^0.4.0
   vector_math: ^2.2.0
   visibility_detector: ^0.4.0+2
-  xml: ^7.0.1
+  xml: ^6.6.1
 
 dev_dependencies:
   flutter_test:
