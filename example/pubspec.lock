@@ -82,10 +82,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_angle
-      sha256: ac8031752d4018ec2bfe699f70eee44f0c868762faf20d5e08bf07ca48f551d7
+      sha256: "2990d71e9cd36c9e181112392f2224c64d1dc5afb6a32afb3fafee27565d16a4"
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.0"
+    version: "0.3.9"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -194,6 +194,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.6"
+  plist_parser:
+    dependency: "direct main"
+    description:
+      name: plist_parser
+      sha256: bd54826ac383526262e90cfe68779b73c817721de2efd769d070e2ff637af71c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.7"
   sky_engine:
     dependency: transitive
     description: flutter

@@ -1,12 +1,9 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:fsg/shaders/shaders.dart';
+import 'package:fsg/fsg.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
-import 'float32_array_filler.dart';
-import 'native_array/index.dart';
 
 /// Represents the possible components a vertex can have.
 ///
@@ -14,8 +11,8 @@ import 'native_array/index.dart';
 /// to ensure a stable contract between the client code and the GLSL shaders.
 enum VertexComponent {
   position(3, ShaderList.v3Attrib, 0), // Location 0, 3 floats
-  normal(3, ShaderList.n3Attrib, 1), // Location 1, 3 floats
-  texCoord(2, ShaderList.t2Attrib, 2), // Location 2, 2 floats
+  texCoord(2, ShaderList.t2Attrib, 1), // Location 1, 2 floats
+  normal(3, ShaderList.n3Attrib, 2), // Location 2, 3 floats
   color(4, ShaderList.c4Attrib, 3); // Location 3, 4 floats (RGBA)
 
   /// The number of float components (e.g., 3 for a vec3).
@@ -47,7 +44,6 @@ class VertexComponentFlags {
 
   static const int all = position | normal | texCoord | color;
 
-
   final int value;
 
   const VertexComponentFlags(this.value);
@@ -72,12 +68,12 @@ class VertexComponentFlags {
 ///
 /// This class handles the creation, allocation, data transfer, and disposal of a
 /// buffer used to supply vertex data to a shader program.
-class VertexBuffer {
+class VertexBuffer with LoggableClass {
   /// The underlying rendering context.
-  final RenderingContext _gl;
+  late RenderingContext _gl;
 
-  /// The WebGL identifier for the buffer object.
-  final Buffer _vboId;
+  // VBO ID for OpenGL
+  late Buffer _vboId;
 
   /// A bitmask defining the vertex layout for this buffer.
   final VertexComponentFlags enabledComponents;
@@ -110,50 +106,46 @@ class VertexBuffer {
   Float32Array? vertexData;
 
   /// Creates a vertex buffer with a specific vertex layout.
-  VertexBuffer(this._gl, {required this.enabledComponents})
-      : _vboId = _gl.createBuffer(),
-        _stride = _calculateStride(enabledComponents),
+  VertexBuffer({required this.enabledComponents})
+      : _stride = _calculateStride(enabledComponents),
         _componentCount = _calculateComponentCount(enabledComponents);
 
+  void init(RenderingContext gl) {
+    _gl = gl;
+    _vboId = _gl.createBuffer();
+  }
 
   /// A convenience constructor for a buffer with position and color (V3C4).
-  VertexBuffer.v3c4(RenderingContext gl)
-      : this(gl,
+  VertexBuffer.v3c4()
+      : this(
             enabledComponents: const VertexComponentFlags(
               VertexComponentFlags.position | VertexComponentFlags.color,
             ));
 
   /// A convenience constructor for a buffer with position and texture coords (V3T2).
-  VertexBuffer.v3t2(RenderingContext gl)
-      : this(gl,
+  VertexBuffer.v3t2()
+      : this(
             enabledComponents: const VertexComponentFlags(
               VertexComponentFlags.position | VertexComponentFlags.texCoord,
             ));
 
   /// A convenience constructor for a buffer with position and normals (V3N3).
-  VertexBuffer.v3n3(RenderingContext gl)
-      : this(gl,
+  VertexBuffer.v3n3()
+      : this(
             enabledComponents: const VertexComponentFlags(
               VertexComponentFlags.position | VertexComponentFlags.normal,
             ));
 
   /// A convenience constructor for a buffer with position, texture coords, and normals (V3T2N3).
-  VertexBuffer.v3t2n3(RenderingContext gl)
-      : this(gl,
+  VertexBuffer.v3t2n3()
+      : this(
             enabledComponents: const VertexComponentFlags(
               VertexComponentFlags.position |
                   VertexComponentFlags.normal |
                   VertexComponentFlags.texCoord
             ));
 
-/* TODO: Add back in
-  VertexBuffer.all(RenderingContext gl)
-      : this(gl,
-      enabledComponents: const VertexComponentFlags(
-          VertexComponentFlags.all
-      ));
 
- */
   /// Updates the GPU buffer with the data from the local [Float32Array] and
   /// sets the number of active vertices to be drawn.
   void setActiveVertexCount(int count) {
@@ -162,7 +154,17 @@ class VertexBuffer {
 
     if ((_activeVertexCount > 0) && (vertexData != null)) {
       _gl.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
-      _gl.bufferData(WebGL.ARRAY_BUFFER, vertexData!.toList(), WebGL.STATIC_DRAW);
+      _gl.bufferData(WebGL.ARRAY_BUFFER,vertexData, WebGL.STATIC_DRAW);
+      _gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
+    }
+  }
+
+  void uploadData() {
+
+    if ((_activeVertexCount > 0) && (vertexData != null)) {
+      _gl.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
+      _gl.bufferData(WebGL.ARRAY_BUFFER,vertexData, WebGL.STATIC_DRAW);
+      _gl.bindBuffer(WebGL.ARRAY_BUFFER, null);
     }
   }
 
@@ -209,6 +211,7 @@ class VertexBuffer {
     if (flags.contains(VertexComponentFlags.color)) {
       calculatedStride += VertexComponent.color.byteSize;
     }
+
     return calculatedStride;
   }
 
@@ -247,6 +250,7 @@ class VertexBuffer {
     int offset = 0;
     disableAllVertexAttributes();
     if (enabledComponents.contains(VertexComponentFlags.position)) {
+
       final comp = VertexComponent.position;
       _gl.enableVertexAttribArray(comp.attributeLocation);
       _gl.vertexAttribPointer(
@@ -257,10 +261,13 @@ class VertexBuffer {
         _stride,
         offset,
       );
+
+      //logPedantic("Position Location is ${comp.attributeLocation}");
       offset += comp.byteSize;
     }
 
     if (enabledComponents.contains(VertexComponentFlags.normal)) {
+
       final comp = VertexComponent.normal;
       _gl.enableVertexAttribArray(comp.attributeLocation);
       _gl.vertexAttribPointer(
@@ -269,14 +276,17 @@ class VertexBuffer {
         WebGL.FLOAT,
         false,
         _stride,
-        offset,
+        offset
       );
+      //logPedantic("Vertex Normal Location is ${comp.attributeLocation}");
       offset += comp.byteSize;
     }
 
     if (enabledComponents.contains(VertexComponentFlags.texCoord)) {
+
       final comp = VertexComponent.texCoord;
       _gl.enableVertexAttribArray(comp.attributeLocation);
+      //print("TexCoordLocation is ${comp.attributeLocation}");
       _gl.vertexAttribPointer(
         comp.attributeLocation,
         comp.size,
@@ -285,10 +295,13 @@ class VertexBuffer {
         _stride,
         offset,
       );
+
+      //logPedantic("Tex Coord Location is ${comp.attributeLocation}");
       offset += comp.byteSize;
     }
 
     if (enabledComponents.contains(VertexComponentFlags.color)) {
+
       final comp = VertexComponent.color;
       _gl.enableVertexAttribArray(comp.attributeLocation);
       _gl.vertexAttribPointer(
@@ -299,6 +312,7 @@ class VertexBuffer {
         _stride,
         offset,
       );
+      //logPedantic("Color Location is ${comp.attributeLocation}");
       offset += comp.byteSize;
     }
   }
@@ -323,8 +337,8 @@ class VertexBuffer {
   void makeTexturedUnitQuad(Rect r, double z) {
     int newVertexCount = 6;
 
-    Float32Array vertTextureArray = requestBuffer(newVertexCount)!;
-    Float32ArrayFiller filler = Float32ArrayFiller(vertTextureArray);
+    vertexData = requestBuffer(newVertexCount)!;
+    Float32ArrayFiller filler = Float32ArrayFiller(vertexData!);
 
     Rect tr = Rect.fromLTWH(0, 0, 1, 1);
 
@@ -336,8 +350,10 @@ class VertexBuffer {
     );
 
     filler.addTexturedQuad(q, tr);
-    setActiveVertexCount(newVertexCount);
+    _activeVertexCount = newVertexCount;
   }
+
+
 
   /// Binds this buffer to the `ARRAY_BUFFER` target.
   /// but does NOT enable the vertex components.

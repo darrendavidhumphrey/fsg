@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fsg/ui/scene_navigation_delegate.dart';
 import 'package:vector_math/vector_math_64.dart';
+import '../fsg_singleton.dart';
 import '../scene.dart';
 import '../util.dart';
 
@@ -17,15 +18,12 @@ class OrbitView implements SceneNavigationDelegate {
   final double verticalFieldOfView = radians(60);
 
   double _yaw = _initialYaw;
-  @override
   double get yaw => _yaw;
 
   double _pitch = _initialPitch;
-  @override
   double get pitch => _pitch;
 
   double _distance = 300;
-  @override
   double get distance => _distance;
 
   // State variables for drag-based rotation.
@@ -94,6 +92,7 @@ class OrbitView implements SceneNavigationDelegate {
 
   @override
   void onPointerMove(PointerMoveEvent event) {
+
     if (_dragStart == Offset.zero) return;
 
     final deltaX = _dragStart.dx - event.localPosition.dx;
@@ -149,11 +148,11 @@ class OrbitView implements SceneNavigationDelegate {
     _viewMatrix = makeViewMatrix(getEyeLocation(), orbitCenter, up);
 
     // Apply rotations around the orbit center.
-    _viewMatrix.translate(orbitCenter);
+    _viewMatrix.translateByVector3(orbitCenter);
     _viewMatrix.rotateZ(radians(180));
     _viewMatrix.rotateY(radians(yaw));
     _viewMatrix.rotateX(radians(pitch));
-    _viewMatrix.translate(-orbitCenter);
+    _viewMatrix.translateByVector3(-orbitCenter);
     return _viewMatrix;
   }
 
@@ -200,6 +199,9 @@ class OrbitView implements SceneNavigationDelegate {
       0.1,
       5000000,
     );
+
+    // Ensure Y Axis is the same regardless of platform
+    FSG.normalizeUpAxis(_projectionMatrix);
 
     return _projectionMatrix;
   }

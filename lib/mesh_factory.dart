@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter_angle/native-array/index.dart';
 import 'package:fsg/float32_array_filler.dart';
 import 'package:fsg/polyline.dart';
 import 'package:fsg/triangle_mesh.dart';

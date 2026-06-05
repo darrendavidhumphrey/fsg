@@ -1,3 +1,6 @@
+/*
+
+
 part of native_array;
 
 class Float32Array extends NativeFloat32Array {
@@ -77,3 +80,6 @@ class Int32Array extends NativeInt32Array {
     return Int32Array(dartList.length)..set(dartList);
   }
 }
+
+
+ */

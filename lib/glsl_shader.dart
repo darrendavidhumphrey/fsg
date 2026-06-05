@@ -127,7 +127,8 @@ class RenderingContextWrapper implements GlslShaderContext {
   void uniformMatrix3fv(
       UniformLocation? location, bool transpose, List<double> value) {
     if (location != null) {
-      _gl.uniformMatrix3fv(location, transpose, Float32List.fromList(value));
+      final Float32List nativeMatrix = Float32List.fromList(value);
+      _gl.uniformMatrix3fv(location, transpose,nativeMatrix);
     }
   }
 
@@ -135,7 +136,8 @@ class RenderingContextWrapper implements GlslShaderContext {
   void uniformMatrix4fv(
       UniformLocation? location, bool transpose, List<double> value) {
     if (location != null) {
-      _gl.uniformMatrix4fv(location, transpose, Float32List.fromList(value));
+      final Float32List nativeMatrix = Float32List.fromList(value);
+      _gl.uniformMatrix4fv(location, transpose, nativeMatrix);
     }
   }
 }
@@ -152,6 +154,7 @@ class GlslShader with LoggableClass {
   final List<String> uniformNames;
   final int _sourceHashCode;
 
+  // TODO: fix this
 // Map<String, int> get attributes => UnmodifiableMapView(_attributes);
   Map<String, UniformLocation> get uniforms => UnmodifiableMapView(_uniforms);
 

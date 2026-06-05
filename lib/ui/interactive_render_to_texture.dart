@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fsg/scene.dart';
 import 'package:fsg/ui/render_to_texture_core.dart';
@@ -63,44 +62,26 @@ class InteractiveRenderToTextureState
 
   @override
   Widget build(BuildContext context) {
-    // The core rendering widget, wrapped with interaction listeners.
-    final core = RenderToTextureCore(
-      scene: widget.scene,
-      automaticallyPause: widget.automaticallyPause,
-      // The child is a Listener that captures all user input.
-      child: Listener(
-        behavior: HitTestBehavior.opaque,
-        onPointerDown: (event) {
-          // Request focus on tap down to enable keyboard events.
-          _focusNode.requestFocus();
-          widget.navigationDelegate?.onPointerDown(event);
-        },
-        onPointerUp: (event) {
-          widget.navigationDelegate?.onPointerUp(event);
-        },
-        onPointerCancel: (event) {
-          widget.navigationDelegate?.onPointerCancel(event);
-        },
-        onPointerSignal: (event) {
-          if (event is PointerScrollEvent) {
-            widget.navigationDelegate?.onPointerScroll(event);
-          }
-        },
-        onPointerMove: (event) {
-          widget.navigationDelegate?.onPointerMove(event);
-        },
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) => widget.navigationDelegate?.onPointerDown(event),
+      onPointerMove: (event) => widget.navigationDelegate?.onPointerMove(event),
+      onPointerUp: (event) => widget.navigationDelegate?.onPointerUp(event),
+      onPointerCancel: (event) =>
+          widget.navigationDelegate?.onPointerCancel(event),
+      child: Focus(
+        autofocus: widget.navigationDelegate != null,
+        focusNode: _focusNode,
+        onKeyEvent: (node, event) =>
+            widget.navigationDelegate?.onKeyEvent(event) ??
+            KeyEventResult.ignored,
+        child: RenderToTextureCore(
+            key: ValueKey('$widget.scene.renderToTextureId!+_RenderToTextureCore'),
+            scene: widget.scene,
+            automaticallyPause: widget.automaticallyPause,
+            child: SizedBox.expand()
+        )
       ),
-    );
-
-    // The Focus widget wraps everything to capture keyboard events.
-    return Focus(
-      autofocus: widget.navigationDelegate != null,
-      focusNode: _focusNode,
-      onKeyEvent: (node, event) {
-        return widget.navigationDelegate?.onKeyEvent(event) ??
-            KeyEventResult.ignored;
-      },
-      child: core,
     );
   }
 }

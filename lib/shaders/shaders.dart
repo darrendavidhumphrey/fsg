@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
+import 'package:fsg/fsg.dart';
 import 'package:fsg/gl_context_manager.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -73,7 +74,7 @@ vTextureCoord = aTextureCoord;
 ''';
 
 /// A class that manages the lifecycle of all shader programs in the application.
-class ShaderList with GlContextManager {
+class ShaderList with GlContextManager,LoggableClass {
   // --- Shared Attribute Names ---
   static const String v3Attrib = "aVertexPosition";
   static const String c4Attrib = "aVertexColor";
@@ -88,40 +89,62 @@ class ShaderList with GlContextManager {
   static const String textureSamplerAttrib = 'uSampler';
   // --- Custom Shader Registration ---
   final Map<String, GlslShader> _customShaders = {};
+  final Map<String, GlslShader Function()> _shaderFactories = {};
 
   /// Initializes all shader programs with the given rendering context.
   void init(RenderingContext gl) {
     initializeGl(gl);
-
     // Register default shaders
-    registerShader("oneLight", OneLightShader(gl));
-    registerShader("basicLighting", BasicLightingShader(gl));
-    registerShader("checkerBoard", CheckerBoardShader(gl));
-    registerShader("grid", GridShader(gl));
+    registerShader("oneLight", ()=> OneLightShader(gl));
+    registerShader("basicLighting", ()=> BasicLightingShader(gl));
+    registerShader("checkerBoard", ()=> CheckerBoardShader(gl));
+    registerShader("grid", ()=> GridShader(gl));
 
     // Register generic, unlit shaders from source
     registerShader(
-        "v3t2", GlslShader( RenderingContextWrapper(gl), _texturedFragmentShader,_texturedVertexShader,
+        "v3t2", ()=> GlslShader( RenderingContextWrapper(gl), _texturedFragmentShader,_texturedVertexShader,
       [v3Attrib, t2Attrib],
           [uModelView, uProj, textureSamplerAttrib],));
     registerShader(
-        "v3c4", GlslShader( RenderingContextWrapper(gl), _flatFragmentShader, _flatVertexShader,
+        "v3c4", ()=> GlslShader( RenderingContextWrapper(gl), _flatFragmentShader, _flatVertexShader,
       [v3Attrib, c4Attrib],
       [uModelView, uProj] ));
   }
 
   /// Registers a custom shader by name for later retrieval.
-  void registerShader(String name, GlslShader shader) {
-    _customShaders[name] = shader;
+  void registerShader(String name, GlslShader Function() factory) {
+    _shaderFactories[name] = factory;
   }
 
-  /// Retrieves a previously registered custom shader by name.
-  T getShader<T>(String name) {
-    final shader = _customShaders[name];
-    if (shader == null) {
-      throw Exception('Custom shader with name "$name" not found.');
+  GlslShader getShader(String name) {
+    // 1. If it was already created, return the cached instance
+    if (_customShaders.containsKey(name)) {
+      return _customShaders[name]!;
     }
-    return shader as T;
+
+    // 2. Look up the factory function for this shader
+    final factory = _shaderFactories[name];
+    if (factory == null) {
+      throw Exception("Shader '$name' has not been registered.");
+    }
+
+    // 3. Instantiated lazily right now, cache it, and return it
+    final shaderInstance = factory();
+    _customShaders[name] = shaderInstance;
+    return shaderInstance;
+  }
+
+
+  /// Retrieves a previously registered custom shader by name.
+  T getShaderByType<T>(String name) {
+    var shader = getShader(name);
+
+      // Verify type of shader requested
+      if (shader is! T) {
+        throw Exception("Shader '$name' is not of type $T.");
+      }
+
+      return shader as T;
   }
 
   /// Disposes all managed shader programs.

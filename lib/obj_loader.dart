@@ -68,7 +68,7 @@ class Mesh {
 /// based on the materials defined in the file.
 class WavefrontObjModel {
   /// The vertex buffer containing the unique, interleaved vertex data for the model.
-  late final VertexBuffer vertexBuffer;
+  final VertexBuffer vertexBuffer = VertexBuffer.v3t2n3();
 
   /// A list of sub-meshes, each corresponding to a different material.
   List<Mesh> meshes = [];
@@ -136,7 +136,7 @@ class WavefrontObjModel {
     // --- MAIN PARSING PASS ---
 
     // Allocate the vertex buffer with the final, correct size.
-    vertexBuffer = VertexBuffer.v3t2n3(gl);
+    vertexBuffer.init(gl);
     final vboData = vertexBuffer.requestBuffer(uniqueVertexMap.length)!;
     final filler = Float32ArrayFiller(vboData);
 

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/gl_context_manager.dart';
@@ -38,11 +41,15 @@ abstract class Scene with LoggableClass, GlContextManager {
   Size _viewportSize = Size.zero;
   Size get viewportSize => _viewportSize;
 
+
   /// The texture that this scene will render its output to.
   FlutterAngleTexture? renderToTextureId;
 
   /// If true, the rendering loop is paused.
   bool isPaused = false;
+
+// TODO: TESTING THIS
+  VertexArrayObject? vaoID;
 
   /// Creates a new scene and its associated performance monitor.
   Scene() {
@@ -66,7 +73,9 @@ abstract class Scene with LoggableClass, GlContextManager {
   /// Initializes the scene with the WebGL [RenderingContext].
   /// This must be called before any drawing operations can occur.
   void init(RenderingContext gl) {
+    logPedantic("init");
     initializeGl(gl); // Initialize the GlContextManager mixin
+
     FSG().initContext(gl);
     mvMatrixStack.current = Matrix4.identity();
     gl.clearColor(0, 1, 0, 1);
@@ -82,7 +91,7 @@ abstract class Scene with LoggableClass, GlContextManager {
 
   /// Sets the viewport size for the scene and all its layers.
   void setViewportSize(Size size) {
-    logPedantic("setViewportSize: ${size.toString()}");
+    //logPedantic("setViewportSize: ${size.toString()}");
     _viewportSize = size;
     for (var layer in layers) {
       layer.setViewportSize(size);
@@ -99,6 +108,7 @@ abstract class Scene with LoggableClass, GlContextManager {
       layer.dispose();
     }
     layers.clear();
+
   }
 
   /// Adds a [SceneLayer] to this scene.
@@ -134,26 +144,71 @@ abstract class Scene with LoggableClass, GlContextManager {
   ///
   /// Renders the scene to the configured texture if a repaint has been requested
   /// or if any layer needs to be rebuilt.
-  Future<void> renderSceneToTexture(_) async {
-    if (renderToTextureId == null || !isInitialized) {
-      return;
-    }
+  ///
 
-    if (isPaused) {
-      return;
-    }
+  bool frameProcessing = false;
 
-    if (_needsRepaint || needsRebuild()) {
-      // Set [_needsRepaint] to false at the start of the loop.
-      // The [drawScene] implementation is expected to call [requestRepaint] if it
-      // needs to continue animating.
-      _needsRepaint = false;
+  Future<void> renderSceneToTexture() async  {
 
-      renderToTextureId!.activate();
-      performanceMonitor.beginFrame();
-      drawScene();
-      await renderToTextureId!.signalNewFrameAvailable();
-      performanceMonitor.endFrame();
+    if (frameProcessing) return;
+    frameProcessing = true;
+
+    try {
+
+      if (renderToTextureId == null) {
+        frameProcessing = false;
+        return;
+      }
+
+      if (isPaused) {
+        frameProcessing = false;
+        return;
+      }
+
+      if (_needsRepaint || needsRebuild()) {
+        // Set [_needsRepaint] to false at the start of the loop.
+        // The [drawScene] implementation is expected to call [requestRepaint] if it
+        // needs to continue animating.
+        _needsRepaint = false;
+
+        performanceMonitor.beginFrame();
+        renderToTextureId!.activate();
+
+        if (!isInitialized) {
+          logPedantic("initScene");
+          FSG().initScene(this);
+        }
+
+
+        //logPedantic("renderSceneToTexture");
+        drawScene();
+
+        if (kIsWeb) {
+
+
+          //renderToTextureId!.rawOpenGl.gl.bindVertexArray(null);
+         //gl.flush();
+          // TODO: TEST
+          FSG().angle.updateTexture(renderToTextureId!);
+          await renderToTextureId!.signalNewFrameAvailable();
+        } else {
+          gl.bindVertexArray(VertexArrayObject(0));
+          gl.flush();
+
+          await renderToTextureId!.signalNewFrameAvailable();
+          if (Platform.isWindows) {
+            gl.finish();
+          }
+        }
+
+        //print("::renderSceneToTexture::");
+        // TODO: TEST
+        //FSG().angle.updateTexture(renderToTextureId!);
+
+        performanceMonitor.endFrame();
+      }
+    } finally {
+      frameProcessing = false;
     }
   }
 }

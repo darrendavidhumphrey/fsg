@@ -11,10 +11,7 @@ void main() async {
   });
 
   WidgetsFlutterBinding.ensureInitialized();
-  FSG().initPlatformState();
-
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(TestApp());
 }
 
@@ -27,61 +24,102 @@ class TestApp extends StatefulWidget {
 
 class TestAppState extends State<TestApp> {
   int _pageIndex = 0;
-  late IndexedScene scene;
+  IndexedScene? scene;
 
-  @override
-  void initState() {
-    super.initState();
+  Future<void> initAngle() async {
+    // Control the size of the render to texture buffer here (defaults to 4096)
+    // FSG.renderToTextureSize = 1024;
+
+    // Initialize FSG. This call immediately sets FSG().state to inProgress
+    await FSG().initPlatformState();
+
+    // Create the scene
     scene = IndexedScene();
-    FSG().registerSceneAndAllocateTexture(scene);
+
+    // Register the scene and allocate a texture
+    await FSG().registerSceneAndAllocateTexture(scene!);
+
+    // Trigger a rebuild of the widget
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'FSG Examples',
-     // showPerformanceOverlay: true,
-      home: Scaffold(
-        body: Row(
-          children: [
-            Expanded(
-              child: Stack(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (FSG().state == FsgState.uninitialized) {
+          initAngle();
+        }
+
+        if (scene == null) {
+          return const CircularProgressIndicator();
+        }
+
+        return SizedBox(
+          width: constraints.maxWidth,
+          height: constraints.maxHeight,
+          child: MaterialApp(
+            title: 'FSG Examples',
+            // showPerformanceOverlay: true,
+            home: Scaffold(
+              body: Row(
                 children: [
-                  InteractiveRenderToTexture(scene: scene.currentScene(), navigationDelegate: scene.currentDelegate(),automaticallyPause: false,),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top:8.0,left:8.0,right:8.0),
-                        child: DropdownMenu<int>(
-                          width: constraints.maxWidth,
-                          initialSelection: _pageIndex,
-                          label: const Text('Select Example'),
-                          // onSelected is called when the user picks an item
-                          onSelected: (int? value) {
-                            setState(() {
-                              _pageIndex = value!;
-                              scene.setSceneIndex(_pageIndex);
-                            });
-                          },
-                          // Define the entries in the menu
-                          dropdownMenuEntries: const [
-                            DropdownMenuEntry(
-                              value: 0,
-                              label: 'Example 1: Hello World',
-                            ),
-                            DropdownMenuEntry(value: 1, label: 'Example 2: Animated Shader Uniforms'),
-                            DropdownMenuEntry(value: 2, label: 'Example 3: Navigation Delegate (Orbit View)'),
-                          ],
+                  Expanded(
+                    child: Stack(
+                      children: [
+                        InteractiveRenderToTexture(
+                          scene: scene!.currentScene(),
+                          navigationDelegate: scene!.currentDelegate(),
                         ),
-                      );
-                    },
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                top: 8.0,
+                                left: 8.0,
+                                right: 8.0,
+                              ),
+                              child: DropdownMenu<int>(
+                                width: constraints.maxWidth,
+                                initialSelection: _pageIndex,
+                                label: const Text('Select Example'),
+                                // onSelected is called when the user picks an item
+                                onSelected: (int? value) {
+                                  setState(() {
+                                    _pageIndex = value!;
+                                    scene!.setSceneIndex(_pageIndex);
+                                  });
+                                },
+                                // Define the entries in the menu
+                                dropdownMenuEntries: const [
+                                  DropdownMenuEntry(
+                                    value: 0,
+                                    label: 'Example 1: Checkerboard Shaded Quad',
+                                  ),
+                                  DropdownMenuEntry(
+                                    value: 1,
+                                    label:
+                                        'Example 2: Animated Shader Uniforms',
+                                  ),
+                                  DropdownMenuEntry(
+                                    value: 2,
+                                    label:
+                                        'Example 3: Navigation Delegate (Orbit View)',
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

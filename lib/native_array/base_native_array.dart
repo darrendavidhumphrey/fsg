@@ -1,3 +1,4 @@
+/*
 part of native_array;
 
 class AllNativeData{
@@ -68,3 +69,5 @@ abstract class NativeArray<T extends num> {
     allNativeData.removeAt(this);
   }
 }
+
+ */

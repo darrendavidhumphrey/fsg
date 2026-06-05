@@ -1,17 +1,23 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/shaders/shaders.dart';
 import 'package:fsg/shaders/materials.dart';
 import 'package:fsg/texture_manager.dart';
-import 'frame_counter.dart';
+import 'package:vector_math/vector_math_64.dart' hide Colors;
 import 'logging.dart';
 import 'bitmap_fonts/bitmap_font_manager.dart';
 import 'scene.dart';
 
 /// Enum to manage the initialization state of the FSG singleton.
-enum _FsgState {
+enum FsgState {
   /// The engine has not been initialized at all.
   uninitialized,
+
+  /// Initialization just started,but engine is not yet ready.
+  inProgress,
 
   /// The core FlutterAngle engine is ready, but no GL context has been created.
   glInitialized,
@@ -30,16 +36,17 @@ class FSG with LoggableClass {
   FlutterAngle angle = FlutterAngle();
 
   /// The current initialization state of the engine.
-  _FsgState _state = _FsgState.uninitialized;
+  FsgState _state = FsgState.uninitialized;
+  FsgState get state => _state;
 
-  /// The default size for textures that are rendered to.
+      /// The default size for textures that are rendered to.
   static double renderToTextureSize = 4096;
 
   /// A map of all registered scenes and their corresponding output textures.
   final Map<Scene, FlutterAngleTexture> scenes = {};
 
   /// The manager for all shader programs.
-  final shaders = ShaderList();
+  late ShaderList shaders;
 
   /// A list of all textures created by the engine, for later disposal.
   final renderToTextureList = <FlutterAngleTexture>[];
@@ -56,9 +63,6 @@ class FSG with LoggableClass {
   /// The singleton instance.
   static final FSG _singleton = FSG._internal();
 
-  /// A model for tracking and displaying the frame rate.
-  late FrameCounterModel frameCounter;
-
   /// Factory constructor to return the singleton instance.
   factory FSG() {
     return _singleton;
@@ -70,11 +74,14 @@ class FSG with LoggableClass {
   /// Initializes the core FlutterAngle engine.
   /// This must be called once before any other operations.
   Future<bool> init() async {
-    if (_state != _FsgState.uninitialized) {
+    if (_state != FsgState.uninitialized) {
       return false;
     }
+    _state = FsgState.inProgress;
+
     await angle.init();
-    _state = _FsgState.glInitialized;
+    shaders = ShaderList();
+    _state = FsgState.glInitialized;
     return true;
   }
 
@@ -83,7 +90,7 @@ class FSG with LoggableClass {
     AngleOptions options, {
     double textureSize = 4096,
   }) async {
-    if (_state == _FsgState.uninitialized) {
+    if (_state == FsgState.uninitialized) {
       logWarning("allocTexture called before FSG is initialized.");
       return null;
     }
@@ -101,7 +108,6 @@ class FSG with LoggableClass {
 
   /// Initializes platform-specific state, including the frame counter and the engine.
   Future<void> initPlatformState() async {
-    frameCounter = FrameCounterModel();
     await init();
   }
 
@@ -119,15 +125,15 @@ class FSG with LoggableClass {
   /// Initializes shared context-specific resources like shaders and textures.
   /// This is called once a GL context becomes available.
   void initContext(RenderingContext gl) {
-    if (_state == _FsgState.contextInitialized) {
+    if (_state == FsgState.contextInitialized) {
       return;
     }
+
     textureManager.initializeGl(gl);
     initDefaultMaterial();
-
     shaders.init(gl);
     fontManager.createDefaultFont();
-    _state = _FsgState.contextInitialized;
+    _state = FsgState.contextInitialized;
   }
 
   /// Disposes all scenes, textures, shaders, and other GPU resources.
@@ -154,8 +160,8 @@ class FSG with LoggableClass {
     await textureManager.dispose();
 
     // After disposing context-specific resources, we revert to the GL-initialized state.
-    if (_state == _FsgState.contextInitialized) {
-      _state = _FsgState.glInitialized;
+    if (_state == FsgState.contextInitialized) {
+      _state = FsgState.glInitialized;
     }
   }
 
@@ -184,5 +190,12 @@ class FSG with LoggableClass {
   void reuseTexture(FlutterAngleTexture textureId, Scene scene) async {
     scene.renderToTextureId = textureId;
     scenes[scene] = textureId;
+  }
+
+  static void normalizeUpAxis(Matrix4 mat) {
+    if ((kIsWeb) || (Platform.isAndroid)) {
+      // Multiply the Y scale component (row 1, column 1) by -1
+      mat.scaleByVector3(Vector3(1.0, -1.0, 1.0));
+    }
   }
 }

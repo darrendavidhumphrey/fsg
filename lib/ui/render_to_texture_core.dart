@@ -7,26 +7,19 @@ import '../fsg_singleton.dart';
 import '../scene.dart';
 import '../logging.dart';
 
-/// A core stateful widget that manages the lifecycle of rendering a [Scene] to a texture.
-///
-/// This widget handles:
-/// - Creating and managing a [Ticker] to drive the render loop.
-/// - Using a [LayoutBuilder] to get the viewport size.
-/// - Using a [VisibilityDetector] to automatically pause the scene when it's not visible.
-/// - Registering the scene with the [FSG] singleton and getting a texture ID.
-/// - Displaying the final texture via a [Texture] widget (mobile/desktop) or [AngleView] (web).
-///
-/// This widget is not intended for direct use. It is wrapped by [RenderToTexture]
-/// and [InteractiveRenderToTexture] to provide a simpler public API.
 class RenderToTextureCore extends StatefulWidget {
   final Scene scene;
   final bool automaticallyPause;
   final Widget? child;
+  // Added: Accepts a notifier from the parent to signal frame repaints
+  final ValueNotifier<int>? repaintNotifier;
 
-  const RenderToTextureCore({super.key,
+  const RenderToTextureCore({
+    super.key,
     required this.scene,
     this.automaticallyPause = true,
     this.child,
+    this.repaintNotifier,
   });
 
   @override
@@ -34,9 +27,8 @@ class RenderToTextureCore extends StatefulWidget {
 }
 
 class RenderToTextureCoreState extends State<RenderToTextureCore>
-    with WidgetsBindingObserver, SingleTickerProviderStateMixin, LoggableClass {
+    with WidgetsBindingObserver, TickerProviderStateMixin, LoggableClass {
   Size screenSize = Size.zero;
-  bool windowResized = false;
   Ticker? ticker;
   final Key _visibilityKey = UniqueKey();
 
@@ -47,6 +39,19 @@ class RenderToTextureCoreState extends State<RenderToTextureCore>
     if (widget.automaticallyPause) {
       widget.scene.isPaused = true;
     }
+    _initRenderLoop();
+  }
+
+  void _initRenderLoop() async {
+    if (kIsWeb) {
+      // Safely let the browser DOM register the viewType before ticking
+      await Future.delayed(const Duration(milliseconds: 250));
+      if (mounted) {
+        setState(() {});
+      }
+    }
+    // Guarantees exactly ONE ticker is ever created
+    ticker ??= createTicker(_onHardwareTick)..start();
   }
 
   @override
@@ -58,87 +63,65 @@ class RenderToTextureCoreState extends State<RenderToTextureCore>
 
   @override
   void didChangeMetrics() {
-    // Triggers a repaint and viewport resize on window metric changes (like rotation).
     onWindowResize();
   }
 
   void onWindowResize() {
-    windowResized = true;
     widget.scene.requestRepaint();
+  }
+
+  void _onHardwareTick(Duration elapsed) async {
+    if (widget.scene.frameProcessing) {
+      return;
+    }
+
+    await widget.scene.renderSceneToTexture();
+
+    if (mounted) {
+      if (!kIsWeb) {
+        setState(() {});
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: FSG().frameCounter,
-      builder: (context, child) {
-        return VisibilityDetector(
-          key: _visibilityKey,
-          onVisibilityChanged: (visibilityInfo) {
-            if (widget.automaticallyPause) {
-              bool visible = (visibilityInfo.visibleFraction > 0);
-              widget.scene.isPaused = !visible;
-
-              if (visible) {
-                widget.scene.requestRepaint();
-              }
-            }
-          },
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              FlutterAngleTexture? texture = FSG().scenes[widget.scene];
-
-              if (texture != null) {
-                bool firstPaint = !widget.scene.isInitialized;
-                if (firstPaint) {
-                  // If this is the first time painting, initialize the scene and start the ticker.
-                  FSG().initScene(widget.scene);
-                  ticker = createTicker(widget.scene.renderSceneToTexture)
-                    ..start();
-                }
-
-                if (firstPaint || windowResized) {
-                  // Update the scene's viewport size if it's the first paint or the window resized.
-                  windowResized = false;
-                  screenSize = Size(constraints.maxWidth, constraints.maxHeight);
-                  widget.scene.setViewportSize(screenSize);
-                }
-
-                final Widget textureWidget;
-                if (kIsWeb) {
-                  // Wrap in SizedBox to provide explicit dimensions and avoid console warnings.
-                  textureWidget = SizedBox(
-                    width: constraints.maxWidth,
-                    height: constraints.maxHeight,
-                    child: HtmlElementView(viewType: texture.textureId.toString()),
-                  );
-                } else {
-                  // On mobile/desktop, we use the standard Texture widget with the textureId.
-                  textureWidget = Texture(
-                    textureId: texture.textureId,
-                    filterQuality: FilterQuality.medium,
-                  );
-                }
-
-                // If a child is provided (e.g., gesture detectors), stack it on top.
-                if (widget.child != null) {
-                  return Stack(children: [textureWidget, widget.child!]);
-                }
-                return textureWidget;
-              } else {
-                // If the texture has not yet been allocated by FSG, schedule a post-frame
-                // callback to register the scene. This prevents calling setState during build.
-                SchedulerBinding.instance.addPostFrameCallback((_) {
-                  FSG().registerSceneAndAllocateTexture(widget.scene);
-                  // Increment counter to trigger a rebuild once the texture is ready.
-                  FSG().frameCounter.increment();
-                });
-                return Container(); // Return an empty container while waiting.
-              }
-            },
-          ),
-        );
+    return VisibilityDetector(
+      key: _visibilityKey,
+      onVisibilityChanged: (visibilityInfo) {
+        if (widget.automaticallyPause) {
+          bool visible = (visibilityInfo.visibleFraction > 0);
+          widget.scene.isPaused = !visible;
+        }
       },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          FlutterAngleTexture? texture = FSG().scenes[widget.scene];
+
+          screenSize = Size(constraints.maxWidth, constraints.maxHeight);
+          widget.scene.setViewportSize(screenSize);
+
+          return Stack(
+            children: [
+              SizedBox(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                child: kIsWeb
+                    ? HtmlElementView(
+                        key: ValueKey(texture!.textureId),
+                        viewType: texture!.textureId.toString(),
+                      )
+                    : Texture(
+                        key: ValueKey(texture!.textureId),
+                        textureId: texture!.textureId,
+                        filterQuality: FilterQuality.medium,
+                      ),
+              ),
+              widget.child!,
+            ],
+          );
+        },
+      ),
     );
   }
 }

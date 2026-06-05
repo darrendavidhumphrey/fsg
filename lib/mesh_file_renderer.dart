@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:fsg/shaders/shaders.dart';
-import 'package:fsg/shaders/materials.dart';
-import 'package:fsg/vertex_buffer.dart';
+import 'package:fsg/fsg.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-import 'fsg_singleton.dart';
-import 'index_buffer.dart';
-import 'native_array/index.dart';
-import 'obj_loader.dart';
 
 /// A renderer responsible for drawing a [WavefrontObjModel] to the screen.
 ///
@@ -26,6 +20,8 @@ class MeshFileRenderer {
 
   /// The WebGL rendering context.
   final RenderingContext gl;
+
+  OneLightShader? shader;
 
   /// Creates a renderer for a specific model and initializes its GL resources.
   ///
@@ -68,25 +64,23 @@ class MeshFileRenderer {
 
   /// Configures and enables the lighting shader for drawing.
   void enableLightingShader(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    var shader = FSG().shaders.getShader("oneLight");
-    gl.useProgram(shader.program);
-    ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
+    gl.useProgram(shader!.program);
+    ShaderList.setMatrixUniforms(shader!, pMatrix, mvMatrix);
 
-    shader.setLightPos(Vector3(40, 0, -200));
-    shader.setNMatrix(Matrix3.identity());
-    shader.setAmbientLight(Colors.grey[900]!);
-    shader.setDiffuseLight(Colors.white);
-    shader.setSpecularLight(Colors.white);
+    shader!.setLightPos(Vector3(40, 0, -200));
+    shader!.setNMatrix(Matrix3.identity());
+    shader!.setAmbientLight(Colors.grey[900]!);
+    shader!.setDiffuseLight(Colors.white);
+    shader!.setSpecularLight(Colors.white);
   }
 
   /// Sets the material properties on the currently active shader.
   void setMaterial(String materialName) {
     GlMaterial material = FSG().materials.getMaterial(materialName);
-    var shader = FSG().shaders.getShader("oneLight");
-    shader.setMaterialAmbient(material.ambient);
-    shader.setMaterialDiffuse(material.diffuse);
-    shader.setMaterialSpecular(material.specular);
-    shader.setShininess(material.shininess);
+    shader!.setMaterialAmbient(material.ambient);
+    shader!.setMaterialDiffuse(material.diffuse);
+    shader!.setMaterialSpecular(material.specular);
+    shader!.setShininess(material.shininess);
   }
 
   /// Draws the entire model.
@@ -95,6 +89,8 @@ class MeshFileRenderer {
   /// enables the shader, and then iterates through each mesh in the model.
   /// For each mesh, it sets the correct material and issues a `drawElements` call.
   void draw(Matrix4 pMatrix, Matrix4 mvMatrix) {
+    shader ??= FSG().shaders.getShaderByType<OneLightShader>("oneLight");
+
     gl.enable(WebGL.DEPTH_TEST);
     gl.enable(WebGL.CULL_FACE);
     gl.cullFace(WebGL.BACK);

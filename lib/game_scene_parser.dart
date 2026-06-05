@@ -1,0 +1,137 @@
+import 'dart:ui';
+import 'package:vector_math/vector_math_64.dart';
+import 'package:xml/xml.dart';
+import 'game_scene_data.dart';
+
+class GameSceneParser {
+  static GameSceneData parse(String xmlString) {
+    final document = XmlDocument.parse(xmlString);
+    final root = document.getElement('gameScene')!;
+    final version = root.getAttribute('version') ?? '1.0';
+
+    final textures = <TextureData>[];
+    final texturesElement = root.getElement('textures');
+    if (texturesElement != null) {
+      for (final node in texturesElement.findElements('texture')) {
+        textures.add(TextureData(
+          id: node.getAttribute('id')!,
+          file: node.getAttribute('file')!,
+        ));
+      }
+    }
+
+    final fonts = <FontData>[];
+    final fontsElement = root.getElement('fonts');
+    if (fontsElement != null) {
+      for (final node in fontsElement.findElements('font')) {
+        fonts.add(FontData(
+          id: node.getAttribute('id')!,
+          fntFile: node.getAttribute('fntFile')!,
+          texture: node.getAttribute('texture')!,
+        ));
+      }
+    }
+
+    final anchors = <String, AnchorData>{};
+    final anchorsElement = root.getElement('anchors');
+    if (anchorsElement != null) {
+      for (final node in anchorsElement.findElements('anchor')) {
+        final id = node.getAttribute('id')!;
+        anchors[id] = AnchorData(
+          id: id,
+          val: _parseVector3(node.getAttribute('val')!, {}),
+        );
+      }
+    }
+
+    final objects = <SceneObject>[];
+    final objectsElement = root.getElement('objects');
+    if (objectsElement != null) {
+      for (final node in objectsElement.children.whereType<XmlElement>()) {
+        final obj = _parseObject(node, anchors);
+        if (obj != null) {
+          objects.add(obj);
+        }
+      }
+    }
+
+    return GameSceneData(
+      version: version,
+      textures: textures,
+      fonts: fonts,
+      anchors: anchors.values.toList(),
+      objects: objects,
+    );
+  }
+
+  static SceneObject? _parseObject(XmlElement node, Map<String, AnchorData> anchors) {
+    switch (node.name.local) {
+      case 'quad':
+        return QuadData(
+          id: node.getAttribute('id')!,
+          texture: node.getAttribute('texture')!,
+          screenRect: _parseRect(node.getAttribute('screenRect')!),
+          textureRect: _parseRect(node.getAttribute('textureRect')!),
+          premultiplyAlpha: node.getAttribute('premultiplyAlpha') == 'true',
+        );
+      case 'group':
+        final children = <SceneObject>[];
+        final childrenElement = node.getElement('children');
+        if (childrenElement != null) {
+          for (final childNode in childrenElement.children.whereType<XmlElement>()) {
+            final child = _parseObject(childNode, anchors);
+            if (child != null) {
+              children.add(child);
+            }
+          }
+        }
+        return GroupData(
+          id: node.getAttribute('id')!,
+          anchor: _parseVector3(node.getAttribute('anchor')!, anchors),
+          children: children,
+        );
+      case 'text':
+        return TextData(
+          id: node.getAttribute('id')!,
+          font: node.getAttribute('font')!,
+          text: node.getAttribute('text')!,
+          screenRect: _parseRect(node.getAttribute('screenRect')!),
+          hJustify: node.getAttribute('hJustify'),
+          maxLen: int.tryParse(node.getAttribute('maxLen') ?? ''),
+          scaleToFit: node.getAttribute('scaleToFit') == 'YES',
+        );
+      default:
+        return null;
+    }
+  }
+
+  static Rect _parseRect(String s) {
+    final regex = RegExp(
+        r'\{\{\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\}\s*,\s*\{\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\}\}');
+    final match = regex.firstMatch(s);
+    if (match != null) {
+      double x = double.parse(match.group(1)!);
+      double y = double.parse(match.group(2)!);
+      double w = double.parse(match.group(3)!);
+      double h = double.parse(match.group(4)!);
+      return Rect.fromLTWH(x, y, w, h);
+    }
+    return Rect.zero;
+  }
+
+  static Vector3 _parseVector3(String s, Map<String, AnchorData> anchors) {
+    if (anchors.containsKey(s)) {
+      return anchors[s]!.val.clone();
+    }
+    final regex = RegExp(
+        r'\{\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*\}');
+    final match = regex.firstMatch(s);
+    if (match != null) {
+      double x = double.parse(match.group(1)!);
+      double y = double.parse(match.group(2)!);
+      double z = double.parse(match.group(3)!);
+      return Vector3(x, y, z);
+    }
+    return Vector3.zero();
+  }
+}

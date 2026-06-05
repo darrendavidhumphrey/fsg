@@ -47,8 +47,6 @@ class IndexedScene extends Scene {
   void init(RenderingContext gl) {
     super.init(gl);
 
-    // TODO: Move into FSG base
-    // TODO: Do this in a derived class
     var checker = CheckerBoardScene();
     checker.init(gl);
     FSG().reuseTexture(renderToTextureId!, checker);
@@ -73,6 +71,7 @@ class IndexedScene extends Scene {
 
   @override
   void dispose() {}
+
 
   @override
   void drawScene() {

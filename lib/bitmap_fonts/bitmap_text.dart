@@ -41,7 +41,7 @@ class BitmapText {
   late double _width;
 
   /// The vertex buffer object that holds the geometry for rendering.
-  VertexBuffer? vbo;
+  VertexBuffer vbo = VertexBuffer.v3t2();
 
   /// Creates a [BitmapText] object.
   ///
@@ -55,9 +55,7 @@ class BitmapText {
 
   /// Disposes the vertex buffer associated with this text.
   void dispose() {
-    if (vbo != null) {
-      vbo!.dispose();
-    }
+      vbo.dispose();
   }
 
   /// Sets a new font and flags the text for a rebuild.
@@ -84,11 +82,11 @@ class BitmapText {
     rebuildQuads();
 
     // Create the VBO if it doesn't exist.
-    vbo ??= VertexBuffer.v3t2(gl);
+    vbo.init(gl);
 
     int vertexCount = quads.length * 6; // Two triangles per character quad.
 
-    Float32Array? vertexTexCoordArray = vbo!.requestBuffer(vertexCount);
+    Float32Array? vertexTexCoordArray = vbo.requestBuffer(vertexCount);
 
     if (vertexTexCoordArray != null) {
       final filler = Float32ArrayFiller(vertexTexCoordArray);
@@ -102,7 +100,7 @@ class BitmapText {
       }
     }
 
-    vbo!.setActiveVertexCount(vertexCount);
+    vbo.setActiveVertexCount(vertexCount);
     _needsRebuild = false; // Reset the flag after a successful rebuild.
   }
 
