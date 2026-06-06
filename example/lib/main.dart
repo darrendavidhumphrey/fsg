@@ -1,14 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fsg/fsg.dart';
 import 'package:flutter/material.dart';
-import 'package:fsg_examples/indexed_scene.dart';
+import 'package:fsg_examples/example_scenes.dart';
 
 void main() async {
   Logging.brevity = Brevity.detailed;
   Logging.defaultLogLevel = LogLevel.pedantic;
-  Logging.setConsoleLogFunction((String message) {
-    print(message);
-  });
+  if (!kDebugMode) {
+    Logging.setConsoleLogFunction(null);
+  }
 
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -24,17 +25,17 @@ class TestApp extends StatefulWidget {
 
 class TestAppState extends State<TestApp> {
   int _pageIndex = 0;
-  IndexedScene? scene;
+  ExampleScenes? scene;
 
   Future<void> initAngle() async {
-    // Control the size of the render to texture buffer here (defaults to 4096)
+    // Override the size of the render to texture buffer here (defaults to 4096)
     // FSG.renderToTextureSize = 1024;
 
     // Initialize FSG. This call immediately sets FSG().state to inProgress
     await FSG().initPlatformState();
 
     // Create the scene
-    scene = IndexedScene();
+    scene = ExampleScenes();
 
     // Register the scene and allocate a texture
     await FSG().registerSceneAndAllocateTexture(scene!);
@@ -42,6 +43,14 @@ class TestAppState extends State<TestApp> {
     // Trigger a rebuild of the widget
     setState(() {});
   }
+
+  static final List<DropdownMenuEntry<int>> menuEntries = [
+    DropdownMenuEntry(value: 0, label: 'Example 1: Checkerboard Shaded Quad'),
+    DropdownMenuEntry(value: 1, label: 'Example 2: Animated Shader Uniforms'),
+    DropdownMenuEntry(value: 2, label: 'Example 3: Navigation Delegate)',),
+    DropdownMenuEntry(value: 3, label: 'Example 4: Bitmap Text',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +69,7 @@ class TestAppState extends State<TestApp> {
           height: constraints.maxHeight,
           child: MaterialApp(
             title: 'FSG Examples',
-            // showPerformanceOverlay: true,
+             //showPerformanceOverlay: true,
             home: Scaffold(
               body: Row(
                 children: [
@@ -71,45 +80,23 @@ class TestAppState extends State<TestApp> {
                           scene: scene!.currentScene(),
                           navigationDelegate: scene!.currentDelegate(),
                         ),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Padding(
-                              padding: const EdgeInsets.only(
-                                top: 8.0,
-                                left: 8.0,
-                                right: 8.0,
-                              ),
-                              child: DropdownMenu<int>(
-                                width: constraints.maxWidth,
-                                initialSelection: _pageIndex,
-                                label: const Text('Select Example'),
-                                // onSelected is called when the user picks an item
-                                onSelected: (int? value) {
-                                  setState(() {
-                                    _pageIndex = value!;
-                                    scene!.setSceneIndex(_pageIndex);
-                                  });
-                                },
-                                // Define the entries in the menu
-                                dropdownMenuEntries: const [
-                                  DropdownMenuEntry(
-                                    value: 0,
-                                    label: 'Example 1: Checkerboard Shaded Quad',
-                                  ),
-                                  DropdownMenuEntry(
-                                    value: 1,
-                                    label:
-                                        'Example 2: Animated Shader Uniforms',
-                                  ),
-                                  DropdownMenuEntry(
-                                    value: 2,
-                                    label:
-                                        'Example 3: Navigation Delegate (Orbit View)',
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            top: 8.0,
+                            left: 8.0,
+                            right: 8.0,
+                          ),
+                          child: DropdownMenu<int>(
+                            initialSelection: _pageIndex,
+                            label: const Text('Select Example'),
+                            onSelected: (int? value) {
+                              setState(() {
+                                _pageIndex = value!;
+                                scene!.setCurrentScene(_pageIndex);
+                              });
+                            },
+                            dropdownMenuEntries: menuEntries,
+                          ),
                         ),
                       ],
                     ),

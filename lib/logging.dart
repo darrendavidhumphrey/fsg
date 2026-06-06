@@ -3,6 +3,7 @@
 /// log message. The frame also allows for dynamic runtime filtering of log
 /// events by level and by source. Additionally, it supports redirecting the
 /// log messages to other sources besides the console.
+library;
 
 /// Defines the severity levels for log messages, in priority order.
 ///
@@ -103,13 +104,14 @@ class Logging {
   static LogLevel defaultLogLevel = LogLevel.pedantic;
 
   /// Installs a function that will receive all formatted log messages.
-  /// Typically, you would pass the `print` function here.
-  static void setConsoleLogFunction(void Function(String arg) func) {
+  /// Call this function with null will disable console logging.
+  static void setConsoleLogFunction(void Function(String arg)? func) {
     _consoleLogFunction = func;
   }
 
   /// Installs an optional second function to receive log messages.
   /// This is useful for redirecting logs to a UI widget, a file, or a network service.
+  /// The custom log function happens independently of the console log function.
   static void setCustomLogFunction(void Function(String arg) func) {
     _customLogFunction = func;
   }
@@ -126,7 +128,7 @@ class Logging {
       logLevelMap[source] = LogLevel.values.firstWhere(
         (e) => e.name == level.toLowerCase(),
         orElse: () {
-          logWarning(
+          logError(
             '"$level" is not a valid LogLevel. Using default for source "$source".',
             source: "Logging",
           );
@@ -177,7 +179,7 @@ class Logging {
   ////////////////////////////////////////////////////////////////////////////
 
   /// The console logging function installed by user code.
-  static void Function(String)? _consoleLogFunction;
+  static void Function(String)? _consoleLogFunction = print;
 
   /// The optional custom log function installed by user code.
   static void Function(String)? _customLogFunction;

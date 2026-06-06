@@ -66,7 +66,6 @@ abstract class Scene with LoggableClass, GlContextManager {
   /// Initializes the scene with the WebGL [RenderingContext].
   /// This must be called before any drawing operations can occur.
   void init(RenderingContext gl) {
-    logPedantic("init");
     initializeGl(gl); // Initialize the GlContextManager mixin
 
     FSG().initContext(gl);
@@ -163,7 +162,6 @@ abstract class Scene with LoggableClass, GlContextManager {
         renderToTextureId!.activate();
 
         if (!isInitialized) {
-          logPedantic("initScene");
           FSG().initScene(this);
         }
 
