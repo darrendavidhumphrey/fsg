@@ -3,11 +3,13 @@ export 'bitmap_fonts/bitmap_font_manager.dart';
 export 'bitmap_fonts/bitmap_text.dart';
 
 export 'shaders/materials.dart';
+export 'shaders/shaders.dart';
 export 'shaders/lighting_shader.dart';
 export 'shaders/one_light_shader.dart';
 export 'shaders/checkerboard_shader.dart';
-export 'shaders/shaders.dart';
+export 'shaders/flat_shader.dart';
 export 'shaders/grid_shader.dart';
+export 'shaders/bitmap_text_shader.dart';
 
 export 'fsg_singleton.dart';
 export 'glsl_shader.dart';

@@ -7,8 +7,6 @@ import 'package:fsg/util.dart';
 import 'package:fsg/vertex_buffer.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import 'native_array/index.dart';
-
 /// A utility class with static methods to create complex [TriangleMesh] objects
 /// or populate [VertexBuffer] objects from geometry.
 class MeshFactory {
@@ -73,7 +71,7 @@ class MeshFactory {
   static void tessellateColorOutlines(
       VertexBuffer vbo, List<Polyline> outlines, Color color) {
     _tessellate(vbo, outlines, (filler, outline) {
-      _addColorTriFan(filler, outline, color);
+      _addTexturedTriFan(filler, outline, true,color: color);
     });
     vbo.uploadData();
   }
@@ -113,23 +111,9 @@ class MeshFactory {
     vbo.setActiveVertexCount(newVertexCount);
   }
 
-  /// Private helper to add a colored triangle fan for a single outline.
-  static void _addColorTriFan(
-      Float32ArrayFiller filler, Polyline outline, Color color) {
-    int numTris = outline.length - 2;
-    Vector3 v0 = outline.getVector3(0);
-    for (int j = 0; j < numTris; j++) {
-      Vector3 v1 = outline.getVector3(j + 1);
-      Vector3 v2 = outline.getVector3(j + 2);
-      filler.addV3C4(v0, color);
-      filler.addV3C4(v1, color);
-      filler.addV3C4(v2, color);
-    }
-  }
-
   /// Private helper to add a textured triangle fan for a single outline.
   static void _addTexturedTriFan(
-      Float32ArrayFiller filler, Polyline outline, bool generateNormals) {
+      Float32ArrayFiller filler, Polyline outline, bool generateNormals,{Color? color}) {
     int numTris = outline.length - 2;
     Vector3 v0 = outline.getVector3(0);
     Vector3 normal = Vector3.zero();
@@ -151,9 +135,15 @@ class MeshFactory {
       List<Vector2> texCoord = computeTexCoords(v0, v1, v2, x, y, w, h);
 
       if (generateNormals) {
-        filler.addV3T2N3(v0, texCoord[0], normal);
-        filler.addV3T2N3(v1, texCoord[1], normal);
-        filler.addV3T2N3(v2, texCoord[2], normal);
+        if (color != null) {
+          filler.addV3T2N3C4(v0, texCoord[0], normal,color);
+          filler.addV3T2N3C4(v1, texCoord[1], normal,color);
+          filler.addV3T2N3C4(v2, texCoord[2], normal,color);
+        } else {
+          filler.addV3T2N3(v0, texCoord[0], normal);
+          filler.addV3T2N3(v1, texCoord[1], normal);
+          filler.addV3T2N3(v2, texCoord[2], normal);
+        }
       } else {
         filler.addV3V2(v0, texCoord[0]);
         filler.addV3V2(v1, texCoord[1]);

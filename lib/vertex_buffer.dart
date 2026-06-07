@@ -76,9 +76,8 @@ class VertexBuffer with LoggableClass {
   }
 
   // Convenience constructors
-  VertexBuffer.v3c4() : this(enabledComponents: const VertexComponentFlags(VertexComponentFlags.position | VertexComponentFlags.color));
+  VertexBuffer.v3t2n3c4() : this(enabledComponents: const VertexComponentFlags(VertexComponentFlags.position | VertexComponentFlags.normal | VertexComponentFlags.texCoord | VertexComponentFlags.color));
   VertexBuffer.v3t2() : this(enabledComponents: const VertexComponentFlags(VertexComponentFlags.position | VertexComponentFlags.texCoord));
-  VertexBuffer.v3n3() : this(enabledComponents: const VertexComponentFlags(VertexComponentFlags.position | VertexComponentFlags.normal));
   VertexBuffer.v3t2n3() : this(enabledComponents: const VertexComponentFlags(VertexComponentFlags.position | VertexComponentFlags.normal | VertexComponentFlags.texCoord));
 
   /// Sets the active vertex count and automatically uploads the buffer data.

@@ -75,6 +75,14 @@ class Float32ArrayFiller {
     addV2(tc);
   }
 
+  /// Adds a [Vector3] for position, a [Vector2] for texture coordinates, a [Vector3] for the normal and a Color for the color.
+  void addV3T2N3C4(Vector3 v, Vector2 tc, Vector3 n,Color c) {
+    addV3(v);
+    addV3(n);
+    addV2(tc);
+    addC4(c);
+  }
+
   /// Adds a triangle defined by three vertices ([v1], [v2], [v3]) to the array,
   /// with each vertex having the same [color].
   void addTriangleWithColor(Vector3 v1, Vector3 v2, Vector3 v3, Color color) {

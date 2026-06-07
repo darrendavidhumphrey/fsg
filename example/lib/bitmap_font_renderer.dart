@@ -28,7 +28,7 @@ class BitmapFontRenderer extends SceneLayer {
   }
 
   void drawSetup(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    var shader = FSG().shaders.getShader("v3t2");
+    var shader = FSG().shaders.getShader<BitmapTextShader>();
     gl.useProgram(shader.program);
     ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
 
@@ -53,11 +53,11 @@ class BitmapFontRenderer extends SceneLayer {
 
       for (var child in _children) {
 
-        if (child.font.isInitialized) {
+        if (child.font!.isInitialized) {
           // Don't  change texture unless needed
-          if (currentTexture != child.font.fontTexture) {
-            currentTexture = child.font.fontTexture;
-            gl.bindTexture(WebGL.TEXTURE_2D, currentTexture);;
+          if (currentTexture != child.font!.fontTexture) {
+            currentTexture = child.font!.fontTexture;
+            gl.bindTexture(WebGL.TEXTURE_2D, currentTexture);
           }
           // TODO: Is this needed to do per child?
           child.vbo!.bind();

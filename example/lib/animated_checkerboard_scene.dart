@@ -30,7 +30,7 @@ class AnimatedCheckerBoardScene extends Scene {
   void dispose() {}
 
   void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    shader ??= FSG().shaders.getShaderByType<CheckerBoardShader>("checkerBoard");
+    shader ??= FSG().shaders.getShader<CheckerBoardShader>();
     gl.useProgram(shader!.program);
     ShaderList.setMatrixUniforms(shader!, pMatrix, mvMatrix);
     gl.enable(WebGL.DEPTH_TEST);

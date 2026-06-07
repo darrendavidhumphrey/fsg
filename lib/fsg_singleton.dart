@@ -152,7 +152,8 @@ class FSG with LoggableClass {
     scenes.clear();
     renderToTextureList.clear();
 
-    shaders.dispose();
+   // TODO:  Dispose shaders
+    //  shaders.dispose();
     await textureManager.dispose();
 
     // After disposing context-specific resources, we revert to the GL-initialized state.

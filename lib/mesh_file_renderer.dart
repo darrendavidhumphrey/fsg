@@ -89,10 +89,7 @@ class MeshFileRenderer {
   /// enables the shader, and then iterates through each mesh in the model.
   /// For each mesh, it sets the correct material and issues a `drawElements` call.
   void draw(Matrix4 pMatrix, Matrix4 mvMatrix) {
-
-
-    // TODO: ERROR !!!  OneLightShader::[error] GL Failed to get attribute aVertexNormal
-    shader ??= FSG().shaders.getShaderByType<OneLightShader>("oneLight");
+    shader ??= FSG().shaders.getShader<OneLightShader>();
 
     gl.enable(WebGL.DEPTH_TEST);
     gl.enable(WebGL.CULL_FACE);
