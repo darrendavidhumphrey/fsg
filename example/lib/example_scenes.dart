@@ -2,6 +2,7 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
 import 'package:fsg/indexed_stack_scene.dart';
 import 'package:fsg_examples/animated_checkerboard_scene.dart';
+import 'package:fsg_examples/bitmap_text_scene.dart';
 import 'package:fsg_examples/orbitview_scene.dart';
 import 'checkerboard_scene.dart';
 
@@ -19,6 +20,7 @@ class ExampleScenes extends IndexedStackScene {
     addScene(CheckerBoardScene());
     addScene(AnimatedCheckerBoardScene());
     addScene(OrbitViewScene(),delegate: OrbitView());
+    addScene(BitmapTextScene(),delegate:OrbitView());
 
     setCurrentScene(0);
   }

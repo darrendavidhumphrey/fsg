@@ -3,7 +3,6 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../float32_array_filler.dart';
-import '../native_array/index.dart';
 import '../reference_box.dart';
 import '../vertex_buffer.dart';
 import 'bitmap_font.dart';
@@ -33,10 +32,10 @@ class BitmapText {
   /// The text string to be rendered.
   String get text => _text;
 
-  late BitmapFont _font;
+  BitmapFont? _font;
 
   /// The [BitmapFont] to use for rendering.
-  BitmapFont get font => _font;
+  BitmapFont? get font => _font;
 
   late double _width;
 
@@ -68,6 +67,7 @@ class BitmapText {
 
   /// Sets a new text string and flags the text for a rebuild.
   void setText(String text) {
+    print("Setting text to $text");
     if (_text != text) {
       _text = text;
       _needsRebuild = true;
@@ -110,7 +110,7 @@ class BitmapText {
   /// 1. First pass gathers character data and calculates the total unscaled line length.
   /// 2. Second pass pre-allocates lists and generates the final scaled and transformed quads.
   void rebuildQuads() {
-    if (text.isEmpty) {
+    if ((text.isEmpty) || (font == null)) {
       quads = [];
       textureQuads = [];
       return;
@@ -121,12 +121,12 @@ class BitmapText {
     double lineLength = 0;
 
     for (int i = 0; i < _text.length; i++) {
-      final charInfo = _font.chars[_text[i]];
+      final charInfo = _font!.chars[_text[i]];
       if (charInfo == null) continue;
 
       double kerning = 0.0;
       if ((i + 1) < _text.length) {
-        kerning = _font.kerningForPair(
+        kerning = _font!.kerningForPair(
           _text.codeUnitAt(i),
           _text.codeUnitAt(i + 1),
         );
@@ -142,7 +142,7 @@ class BitmapText {
 
     double currentX = 0;
     final double ratio = (lineLength > 0) ? _width / lineLength : 1.0;
-    final double lineHeight = _font.lineHeight * ratio;
+    final double lineHeight = _font!.lineHeight * ratio;
     final double vCenter = -lineHeight / 2.0;
 
     for (int i = 0; i < characterCount; i++) {
@@ -151,7 +151,7 @@ class BitmapText {
       final kerning = data.kerning;
 
       // Calculate unscaled vertex positions relative to the baseline
-      final top = _font.baseline - charInfo.yOffset;
+      final top = _font!.baseline - charInfo.yOffset;
       final bottom = top - charInfo.region.height;
       final left = currentX + charInfo.xOffset;
       final right = left + charInfo.region.width;
@@ -170,10 +170,10 @@ class BitmapText {
       quads[i] = _screenRect.calcQuadFrom2DVectors(blc, trc);
 
       // Calculate normalized texture coordinates from the font atlas region.
-      final tLeft = charInfo.region.left / _font.scaleW;
-      final tTop = charInfo.region.top / _font.scaleH;
-      final tRight = (charInfo.region.left + charInfo.region.width) / _font.scaleW;
-      final tBottom = (charInfo.region.top + charInfo.region.height) / _font.scaleH;
+      final tLeft = charInfo.region.left / _font!.scaleW;
+      final tTop = charInfo.region.top / _font!.scaleH;
+      final tRight = (charInfo.region.left + charInfo.region.width) / _font!.scaleW;
+      final tBottom = (charInfo.region.top + charInfo.region.height) / _font!.scaleH;
       textureQuads[i] = Rect.fromLTRB(tLeft, tTop, tRight, tBottom);
 
       currentX += charInfo.xAdvance + kerning;

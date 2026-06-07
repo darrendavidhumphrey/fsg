@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
-import 'package:fsg/gl_context_manager.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import '../glsl_shader.dart';
-import 'lighting_shader.dart';
-import 'checkerboard_shader.dart';
-import 'grid_shader.dart';
-import 'one_light_shader.dart';
-
+import 'bitmap_text_shader.dart';
 // --- Source code for basic, unlit shaders ---
 
 String _flatFragmentShader = '''
@@ -85,7 +79,6 @@ class ShaderList with GlContextManager,LoggableClass {
   static const String uModelView = "uMVMatrix";
   static const String uProj = "uPMatrix";
   static const String uNormal = "uNMatrix";
-  static const String uSampler = "uSampler";
   static const String textureSamplerAttrib = 'uSampler';
   // --- Custom Shader Registration ---
   final Map<String, GlslShader> _customShaders = {};
@@ -99,6 +92,7 @@ class ShaderList with GlContextManager,LoggableClass {
     registerShader("basicLighting", ()=> BasicLightingShader(gl));
     registerShader("checkerBoard", ()=> CheckerBoardShader(gl));
     registerShader("grid", ()=> GridShader(gl));
+    registerShader("bitmapText", ()=> BitmapTextShader(gl));
 
     // Register generic, unlit shaders from source
     registerShader(

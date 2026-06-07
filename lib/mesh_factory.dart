@@ -37,6 +37,7 @@ class MeshFactory {
       }
     }
     vbo.setActiveVertexCount(vertexCount);
+
   }
 
   /// Creates a [TriangleMesh] by tessellating a list of [faces].
@@ -63,6 +64,7 @@ class MeshFactory {
     for (var face in faces) {
       currentTriangle = _addOutlineAsTriFan(mesh, face, currentTriangle);
     }
+
     mesh.recomputeBounds();
     return mesh;
   }
@@ -73,6 +75,7 @@ class MeshFactory {
     _tessellate(vbo, outlines, (filler, outline) {
       _addColorTriFan(filler, outline, color);
     });
+    vbo.uploadData();
   }
 
   /// Fills a [vbo] by tessellating a list of [outlines] with texture coordinates.
@@ -82,6 +85,7 @@ class MeshFactory {
     _tessellate(vbo, outlines, (filler, outline) {
       _addTexturedTriFan(filler, outline, generateNormals);
     });
+    vbo.uploadData();
   }
 
   /// Generic helper to tessellate a list of outlines into a vertex buffer.

@@ -37,6 +37,10 @@ abstract class Scene with LoggableClass, GlContextManager {
   /// A flag to indicate that the scene needs to be redrawn.
   bool _needsRepaint = true;
 
+  /// Track how many times drawScene has been called
+  int _frameCounter = 0;
+  int get frameCounter => _frameCounter;
+
   /// The current size of the viewport.
   Size _viewportSize = Size.zero;
   Size get viewportSize => _viewportSize;
@@ -92,7 +96,10 @@ abstract class Scene with LoggableClass, GlContextManager {
 
   /// The core drawing logic to be implemented by subclasses.
   /// This method is called within the rendering loop when a repaint is needed.
-  void drawScene();
+  @mustCallSuper
+  void drawScene() {
+    _frameCounter++;
+  }
 
   /// Releases resources held by the scene and its layers.
   void dispose() {

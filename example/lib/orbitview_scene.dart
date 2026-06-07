@@ -22,9 +22,6 @@ class OrbitViewScene extends Scene {
     exampleVbo.uploadData();
   }
 
-  @override
-  void dispose() {}
-
   void drawVBO(Matrix4 pMatrix, Matrix4 mvMatrix) {
     // TODO: Use different shader
     shader ??= FSG().shaders.getShaderByType<CheckerBoardShader>("checkerBoard");
@@ -43,6 +40,7 @@ class OrbitViewScene extends Scene {
 
   @override
   void drawScene() {
+    super.drawScene();
 
     gl.clearColor(1.0, 0.0, 1.0, 1.0);
 

@@ -137,11 +137,11 @@ class TriangleMesh {
     vertexData[meshIndex++] = pos.x;
     vertexData[meshIndex++] = pos.y;
     vertexData[meshIndex++] = pos.z;
+    vertexData[meshIndex++] = tex.x;
+    vertexData[meshIndex++] = tex.y;
     vertexData[meshIndex++] = normal.x;
     vertexData[meshIndex++] = normal.y;
     vertexData[meshIndex++] = normal.z;
-    vertexData[meshIndex++] = tex.x;
-    vertexData[meshIndex++] = tex.y;
   }
 
   /// A low-level method to add a single triangle to the mesh data.

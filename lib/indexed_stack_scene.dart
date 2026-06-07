@@ -63,6 +63,8 @@ class IndexedStackScene extends Scene {
 
   @override
   void drawScene() {
+    super.drawScene();
+
     if (_currentScene != null) {
       _currentScene!.drawScene();
       _currentScene!.requestRepaint();

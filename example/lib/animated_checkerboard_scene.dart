@@ -18,6 +18,7 @@ class AnimatedCheckerBoardScene extends Scene {
   Color color2 = Colors.yellow;
   double patternScale = 5;
   CheckerBoardShader? shader;
+
   @override
   void init(RenderingContext gl) {
     super.init(gl);
@@ -106,6 +107,8 @@ class AnimatedCheckerBoardScene extends Scene {
 
   @override
   void drawScene() {
+    super.drawScene();
+
     //logPedantic("drawScene");
     gl.clearColor(1.0, 0.0, 1.0, 1.0);
 

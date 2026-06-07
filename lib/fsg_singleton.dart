@@ -8,7 +8,7 @@ import 'package:fsg/shaders/materials.dart';
 import 'package:fsg/texture_manager.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 import 'logging.dart';
-import 'bitmap_fonts/bitmap_font_manager.dart';
+
 import 'scene.dart';
 
 /// Enum to manage the initialization state of the FSG singleton.
@@ -53,9 +53,6 @@ class FSG with LoggableClass {
 
   /// The manager for all rendering materials.
   final materials = MaterialList();
-
-  /// The manager for bitmap fonts.
-  final fontManager = BitmapFontManager();
 
   /// The manager for textures loaded from assets.
   final textureManager = TextureManager();
@@ -132,7 +129,6 @@ class FSG with LoggableClass {
     textureManager.initializeGl(gl);
     initDefaultMaterial();
     shaders.init(gl);
-    fontManager.createDefaultFont();
     _state = FsgState.contextInitialized;
   }
 

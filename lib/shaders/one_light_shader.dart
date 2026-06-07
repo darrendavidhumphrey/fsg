@@ -11,9 +11,9 @@ const String _vertexShader = """
 precision mediump float;
 
 // Input vertex attributes
-layout(location = 0) in vec3 aVertexPosition;
-layout (location = 1) in vec3 aNormal; 
-layout (location = 2) in vec2 aTextureCoord;
+layout (location = 0) in vec3 aVertexPosition;
+layout (location = 1) in vec2 aTextureCoord;
+layout (location = 2) in vec3 aVertexNormal; 
 layout (location = 3) in vec4 aVertexColor; 
 
 // Output to fragment shader
@@ -42,7 +42,7 @@ void main(void) {
     vec3 lightDir = normalize(uLightPos - vec3(eyeCoords)); // Direction from vertex to light source
 
     // Transform normal to eye space
-    vec3 transformedNormal = normalize(uNMatrix * aNormal); // Remember to normalize normals after transformation
+    vec3 transformedNormal = normalize(uNMatrix * aVertexNormal); // Remember to normalize normals after transformation
 
     // Calculate diffuse lighting (Lambertian reflectance)
     float diff = max(dot(transformedNormal, lightDir), 0.0);
