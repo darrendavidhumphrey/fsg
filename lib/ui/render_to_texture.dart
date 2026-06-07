@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fsg/scene.dart';
 import 'package:fsg/ui/render_to_texture_core.dart';
-import 'package:fsg/ui/scene_navigation_delegate.dart';
+import 'package:fsg/ui/navigation_delegates/scene_navigation_delegate.dart';
 
 /// A widget that renders a [Scene] and provides user interaction capabilities.
 ///
@@ -13,12 +13,12 @@ class RenderToTexture extends StatefulWidget {
   final Scene scene;
 
   /// The delegate responsible for handling user input and navigating the scene.
-  final SceneNavigationDelegate? navigationDelegate;
+  final SceneNavigationDelegate navigationDelegate;
 
   const RenderToTexture({
     super.key,
     required this.scene,
-    this.navigationDelegate,
+    required this.navigationDelegate,
   });
 
   @override
@@ -35,23 +35,24 @@ class RenderToTextureState
     super.initState();
     _focusNode = FocusNode();
     // Set the scene on the delegate when the widget is first created.
-    widget.navigationDelegate?.setScene(widget.scene);
+    widget.navigationDelegate.setScene(widget.scene);
   }
 
   @override
   void didUpdateWidget(covariant RenderToTexture oldWidget) {
     super.didUpdateWidget(oldWidget);
+
     // If the scene or delegate changes, update the delegate.
     if (widget.scene != oldWidget.scene ||
         widget.navigationDelegate != oldWidget.navigationDelegate) {
-      widget.navigationDelegate?.setScene(widget.scene);
+      widget.navigationDelegate.setScene(widget.scene);
     }
   }
 
   @override
   void dispose() {
     // Dispose the FocusNode to prevent memory leaks.
-    widget.navigationDelegate?.dispose();
+    widget.navigationDelegate.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -60,20 +61,20 @@ class RenderToTextureState
   Widget build(BuildContext context) {
     return Listener(
       behavior: HitTestBehavior.opaque,
-      onPointerDown: (event) => widget.navigationDelegate?.onPointerDown(event),
-      onPointerMove: (event) => widget.navigationDelegate?.onPointerMove(event),
-      onPointerUp: (event) => widget.navigationDelegate?.onPointerUp(event),
+      onPointerDown: (event) => widget.navigationDelegate.onPointerDown(event),
+      onPointerMove: (event) => widget.navigationDelegate.onPointerMove(event),
+      onPointerUp: (event) => widget.navigationDelegate.onPointerUp(event),
       onPointerCancel: (event) =>
-          widget.navigationDelegate?.onPointerCancel(event),
+          widget.navigationDelegate.onPointerCancel(event),
       child: Focus(
-        autofocus: widget.navigationDelegate != null,
+        autofocus: true,
         focusNode: _focusNode,
         onKeyEvent: (node, event) =>
-            widget.navigationDelegate?.onKeyEvent(event) ??
-            KeyEventResult.ignored,
+            widget.navigationDelegate.onKeyEvent(event),
         child: RenderToTextureCore(
             key: ValueKey('$widget.scene.renderToTextureId!+_RenderToTextureCore'),
             scene: widget.scene,
+            navigationDelegate: widget.navigationDelegate,
             child: SizedBox.expand()
         )
       ),

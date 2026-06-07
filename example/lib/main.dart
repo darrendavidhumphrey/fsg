@@ -41,13 +41,15 @@ class TestAppState extends State<TestApp> {
     await FSG().registerSceneAndAllocateTexture(scene!);
 
     // Trigger a rebuild of the widget
-    setState(() {});
+    setState(() {
+      scene!.setCurrentScene(0);
+    });
   }
 
   static final List<DropdownMenuEntry<int>> menuEntries = [
     DropdownMenuEntry(value: 0, label: 'Example 1: Checkerboard Shaded Quad'),
     DropdownMenuEntry(value: 1, label: 'Example 2: Animated Shader Uniforms'),
-    DropdownMenuEntry(value: 2, label: 'Example 3: Navigation Delegate)',),
+    DropdownMenuEntry(value: 2, label: 'Example 3:Orbit View Delegate',),
     DropdownMenuEntry(value: 3, label: 'Example 4: Bitmap Text',
     ),
   ];
@@ -76,9 +78,8 @@ class TestAppState extends State<TestApp> {
                   Expanded(
                     child: Stack(
                       children: [
-                        RenderToTexture(
-                          scene: scene!.currentScene(),
-                          navigationDelegate: scene!.currentDelegate(),
+                        IndexedSceneViewer(
+                          scene: scene!
                         ),
                         Padding(
                           padding: const EdgeInsets.only(

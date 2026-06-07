@@ -5,14 +5,17 @@ import 'package:flutter_angle/flutter_angle.dart';
 import '../fsg_singleton.dart';
 import '../scene.dart';
 import '../logging.dart';
+import 'navigation_delegates/scene_navigation_delegate.dart';
 
 class RenderToTextureCore extends StatefulWidget {
   final Scene scene;
   final Widget? child;
+  final SceneNavigationDelegate navigationDelegate;
 
   const RenderToTextureCore({
     super.key,
     required this.scene,
+    required this.navigationDelegate,
     this.child,
   });
 
@@ -105,6 +108,7 @@ class RenderToTextureCoreState extends State<RenderToTextureCore>
   void _onHardwareTick(Duration elapsed) async {
     if (kIsWeb && (!_isWebReady)) return;
 
+
     if (widget.scene.frameProcessing) {
       return;
     }
@@ -116,6 +120,7 @@ class RenderToTextureCoreState extends State<RenderToTextureCore>
     }
 
     widget.scene.setViewportSize(screenSize);
+    widget.navigationDelegate.updateSceneMatrices();
 
     await widget.scene.renderSceneToTexture();
 
@@ -141,6 +146,7 @@ class RenderToTextureCoreState extends State<RenderToTextureCore>
         // Continuously update screen size in case it changed.
         // This ensures the viewport is correct for constructing GL matrices
         screenSize = Size(constraints.maxWidth, constraints.maxHeight);
+        widget.navigationDelegate.updateSceneMatrices();
 
         // On web, only start the ticker once size is non-zero
         if (kIsWeb && constraints.maxWidth > 0 && constraints.maxHeight > 0) {

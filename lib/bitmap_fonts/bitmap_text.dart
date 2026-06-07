@@ -67,7 +67,6 @@ class BitmapText {
 
   /// Sets a new text string and flags the text for a rebuild.
   void setText(String text) {
-    print("Setting text to $text");
     if (_text != text) {
       _text = text;
       _needsRebuild = true;

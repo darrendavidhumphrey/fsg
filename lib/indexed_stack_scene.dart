@@ -5,34 +5,44 @@ import 'package:fsg/fsg.dart';
 // IndexedStackScene contains a list of scenes and a current scene index.
 // Only the current scene is rendered. Its behavior is analogous to the
 // IndexedStack widget in flutter
-class IndexedStackScene extends Scene {
-  Scene? _currentScene;
+class IndexedStackScene extends Scene with ChangeNotifier {
+  late Scene _currentScene;
+  late SceneNavigationDelegate _currentDelegate;
   final List<Scene> scenes = [];
   final Map<Scene, SceneNavigationDelegate> delegates = {};
   int _currentIndex = 0;
-  IndexedStackScene();
+  int get currentIndex => _currentIndex;
+
+  IndexedStackScene() {
+    // HACK to fix async init problem -- return this scene until a real one is ready
+    _currentScene = this;
+    // HACK to fix async init problem -- create a temp delegate until a real one is ready
+    _currentDelegate = StaticViewDelegate();
+  }
 
   @override
   @mustCallSuper
   void init(RenderingContext gl) {
     super.init(gl);
+    notifyListeners();
   }
 
   // Add a scene to the list of scenes, optionally with a delegate.
-  void addScene(Scene scene,{SceneNavigationDelegate? delegate}) {
+  void addScene(Scene scene, SceneNavigationDelegate delegate) {
     scene.init(gl);
     FSG().reuseTexture(renderToTextureId!, scene);
     scenes.add(scene);
-    if (delegate != null) {
-      delegates[scene] = delegate;
-    }
+    delegates[scene] = delegate;
+    notifyListeners();
   }
 
   void setCurrentScene(int index) {
     if (index < scenes.length) {
       _currentScene = scenes[index];
       _currentIndex = index;
+      _currentDelegate = delegates[_currentScene]!;
       requestRepaint();
+      notifyListeners();
     }
   }
 
@@ -45,30 +55,26 @@ class IndexedStackScene extends Scene {
   }
 
   Scene currentScene() {
-    if (scenes.length > _currentIndex) {
-      return scenes[_currentIndex];
-    }
-    return this;
+    return _currentScene;
   }
 
-  SceneNavigationDelegate? currentDelegate() {
-    if (scenes.length > _currentIndex) {
-      return delegates[scenes[_currentIndex]];
-    }
-    return null;
+  SceneNavigationDelegate currentDelegate() {
+    return _currentDelegate;
   }
-
   @override
-  void dispose() {}
+  void dispose() {
+    for (var scene in scenes) {
+      scene.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   void drawScene() {
     super.drawScene();
 
-    if (_currentScene != null) {
-      _currentScene!.drawScene();
-      _currentScene!.requestRepaint();
-      requestRepaint();
-    }
+    _currentScene.drawScene();
+    _currentScene.requestRepaint();
+    requestRepaint();
   }
 }

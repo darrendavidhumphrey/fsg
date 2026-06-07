@@ -1,17 +1,18 @@
 import 'dart:math';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:fsg/ui/scene_navigation_delegate.dart';
+import 'scene_navigation_delegate.dart';
 import 'package:vector_math/vector_math_64.dart';
-import '../fsg_singleton.dart';
-import '../scene.dart';
-import '../util.dart';
+import '../../fsg_singleton.dart';
+import '../../util.dart';
 
 /// A navigation delegate that implements a classic 3D orbit camera.
 ///
 /// This class handles user input to rotate (orbit) around a central point,
 /// and zoom (dolly) the camera towards and away from that point.
-class OrbitView implements SceneNavigationDelegate {
+class OrbitViewDelegate extends SceneNavigationDelegate {
+
+  OrbitViewDelegate();
   static const double _initialYaw = 0;
   static const double _initialPitch = 0;
 
@@ -31,39 +32,18 @@ class OrbitView implements SceneNavigationDelegate {
   double _yawStart = 0;
   double _pitchStart = 0;
 
-  /// A plane at z=0 used for calculating logical coordinates from a pick ray.
+// TODO: Move to util
+/// Wraps an angle to be in the range [0, 360).
+double _clampAngle0To360(double angle) {
+  return angle % 360;
+}
+
+/// A plane at z=0 used for calculating logical coordinates from a pick ray.
   final Plane _projectPlane = makePlaneFromVertices(
     Vector3.zero(),
     Vector3(1, 0, 0),
     Vector3(0, 1, 0),
   )!;
-
-  final Matrix4 _projectionMatrix = Matrix4.identity();
-  Matrix4 _viewMatrix = Matrix4.identity();
-
-  late Scene _scene;
-  @override
-  Scene get scene => _scene;
-
-  /// Wraps an angle to be in the range [0, 360).
-  double _clampAngle0To360(double angle) {
-    return angle % 360;
-  }
-
-  /// Re-calculates the scene's view and projection matrices and requests a repaint.
-  void updateSceneMatrices() {
-    if (scene.isInitialized) {
-      scene.mvMatrixStack.current = createViewMatrix();
-      scene.pMatrix = createProjectionMatrix();
-      scene.requestRepaint();
-    }
-  }
-
-  @override
-  void setScene(Scene scene) {
-    _scene = scene;
-    updateSceneMatrices();
-  }
 
   @override
   void onPointerDown(PointerDownEvent event) {
@@ -92,7 +72,6 @@ class OrbitView implements SceneNavigationDelegate {
 
   @override
   void onPointerMove(PointerMoveEvent event) {
-
     if (_dragStart == Offset.zero) return;
 
     final deltaX = _dragStart.dx - event.localPosition.dx;
@@ -140,20 +119,21 @@ class OrbitView implements SceneNavigationDelegate {
   }
 
   /// Creates the view matrix based on the current yaw, pitch, and distance.
-  Matrix4 createViewMatrix() {
+  @override
+  void createViewMatrix() {
     Vector3 up = Vector3(0, 1, 0);
     Vector3 orbitCenter = getOrbitCenter();
 
     // Use the library's makeViewMatrix for a correct look-at matrix.
-    _viewMatrix = makeViewMatrix(getEyeLocation(), orbitCenter, up);
+    Matrix4 v = makeViewMatrix(getEyeLocation(), orbitCenter, up);
 
     // Apply rotations around the orbit center.
-    _viewMatrix.translateByVector3(orbitCenter);
-    _viewMatrix.rotateZ(radians(180));
-    _viewMatrix.rotateY(radians(yaw));
-    _viewMatrix.rotateX(radians(pitch));
-    _viewMatrix.translateByVector3(-orbitCenter);
-    return _viewMatrix;
+    v.translateByVector3(orbitCenter);
+    v.rotateZ(radians(180));
+    v.rotateY(radians(yaw));
+    v.rotateX(radians(pitch));
+    v.translateByVector3(-orbitCenter);
+    v.copyInto(viewMatrix);
   }
 
   /// Calculates the camera's position in 3D space.
@@ -171,8 +151,8 @@ class OrbitView implements SceneNavigationDelegate {
     Ray ray = computePickRay(
       mousePosition,
       scene.viewportSize,
-      _projectionMatrix,
-      _viewMatrix,
+      projectionMatrix,
+      viewMatrix,
     );
     return intersectRayWithPlane(ray, _projectPlane);
   }
@@ -182,18 +162,19 @@ class OrbitView implements SceneNavigationDelegate {
     Ray ray = computePickRay(
       mousePosition,
       scene.viewportSize,
-      _projectionMatrix,
-      _viewMatrix,
+      projectionMatrix,
+      viewMatrix,
     );
     return ray;
   }
 
   /// Creates the perspective projection matrix.
-  Matrix4 createProjectionMatrix() {
+  @override
+  void createProjectionMatrix() {
     final double aspectRatio = scene.viewportSize.width / scene.viewportSize.height;
 
     setPerspectiveMatrix(
-      _projectionMatrix,
+      projectionMatrix,
       verticalFieldOfView,
       aspectRatio,
       0.1,
@@ -201,9 +182,7 @@ class OrbitView implements SceneNavigationDelegate {
     );
 
     // Ensure Y Axis is the same regardless of platform
-    FSG.normalizeUpAxis(_projectionMatrix);
-
-    return _projectionMatrix;
+    FSG.normalizeUpAxis(projectionMatrix);
   }
 
   @override

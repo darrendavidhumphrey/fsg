@@ -23,10 +23,11 @@ export 'util.dart';
 export 'vertex_buffer.dart';
 
 export 'ui/render_to_texture.dart';
-export 'ui/orbit_view_delegate.dart';
 export 'ui/screen_space_overlay.dart';
-export 'ui/scene_navigation_delegate.dart';
-
+export 'ui/navigation_delegates/orbit_view_delegate.dart';
+export 'ui/navigation_delegates/static_view_delegate.dart';
+export 'ui/navigation_delegates/scene_navigation_delegate.dart';
+export 'ui/indexed_scene_viewer.dart';
 export 'edge.dart';
 export 'float32_array_filler.dart';
 export 'gl_context_manager.dart';
