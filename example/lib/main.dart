@@ -73,33 +73,28 @@ class TestAppState extends State<TestApp> {
             title: 'FSG Examples',
              //showPerformanceOverlay: true,
             home: Scaffold(
-              body: Row(
+              body: Stack(
                 children: [
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        IndexedSceneViewer(
-                          scene: scene!
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 8.0,
-                            left: 8.0,
-                            right: 8.0,
-                          ),
-                          child: DropdownMenu<int>(
-                            initialSelection: _pageIndex,
-                            label: const Text('Select Example'),
-                            onSelected: (int? value) {
-                              setState(() {
-                                _pageIndex = value!;
-                                scene!.setCurrentScene(_pageIndex);
-                              });
-                            },
-                            dropdownMenuEntries: menuEntries,
-                          ),
-                        ),
-                      ],
+                  IndexedSceneViewer(
+                    scene: scene!
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                      top: 8.0,
+                      left: 8.0,
+                      right: 8.0,
+                    ),
+                    child: DropdownMenu<int>(
+                      initialSelection: _pageIndex,
+                      label: const Text('Select Example'),
+                      expandedInsets: EdgeInsets.zero,
+                      onSelected: (int? value) {
+                        setState(() {
+                          _pageIndex = value!;
+                          scene!.setCurrentScene(_pageIndex);
+                        });
+                      },
+                      dropdownMenuEntries: menuEntries,
                     ),
                   ),
                 ],

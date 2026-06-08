@@ -83,14 +83,6 @@ class Float32ArrayFiller {
     addC4(c);
   }
 
-  /// Adds a triangle defined by three vertices ([v1], [v2], [v3]) to the array,
-  /// with each vertex having the same [color].
-  void addTriangleWithColor(Vector3 v1, Vector3 v2, Vector3 v3, Color color) {
-    addV3C4(v1, color);
-    addV3C4(v2, color);
-    addV3C4(v3, color);
-  }
-
   /// Adds a textured quad to the array using two triangles.
   ///
   /// The quad's vertex positions are defined by [q], and the texture coordinates

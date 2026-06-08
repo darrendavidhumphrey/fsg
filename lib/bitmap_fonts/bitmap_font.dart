@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:xml/xml.dart';
 import '../fsg_singleton.dart';
+import 'bitmap_font_manager.dart';
 
 /// A data class that holds rendering information for a single character
 /// in a [BitmapFont].
@@ -81,17 +82,38 @@ class BitmapFont {
     this.kerningPairs,
   );
 
-  /// Asynchronously loads the font's texture from assets.
-  ///
-  /// This method uses NEAREST filtering to ensure crisp, pixel-perfect font rendering.
   Future<void> loadTexture(String textureName) async {
-    fontTexture = await FSG().textureManager.createTextureFromAsset(
+    // Capture the current manager instance
+    final manager = BitmapFontManager();
+
+    // 1. Create the task that will execute when its turn arrives
+    Future<void> executionTask() async {
+      print("Starting load: $textureName");
+
+      try {
+        // Execute the asynchronous asset creation
+        fontTexture = await FSG().textureManager.createTextureFromAsset(
           textureName,
           magFilter: WebGL.NEAREST,
           minFilter: WebGL.NEAREST,
           wrapS: WebGL.CLAMP_TO_EDGE,
           wrapT: WebGL.CLAMP_TO_EDGE,
         );
+        print("Finished loading: $textureName");
+      } catch (e) {
+        print("Failed loading $textureName: $e");
+        rethrow; // Rethrow to let the caller handle individual file failures
+      }
+    }
+
+    // 2. Chain this task onto the end of the existing queue line
+    // Use whenComplete() so a failing texture won't block the next texture in line
+    manager.loadQueue = manager.loadQueue.whenComplete(() async {
+      await executionTask();
+    });
+
+    // 3. Await the specific completion of this texture item
+    await manager.loadQueue;
   }
 
   /// Factory constructor to load and parse a BitmapFont from an XML string.

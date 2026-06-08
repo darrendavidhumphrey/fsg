@@ -62,24 +62,6 @@ void main() {
       expect(array.sublist(0, 8), equals([1, 2, 3, 0.5, 0.5, 0, 1, 0]));
     });
 
-    test('addTriangleWithColor should add three vertices with the same color', () {
-      final v1 = Vector3(1, 1, 0);
-      final v2 = Vector3(2, 1, 0);
-      final v3 = Vector3(1, 2, 0);
-      final color = Color.from(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0);
-
-      filler.addTriangleWithColor(v1, v2, v3, color);
-
-      expect(filler.currentPosition, 21); // 3 vertices * (3 floats for pos + 4 floats for color)
-
-      // Check vertex 1
-      expect(array.sublist(0, 7), equals([1, 1, 0, 1, 0, 0, 1]));
-      // Check vertex 2
-      expect(array.sublist(7, 14), equals([2, 1, 0, 1, 0, 0, 1]));
-      // Check vertex 3
-      expect(array.sublist(14, 21), equals([1, 2, 0, 1, 0, 0, 1]));
-    });
-
     test('addTexturedQuad should add six vertices for two triangles', () {
       final bl = Vector3(-1, -1, 0);
       final br = Vector3(1, -1, 0);

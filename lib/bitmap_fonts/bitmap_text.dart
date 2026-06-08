@@ -3,7 +3,10 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../float32_array_filler.dart';
+import '../fsg_singleton.dart';
 import '../reference_box.dart';
+import '../shaders/bitmap_text_shader.dart';
+import '../shaders/shaders.dart';
 import '../vertex_buffer.dart';
 import 'bitmap_font.dart';
 
@@ -22,7 +25,7 @@ class BitmapText {
   String _text;
 
   /// The [ReferenceBox] that defines the target area for the text to be rendered into.
-  final ReferenceBox _screenRect;
+  late final ReferenceBox _screenRect;
 
   bool _needsRebuild = true;
 
@@ -52,6 +55,19 @@ class BitmapText {
     _width = _screenRect.xVector.length;
   }
 
+  BitmapText.origin({required this._text,required BitmapFont font,Vector3? origin,double scale=1}) {
+    origin ??= Vector3.zero();
+    _font = font;
+
+    _width = _font!.widthOfString(_text)*scale;
+    _screenRect = ReferenceBox(
+      origin,
+      Vector3(_width, 0, 0),
+      Vector3(0, _width, 0),
+      Vector3(0, 0, 1),
+    );
+  }
+
   /// Disposes the vertex buffer associated with this text.
   void dispose() {
       vbo.dispose();
@@ -74,7 +90,7 @@ class BitmapText {
   }
 
   /// Rebuilds the vertex buffer object if the text or font has changed.
-  void rebuild(RenderingContext gl, DateTime now) {
+  void rebuild(RenderingContext gl) {
     // Guard against unnecessary, expensive rebuilds.
     if (!_needsRebuild) return;
 
@@ -177,5 +193,21 @@ class BitmapText {
 
       currentX += charInfo.xAdvance + kerning;
     }
+  }
+
+  static void drawSetup(RenderingContext gl, Matrix4 pMatrix, Matrix4 mvMatrix) {
+    var shader = FSG().shaders.getShader<BitmapTextShader>();
+    gl.useProgram(shader.program);
+    ShaderList.setMatrixUniforms(shader, pMatrix, mvMatrix);
+
+    gl.enable(WebGL.BLEND);
+    gl.activeTexture(WebGL.TEXTURE0);
+    gl.blendFuncSeparate(
+      WebGL.SRC_ALPHA,
+      WebGL.ONE_MINUS_SRC_ALPHA,
+      WebGL.ONE,
+      WebGL.ONE_MINUS_SRC_ALPHA,
+    );
+    gl.uniform1i(shader.uniforms[ShaderList.textureSamplerAttrib]!, 0);
   }
 }
