@@ -3,10 +3,9 @@ import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_angle/flutter_angle.dart';
+import 'package:fsg/vbo_filler.dart';
 import 'package:fsg/vertex_buffer.dart';
 import 'package:vector_math/vector_math_64.dart';
-
-import 'float32_array_filler.dart';
 
 /// A record type representing a unique combination of position, texture coordinate,
 /// and normal indices. Used as a key to de-duplicate vertices.
@@ -138,7 +137,7 @@ class WavefrontObjModel {
     // Allocate the vertex buffer with the final, correct size.
     vertexBuffer.init(gl);
     final vboData = vertexBuffer.requestBuffer(uniqueVertexMap.length)!;
-    final filler = Float32ArrayFiller(vboData);
+    final filler = VboFiller(vboData,vertexBuffer);
 
     // Reset state for the main parsing pass.
     uniqueVertexMap.clear();

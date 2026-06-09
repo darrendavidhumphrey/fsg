@@ -1,4 +1,5 @@
 import 'package:flutter_angle/flutter_angle.dart';
+import 'package:fsg/vbo_filler.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:fsg/fsg.dart';
 import 'game_scene_data.dart';
@@ -51,7 +52,7 @@ class GameQuadNode extends GameSceneNode {
   VertexBuffer? vbo;
   WebGLTexture? texture;
 
-  GameQuadNode(QuadData data) : super(data);
+  GameQuadNode(QuadData super.data);
 
   @override
   void init(RenderingContext gl) {
@@ -59,16 +60,16 @@ class GameQuadNode extends GameSceneNode {
     vbo = VertexBuffer.v3t2();
     final buffer = vbo!.requestBuffer(6);
     if (buffer != null) {
-      final filler = Float32ArrayFiller(buffer);
+
       final rect = Quad.points(
         Vector3(quadData.screenRect.left, quadData.screenRect.top, 0),
         Vector3(quadData.screenRect.right, quadData.screenRect.top, 0),
         Vector3(quadData.screenRect.right, quadData.screenRect.bottom, 0),
         Vector3(quadData.screenRect.left, quadData.screenRect.bottom, 0),
       );
-      filler.addTexturedQuad(rect, quadData.textureRect);
+      VboFiller.makeTexturedQuad(rect, quadData.textureRect ,vbo!);
     }
-    vbo!.setActiveVertexCount(6);
+
 
     // Texture should be loaded by the scene/manager
   }
@@ -77,13 +78,15 @@ class GameQuadNode extends GameSceneNode {
   void draw(RenderingContext gl, Matrix4 pMatrix, MatrixStack mvStack) {
     if (!visible || vbo == null || texture == null) return;
 
-    final shader = FSG().shaders.getShader<GlslShader>("v3t2");
+    // TODO: Bind the right shader
+    final shader = FSG().shaders.getShader<GlslShader>();
  // TODO:   shader.use();
     ShaderList.setMatrixUniforms(shader, pMatrix, mvStack.current);
 
     gl.activeTexture(WebGL.TEXTURE0);
     gl.bindTexture(WebGL.TEXTURE_2D, texture);
-    gl.uniform1i(shader.uniforms[ShaderList.uSampler]!, 0);
+
+   // TODO:  gl.uniform1i(shader.uniforms[ShaderList.uSampler]!, 0);
 
     // TODO:  vbo!.draw(shader);
   }
@@ -97,12 +100,12 @@ class GameQuadNode extends GameSceneNode {
 class GameTextNode extends GameSceneNode {
   BitmapText? bitmapText;
 
-  GameTextNode(TextData data) : super(data);
+  GameTextNode(TextData super.data);
 
   @override
   void init(RenderingContext gl) {
     final textData = data as TextData;
-    final font = FSG().fontManager.getFont(textData.font);
+    final font = BitmapFontManager().getFont(textData.font);
     if (font != null) {
       final refBox = ReferenceBox(
         Vector3(textData.screenRect.left, textData.screenRect.top, 0),
@@ -118,15 +121,15 @@ class GameTextNode extends GameSceneNode {
   void draw(RenderingContext gl, Matrix4 pMatrix, MatrixStack mvStack) {
     if (!visible || bitmapText == null) return;
     
-    bitmapText!.rebuild(gl, DateTime.now());
+    bitmapText!.rebuild(gl);
     
-    final shader = FSG().shaders.getShader<GlslShader>("v3t2");
+    final shader = FSG().shaders.getShader<GlslShader>();
     // TODO: shader.use();
     ShaderList.setMatrixUniforms(shader, pMatrix, mvStack.current);
 
     gl.activeTexture(WebGL.TEXTURE0);
-    gl.bindTexture(WebGL.TEXTURE_2D, bitmapText!.font.fontTexture);
-    gl.uniform1i(shader.uniforms[ShaderList.uSampler]!, 0);
+ // TODO:    gl.bindTexture(WebGL.TEXTURE_2D, bitmapText!.font.fontTexture);
+   //TODO:  gl.uniform1i(shader.uniforms[ShaderList.uSampler]!, 0);
 
     // TODO:  bitmapText!.vbo?.draw(shader);
   }

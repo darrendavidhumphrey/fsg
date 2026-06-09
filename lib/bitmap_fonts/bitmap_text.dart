@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart'; // Adds the 'Colors' constant utility
 import 'package:flutter_angle/flutter_angle.dart';
+import 'package:fsg/vbo_filler.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-
-import '../float32_array_filler.dart';
 import '../fsg_singleton.dart';
 import '../reference_box.dart';
 import '../shaders/bitmap_text_shader.dart';
@@ -118,15 +117,8 @@ class BitmapText {
     Float32Array? vertexTexCoordArray = vbo.requestBuffer(vertexCount);
 
     if (vertexTexCoordArray != null) {
-      final filler = Float32ArrayFiller(vertexTexCoordArray);
-
       // Fill the VBO with the generated quad data.
-      for (int i = 0; i < quads.length; i++) {
-        Quad rect = quads[i];
-        Rect textureRect = textureQuads[i];
-
-        filler.addTexturedQuad(rect, textureRect);
-      }
+      VboFiller.addTexturedQuads(quads, textureQuads,vbo);
     }
 
     vbo.setActiveVertexCount(vertexCount);

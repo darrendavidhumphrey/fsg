@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
+import 'package:fsg/vbo_filler.dart';
 
 class OrbitViewScene extends Scene {
   OrbitViewScene() {
     // TODO: make cube
-    exampleVbo.makeTexturedUnitQuad(
+
+    VboFiller.makeTexturedUnitQuad(
       Rect.fromLTWH(-quadExtents.width/2, -quadExtents.height/2, quadExtents.width, quadExtents.height),
       0.1,
+      exampleVbo
     );
   }
 

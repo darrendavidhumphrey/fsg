@@ -3,10 +3,8 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 /// A utility class for filling a [Float32Array] with vertex data.
-///
-/// This class simplifies the process of sequentially adding different types of
-/// data, such as vectors and colors, to a [Float32Array]. It automatically
-/// manages the current position within the array.
+
+/// Deprecated, in favor of [VboFiller]
 class Float32ArrayFiller {
   /// The underlying [Float32Array] that is being filled.
   Float32Array array;

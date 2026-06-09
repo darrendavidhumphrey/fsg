@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
+import 'package:fsg/vbo_filler.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
 
 class AnimatedCheckerBoardScene extends Scene {
   AnimatedCheckerBoardScene() {
-    exampleVbo.makeTexturedUnitQuad(
+    VboFiller.makeTexturedUnitQuad(
       Rect.fromLTWH(-quadExtents.width/2, -quadExtents.height/2, quadExtents.width, quadExtents.height),
       0.1,
+      exampleVbo
     );
   }
 

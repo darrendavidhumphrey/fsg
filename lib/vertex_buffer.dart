@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
+import 'package:fsg/vbo_filler.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 /// Represents the possible components a vertex can have.
@@ -198,25 +199,5 @@ class VertexBuffer with LoggableClass {
     if (activeVertexCount > 0) {
       _gl!.drawArrays(WebGL.TRIANGLES, 0, activeVertexCount);
     }
-  }
-
-  /// Fills the buffer with six vertices to form a textured quad.
-  void makeTexturedUnitQuad(Rect r, double z) {
-    int newVertexCount = 6;
-
-    vertexData = requestBuffer(newVertexCount)!;
-    Float32ArrayFiller filler = Float32ArrayFiller(vertexData!);
-
-    Rect tr = Rect.fromLTWH(0, 0, 1, 1);
-
-    Quad q = Quad.points(
-      Vector3(r.left, r.bottom, z),
-      Vector3(r.right, r.bottom, z),
-      Vector3(r.right, r.top, z),
-      Vector3(r.left, r.top, z),
-    );
-
-    filler.addTexturedQuad(q, tr);
-    _activeVertexCount = newVertexCount;
   }
 }
