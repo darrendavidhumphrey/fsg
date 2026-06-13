@@ -18,8 +18,8 @@ class GameScene extends Scene {
 
     // 1. Load textures
     for (var textureData in data.textures.values) {
-      final tex = await FSG().textureManager.createTextureFromAsset(textureData.file);
-      textureMap[textureData.id] = tex;
+      final tex = await FSG().textureManager.createTextureFromAsset(
+          textureData.file);
     }
 
     // 2. Load fonts

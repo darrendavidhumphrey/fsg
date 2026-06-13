@@ -42,7 +42,7 @@ class OrbitViewScene extends Scene {
   }
 
   @override
-  void drawScene() {
+void drawScene() async {
     super.drawScene();
 
     gl.clearColor(1.0, 0.0, 1.0, 1.0);

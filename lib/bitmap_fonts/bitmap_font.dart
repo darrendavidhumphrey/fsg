@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:xml/xml.dart';
 import '../fsg_singleton.dart';
-import 'bitmap_font_manager.dart';
+import '../logging.dart';
+import '../texture_manager.dart';
 
 /// A data class that holds rendering information for a single character
 /// in a [BitmapFont].
@@ -40,7 +41,7 @@ class CharInfo {
 ///
 /// This class holds the font's metrics, character information, kerning pairs,
 /// and the associated WebGL texture.
-class BitmapFont {
+class BitmapFont with LoggableClass {
   /// The name of the font.
   final String name;
 
@@ -66,10 +67,10 @@ class BitmapFont {
 
   /// The WebGL texture containing the rendered font characters (the texture atlas).
   /// This is null until [loadTexture] is called and completes.
-  WebGLTexture? fontTexture;
+  TextureInfo? textureInfo;
 
   /// Returns true if the font's texture has been loaded and is ready for use.
-  bool get isInitialized => fontTexture != null;
+  bool get isInitialized => (textureInfo != null) && (textureInfo!.isBound);
 
   /// Creates a new BitmapFont.
   BitmapFont(
@@ -83,37 +84,20 @@ class BitmapFont {
   );
 
   Future<void> loadTexture(String textureName) async {
-    // Capture the current manager instance
-    final manager = BitmapFontManager();
-
-    // 1. Create the task that will execute when its turn arrives
-    Future<void> executionTask() async {
-      print("Starting load: $textureName");
-
-      try {
-        // Execute the asynchronous asset creation
-        fontTexture = await FSG().textureManager.createTextureFromAsset(
-          textureName,
-          magFilter: WebGL.NEAREST,
-          minFilter: WebGL.NEAREST,
-          wrapS: WebGL.CLAMP_TO_EDGE,
-          wrapT: WebGL.CLAMP_TO_EDGE,
-        );
-        print("Finished loading: $textureName");
-      } catch (e) {
-        print("Failed loading $textureName: $e");
-        rethrow; // Rethrow to let the caller handle individual file failures
-      }
+    try {
+      // Execute the asynchronous asset creation
+      textureInfo = await FSG().textureManager.createTextureFromAsset(
+        textureName,
+        magFilter: WebGL.NEAREST,
+        minFilter: WebGL.NEAREST,
+        wrapS: WebGL.CLAMP_TO_EDGE,
+        wrapT: WebGL.CLAMP_TO_EDGE,
+      );
+      logVerbose("Loaded font texture: $textureName");
+    } catch (e) {
+      logError("Failed loading $textureName: $e");
+      rethrow; // Rethrow to let the caller handle individual file failures
     }
-
-    // 2. Chain this task onto the end of the existing queue line
-    // Use whenComplete() so a failing texture won't block the next texture in line
-    manager.loadQueue = manager.loadQueue.whenComplete(() async {
-      await executionTask();
-    });
-
-    // 3. Await the specific completion of this texture item
-    await manager.loadQueue;
   }
 
   /// Factory constructor to load and parse a BitmapFont from an XML string.

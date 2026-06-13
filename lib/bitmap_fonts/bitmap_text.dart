@@ -221,11 +221,12 @@ class BitmapText {
   }
 
   void draw(RenderingContext gl) {
-    if ((font == null) || (shader==null)) return;
+
+    if ((font == null) || (!font!.isInitialized) || (shader==null)) return;
 
     shader!.setTextColor(textColor);
 
-    gl.bindTexture(WebGL.TEXTURE_2D, font!.fontTexture);
+    gl.bindTexture(WebGL.TEXTURE_2D, font!.textureInfo!.texture);
 
     vbo.bind();
     vbo.drawTriangles();

@@ -7,6 +7,7 @@ import 'package:fsg/shaders/shaders.dart';
 import 'package:fsg/shaders/materials.dart';
 import 'package:fsg/texture_manager.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
+import 'gl_state_manager.dart';
 import 'logging.dart';
 
 import 'scene.dart';
@@ -56,6 +57,9 @@ class FSG with LoggableClass {
 
   /// The manager for textures loaded from assets.
   final textureManager = TextureManager();
+
+  /// OpenGL State manager to reduce unneeded OpenGL state changes
+  final GlStateManager glStateManager = GlStateManager();
 
   /// The singleton instance.
   static final FSG _singleton = FSG._internal();

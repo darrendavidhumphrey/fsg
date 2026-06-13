@@ -108,7 +108,7 @@ class AnimatedCheckerBoardScene extends Scene {
   }
 
   @override
-  void drawScene() {
+  void drawScene() async {
     super.drawScene();
 
     //logPedantic("drawScene");

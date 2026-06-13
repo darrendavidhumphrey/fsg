@@ -97,7 +97,8 @@ abstract class Scene with LoggableClass, GlContextManager {
   /// The core drawing logic to be implemented by subclasses.
   /// This method is called within the rendering loop when a repaint is needed.
   @mustCallSuper
-  void drawScene() {
+void drawScene() {
+    FSG().glStateManager.startFrame();
     _frameCounter++;
   }
 
@@ -172,7 +173,7 @@ abstract class Scene with LoggableClass, GlContextManager {
           FSG().initScene(this);
         }
 
-        drawScene();
+       drawScene();
 
         await renderToTextureId!.signalNewFrameAvailable();
 

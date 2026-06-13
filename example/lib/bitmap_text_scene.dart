@@ -84,9 +84,8 @@ class BitmapTextScene extends Scene {
   }
 
   @override
-  void drawScene() {
+  void drawScene() async {
     super.drawScene();
-
     updateTextItems();
 
     if (textItems.isEmpty) {

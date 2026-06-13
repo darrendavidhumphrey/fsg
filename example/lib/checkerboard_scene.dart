@@ -44,7 +44,7 @@ class CheckerBoardScene extends Scene {
   }
 
   @override
-  void drawScene() {
+  void drawScene() async {
     super.drawScene();
 
     gl.viewport(0, 0, FSG.renderToTextureSize.toInt(), FSG.renderToTextureSize.toInt());
