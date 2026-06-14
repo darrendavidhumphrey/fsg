@@ -56,7 +56,7 @@ class FSG with LoggableClass {
   final materials = MaterialList();
 
   /// The manager for textures loaded from assets.
-  final textureManager = TextureManager();
+  late TextureManager textureManager;
 
   /// OpenGL State manager to reduce unneeded OpenGL state changes
   final GlStateManager glStateManager = GlStateManager();
@@ -70,7 +70,9 @@ class FSG with LoggableClass {
   }
 
   /// Internal constructor for the singleton.
-  FSG._internal();
+  FSG._internal() {
+    textureManager = TextureManager(glStateManager);
+  }
 
   /// Initializes the core FlutterAngle engine.
   /// This must be called once before any other operations.

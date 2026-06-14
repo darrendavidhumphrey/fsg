@@ -66,14 +66,14 @@ class BasicLightingShader extends GlslShader {
       );
 
   void setLightPos(Vector3 v) {
-    gls.setUniform4f(uniforms[uLightPos]!, v.x, v.y, v.z, 1.0);
+    gls.setUniform4fv(uniforms[uLightPos]!, [v.x, v.y, v.z, 1.0]);
   }
 
   void setKd(Vector3 v) {
-    gls.setUniform3f(uniforms[uKd]!, v.x, v.y, v.z);
+    gls.setUniform3fv(uniforms[uKd]!, [v.x, v.y, v.z]);
   }
 
   void setLd(Vector3 v) {
-    gls.setUniform3f(uniforms[uLd]!, v.x, v.y, v.z);
+    gls.setUniform3fv(uniforms[uLd]!, [v.x, v.y, v.z]);
   }
 }

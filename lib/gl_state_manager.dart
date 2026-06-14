@@ -2,6 +2,21 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'fsg_singleton.dart';
 
+/// Helper to store texture parameter states for individual textures.
+class TextureSettings {
+  int wrapS;
+  int wrapT;
+  int minFilter;
+  int magFilter;
+
+  TextureSettings({
+    required this.wrapS,
+    required this.wrapT,
+    required this.minFilter,
+    required this.magFilter,
+  });
+}
+
 class GlStateManager {
   // The official flutter_angle WebGL rendering context wrapper
   late RenderingContext gl;
@@ -21,7 +36,8 @@ class GlStateManager {
   int? _depthFunc;
   bool? _depthMask;
   int? _activeTextureUnit;
-  final Map<int, WebGLTexture?> _boundTexturesByUnit = {}; // Map texture unit to specific WebGLTexture
+  final Map<int, WebGLTexture?> _boundTexturesByUnit =
+      {}; // Map texture unit to specific WebGLTexture
   int? _cullFaceMode;
 
   List<double> _clearColor = [-1.0, -1.0, -1.0, -1.0];
@@ -38,6 +54,9 @@ class GlStateManager {
   // Buffer bindings using flutter_angle classes
   Buffer? _currentVBO;
   Buffer? _currentIBO;
+
+  // Texture state tracking parameter cache
+  final Map<WebGLTexture, TextureSettings> _textureParameterCache = {};
 
   GlStateManager();
 
@@ -71,7 +90,7 @@ class GlStateManager {
     _clearColor = [0.0, 0.0, 0.0, 0.0];
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
 
-    _viewport =[-1,-1,-1,-1];
+    _viewport = [-1, -1, -1, -1];
     gl.viewport(0, 0, 0, 0);
 
     // 3. Reset Blend Functions (Standard alpha blending defaults)
@@ -87,6 +106,7 @@ class GlStateManager {
 
     _boundTexturesByUnit.clear();
     gl.bindTexture(WebGL.TEXTURE_2D, null);
+    _textureParameterCache.clear();
 
     // 5. Reset Buffer Bindings
     _currentVBO = null;
@@ -120,67 +140,88 @@ class GlStateManager {
 
     final uniforms = _shaderUniformCache[_currentProgram]!;
     var uniform = uniforms[uniformPos];
-// TODO: Check for same or use force logic
-    gl.uniform1i(uniformPos, v);
+    if (force || uniform != v) {
+      uniforms[uniformPos] = v;
+      gl.uniform1i(uniformPos, v);
+    }
   }
 
-  void setUniform1f(UniformLocation uniformPos, double v, {bool force = false}) {
+  void setUniform1f(
+    UniformLocation uniformPos,
+    double v, {
+    bool force = false,
+  }) {
     if (_currentProgram == null) return;
 
     final uniforms = _shaderUniformCache[_currentProgram]!;
     var uniform = uniforms[uniformPos];
-// TODO: Check for same or use force logic
-    gl.uniform1f(uniformPos, v);
+    if (force || uniform != v) {
+      uniforms[uniformPos] = v;
+      gl.uniform1f(uniformPos, v);
+    }
   }
 
-  void setUniform2f(UniformLocation uniformPos, double x, double y, {bool force = false}) {
-    if (_currentProgram == null) return;
+  /// Compares values against the cache and updates it. Returns true if it was a cache hit.
+  bool _checkAndUpdateCache(
+    UniformLocation pos,
+    List<double> newValues,
+    bool force,
+  ) {
+    if (_currentProgram == null) return true; // Skip upload if no program
 
     final uniforms = _shaderUniformCache[_currentProgram]!;
-    var uniform = uniforms[uniformPos];
-// TODO: Check for same or use force logic
-    gl.uniform2f(uniformPos, x, y);
+    final cached = uniforms[pos];
+
+    if (!force && cached is List<double> && cached.length == newValues.length) {
+      bool identical = true;
+      for (int i = 0; i < newValues.length; i++) {
+        if (cached[i] != newValues[i]) {
+          identical = false;
+          break;
+        }
+      }
+      if (identical) return true; // Cache hit: skip upload
+    }
+
+    // Cache miss or forced update: save a copy
+    uniforms[pos] = List<double>.from(newValues);
+    return false;
   }
 
-  void setUniform3f(UniformLocation uniformPos, double x, double y, double z, {bool force = false}) {
-    if (_currentProgram == null) return;
-
-    final uniforms = _shaderUniformCache[_currentProgram]!;
-    var uniform = uniforms[uniformPos];
-// TODO: Check for same or use force logic
-    gl.uniform3f(uniformPos, x, y, z);
+  void setUniform2fv(
+    UniformLocation uniformPos,
+    List<double> v, {
+    bool force = false,
+  }) {
+    if (_checkAndUpdateCache(uniformPos, v, force)) return;
+    gl.uniform2fv(uniformPos, v);
   }
 
-  void setUniform4f(UniformLocation uniformPos, double x, double y, double z, double w,{bool force = false}) {
-    if (_currentProgram == null) return;
-
-    final uniforms = _shaderUniformCache[_currentProgram]!;
-    var uniform = uniforms[uniformPos];
-// TODO: Check for same or use force logic
-    gl.uniform4f(uniformPos, x, y, z, w);
+  void setUniform3fv(
+    UniformLocation uniformPos,
+    List<double> v, {
+    bool force = false,
+  }) {
+    if (_checkAndUpdateCache(uniformPos, v, force)) return;
+    gl.uniform3fv(uniformPos, v);
   }
 
-  void setUniform4fv(UniformLocation uniformPos, List<double> u,{bool force = false}) {
-    if (_currentProgram == null) return;
-
-    final uniforms = _shaderUniformCache[_currentProgram]!;
-    var uniform = uniforms[uniformPos];
-// TODO: Check for same or use force logic
-    gl.uniform4fv(uniformPos, u);
+  void setUniform4fv(
+    UniformLocation uniformPos,
+    List<double> v, {
+    bool force = false,
+  }) {
+    if (_checkAndUpdateCache(uniformPos, v, force)) return;
+    gl.uniform4fv(uniformPos, v);
   }
-  void setUniformMatrix3fv(UniformLocation uniformPos,Matrix3 m) {
-    final uniforms = _shaderUniformCache[_currentProgram]!;
-    var uniform = uniforms[uniformPos];
-    uniforms[uniformPos] = m.storage;
-    // TODO: Check for same or use force logic
+
+  // It's expensive to check an entire matrix, so there's not much point in caching it.
+  void setUniformMatrix3fv(UniformLocation uniformPos, Matrix3 m) {
     gl.uniformMatrix3fv(uniformPos, false, m.storage);
   }
 
-  void setUniformMatrix4fv(UniformLocation uniformPos,Matrix4 m) {
-    final uniforms = _shaderUniformCache[_currentProgram]!;
-    var uniform = uniforms[uniformPos];
-    uniforms[uniformPos] = m.storage;
-    // TODO: Check for same or use force logic
+  // It's expensive to check an entire matrix, so there's not much point in caching it.
+  void setUniformMatrix4fv(UniformLocation uniformPos, Matrix4 m) {
     gl.uniformMatrix4fv(uniformPos, false, m.storage);
   }
 
@@ -268,6 +309,44 @@ class GlStateManager {
     if (force || _boundTexturesByUnit[currentUnit] != texture) {
       _boundTexturesByUnit[currentUnit] = texture;
       gl.bindTexture(target, texture);
+
+      // Apply cached parameters immediately if a real texture is bound
+      if (texture != null) {
+        _applyCachedTextureParameters(target, texture);
+      }
+    }
+  }
+
+  /// Internal utility to execute parameter updates against bound context.
+  void _applyCachedTextureParameters(int target, WebGLTexture texture,{TextureSettings? settings}) {
+    if (settings == null) return;
+    gl.texParameteri(target, WebGL.TEXTURE_WRAP_S, settings.wrapS);
+    gl.texParameteri(target, WebGL.TEXTURE_WRAP_T, settings.wrapT);
+    gl.texParameteri(target, WebGL.TEXTURE_MIN_FILTER, settings.minFilter);
+    gl.texParameteri(target, WebGL.TEXTURE_MAG_FILTER, settings.magFilter);
+  }
+
+  void setTextureParameters(
+    WebGLTexture texture, {
+    required int wrapS,
+    required int wrapT,
+    required int minFilter,
+    required int magFilter,
+  }) {
+    final settings = _textureParameterCache.putIfAbsent(
+      texture,
+      () => TextureSettings(
+        wrapS: wrapS,
+        wrapT: wrapT,
+        minFilter: minFilter,
+        magFilter: magFilter,
+      ),
+    );
+
+    // If this texture is currently bound to the active unit, push modifications immediately
+    final currentUnit = _activeTextureUnit ?? WebGL.TEXTURE0;
+    if (_boundTexturesByUnit[currentUnit] == texture) {
+      _applyCachedTextureParameters(WebGL.TEXTURE_2D, texture,settings: settings);
     }
   }
 
@@ -278,7 +357,13 @@ class GlStateManager {
     }
   }
 
-  void clearColor(double r, double g, double b, double a, {bool force = false}) {
+  void clearColor(
+    double r,
+    double g,
+    double b,
+    double a, {
+    bool force = false,
+  }) {
     if (force ||
         _clearColor[0] != r ||
         _clearColor[1] != g ||
@@ -289,7 +374,13 @@ class GlStateManager {
     }
   }
 
-  void blendFuncSeparate(int srcRGB, int dstRGB, int srcAlpha, int dstAlpha, {bool force = false}) {
+  void blendFuncSeparate(
+    int srcRGB,
+    int dstRGB,
+    int srcAlpha,
+    int dstAlpha, {
+    bool force = false,
+  }) {
     if (force ||
         _blendSrcRGB != srcRGB ||
         _blendDstRGB != dstRGB ||
@@ -304,6 +395,41 @@ class GlStateManager {
   }
 
   // --- BUFFER BINDINGS ---
+  void bufferData(int target, dynamic data, int usage) {
+    gl.bufferData(target, data, usage);
+  }
+
+  /// Activates state parameters on individual index layouts.
+  void enableVertexAttribArray(int index) {
+    gl.enableVertexAttribArray(index);
+  }
+
+  /// Deactivates layout channels when arrays complete drawing tasks.
+  void disableVertexAttribArray(int index) {
+    gl.disableVertexAttribArray(index);
+  }
+
+  /// Sets array formatting specifications relative to strides and offsets.
+  void vertexAttribPointer(
+    int index,
+    int size,
+    int type,
+    bool normalized,
+    int stride,
+    int offset,
+  ) {
+    gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+  }
+
+  /// Disposes GPU allocated buffers and resets local active bindings if tracked.
+  void deleteBuffer(Buffer? buffer) {
+    if (buffer == null) return;
+
+    gl.deleteBuffer(buffer);
+
+    if (_currentVBO == buffer) _currentVBO = null;
+    if (_currentIBO == buffer) _currentIBO = null;
+  }
 
   void bindVertexBuffer(Buffer? vbo, {bool force = false}) {
     if (force || _currentVBO != vbo) {

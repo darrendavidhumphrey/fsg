@@ -177,7 +177,7 @@ class OneLightShader extends GlslShader {
       );
 
   void setLightPos(Vector3 v) {
-    gls.setUniform3f(uniforms[uLightPos]!, v.x, v.y, v.z);
+    gls.setUniform3fv(uniforms[uLightPos]!, [v.x, v.y, v.z]);
   }
 
   void setNMatrix(Matrix3 m) {
@@ -185,27 +185,27 @@ class OneLightShader extends GlslShader {
   }
 
   void setAmbientLight(Color color) {
-    gls.setUniform3f(uniforms[uAmbientLight]!, color.r, color.g, color.b);
+    gls.setUniform3fv(uniforms[uAmbientLight]!, [color.r, color.g, color.b]);
   }
 
   void setDiffuseLight(Color color) {
-    gls.setUniform3f(uniforms[uDiffuseLight]!, color.r, color.g, color.b);
+    gls.setUniform3fv(uniforms[uDiffuseLight]!, [color.r, color.g, color.b]);
   }
 
   void setSpecularLight(Color color) {
-    gls.setUniform3f(uniforms[uSpecularLight]!, color.r, color.g, color.b);
+    gls.setUniform3fv(uniforms[uSpecularLight]!, [color.r, color.g, color.b]);
   }
 
   void setMaterialAmbient(Color color) {
-    gls.setUniform3f(uniforms[uMaterialAmbient]!, color.r, color.g, color.b);
+    gls.setUniform3fv(uniforms[uMaterialAmbient]!, [color.r, color.g, color.b]);
   }
 
   void setMaterialDiffuse(Color color) {
-    gls.setUniform3f(uniforms[uMaterialDiffuse]!, color.r, color.g, color.b);
+    gls.setUniform3fv(uniforms[uMaterialDiffuse]!, [color.r, color.g, color.b]);
   }
 
   void setMaterialSpecular(Color color) {
-    gls.setUniform3f(uniforms[uMaterialSpecular]!, color.r, color.g, color.b);
+    gls.setUniform3fv(uniforms[uMaterialSpecular]!, [color.r, color.g, color.b]);
   }
 
   void setShininess(num shininess) {
@@ -221,7 +221,7 @@ class OneLightShader extends GlslShader {
   }
 
   void setOutlineColor(Color color) {
-    gls.setUniform4f(uniforms[uOutlineColor]!, color.r, color.g, color.b, color.a);
+    gls.setUniform4fv(uniforms[uOutlineColor]!, [color.r, color.g, color.b, color.a]);
   }
 
   void setOutlineWidth(num width) {

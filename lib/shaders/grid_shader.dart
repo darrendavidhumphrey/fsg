@@ -137,10 +137,10 @@ class GridShader extends GlslShader {
       );
 
   void setResolutionMM(num width, num height) {
-    gls.setUniform2f(
+    gls.setUniform2fv(
       uniforms[uResolution]!,
-      width.toDouble() * 10,
-      height.toDouble() * 10,
+      [width.toDouble() * 10,
+      height.toDouble() * 10]
     );
   }
 

@@ -73,9 +73,8 @@ abstract class Scene with LoggableClass, GlContextManager {
   /// This must be called before any drawing operations can occur.
   void init(RenderingContext gl) {
     initializeGl(gl); // Initialize the GlContextManager mixin
-    gls = FSG().glStateManager;
-
     FSG().initContext(gl);
+    gls = FSG().glStateManager;
     mvMatrixStack.current = Matrix4.identity();
     gl.clearColor(0, 1, 0, 1);
   }
@@ -101,7 +100,7 @@ abstract class Scene with LoggableClass, GlContextManager {
   /// This method is called within the rendering loop when a repaint is needed.
   @mustCallSuper
 void drawScene() {
-    FSG().glStateManager.startFrame();
+    gls.startFrame();
     _frameCounter++;
   }
 

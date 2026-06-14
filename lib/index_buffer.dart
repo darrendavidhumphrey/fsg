@@ -1,5 +1,5 @@
 import 'package:flutter_angle/flutter_angle.dart';
-import 'native_array/index.dart';
+import 'package:fsg/fsg.dart';
 
 /// Manages a WebGL Element Array Buffer, also known as an Index Buffer Object (IBO).
 ///
@@ -7,7 +7,7 @@ import 'native_array/index.dart';
 /// buffer used for indexed drawing with `gl.drawElements`.
 class IndexBuffer {
   /// The underlying rendering context.
-  final RenderingContext _gl;
+  final GlStateManager _gls;
 
   /// The WebGL identifier for the buffer object.
   final Buffer _iboId;
@@ -25,7 +25,7 @@ class IndexBuffer {
   Int16Array? _indexData;
 
   /// Creates an index buffer for the given rendering context.
-  IndexBuffer(this._gl) : _iboId = _gl.createBuffer();
+  IndexBuffer(this._gls) : _iboId = _gls.gl.createBuffer();
 
   /// Ensures the underlying buffer has at least [newIndexCount] capacity and
   /// returns it.
@@ -59,7 +59,7 @@ class IndexBuffer {
 
   /// Disposes of all WebGL resources and the client-side buffer held by this object.
   void dispose() {
-    _gl.deleteBuffer(_iboId);
+    _gls.deleteBuffer(_iboId);
     _indexData?.dispose();
     _indexData = null;
   }
@@ -71,20 +71,20 @@ class IndexBuffer {
     _activeIndexCount = count;
 
     if (count > 0 && _indexData != null) {
-      _gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _iboId);
-      _gl.bufferData(WebGL.ELEMENT_ARRAY_BUFFER, _indexData, WebGL.STATIC_DRAW);
-      _gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, null);
+      _gls.bindIndexBuffer(_iboId);
+      _gls.bufferData(WebGL.ELEMENT_ARRAY_BUFFER, _indexData, WebGL.STATIC_DRAW);
+      _gls.bindIndexBuffer(null);
     }
   }
 
   /// Binds the index buffer to make it the active ELEMENT_ARRAY_BUFFER.
   void bind() {
-    _gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, _iboId);
+    _gls.bindIndexBuffer(_iboId);
   }
 
   /// Unbinds the index buffer by binding `null`.
   void unbind() {
-    _gl.bindBuffer(WebGL.ELEMENT_ARRAY_BUFFER, null);
+    _gls.bindIndexBuffer(null);
   }
 
   /// Checks for value equality. Two [IndexBuffer] instances are considered equal

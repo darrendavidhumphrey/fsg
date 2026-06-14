@@ -15,7 +15,7 @@ class TextureInfo {
   bool isLoaded = false;
   bool isBound = false;
 
-  TextureInfo(this.url,this.magFilter, this.minFilter, this.wrapS, this.wrapT);
+  TextureInfo(this.url, this.magFilter, this.minFilter, this.wrapS, this.wrapT);
 }
 
 /// A manager for loading, creating, and caching WebGL textures for a given GL context.
@@ -26,10 +26,12 @@ class TextureManager with GlContextManager, LoggableClass {
   final List<TextureInfo> _unBoundTextures = [];
   final Mutex _unBoundTexturesLock = Mutex();
 
+  GlStateManager gls;
+
   /// Creates a new TextureManager.
   /// This class is intended to be held by a central singleton (e.g., FSG)
   /// rather than being a singleton itself.
-  TextureManager();
+  TextureManager(this.gls);
 
   /// Loads an image from assets and creates a WebGL texture from it.
   ///
@@ -44,7 +46,7 @@ class TextureManager with GlContextManager, LoggableClass {
     int wrapT = WebGL.REPEAT,
   }) async {
     if (!_textures.containsKey(url)) {
-      var textureInfo = TextureInfo(url,magFilter, minFilter, wrapS, wrapT);
+      var textureInfo = TextureInfo(url, magFilter, minFilter, wrapS, wrapT);
       _textures[url] = textureInfo;
 
       textureInfo.image = await gl.loadImageFromAsset('assets/$url');
@@ -93,7 +95,9 @@ class TextureManager with GlContextManager, LoggableClass {
         // textures during this await, it won't affect our logic because we
         // haven't bound anything yet.
         // ====================================================================
-        final ByteData? byteData = await uiImage.toByteData(format: ImageByteFormat.rawRgba);
+        final ByteData? byteData = await uiImage.toByteData(
+          format: ImageByteFormat.rawRgba,
+        );
         if (byteData == null) {
           throw Exception("Could not convert image to raw RGBA bytes.");
         }
@@ -109,7 +113,7 @@ class TextureManager with GlContextManager, LoggableClass {
 
         // 1. Instantly allocate and isolate the target texture slot
         textureInfo.texture = gl.createTexture();
-        gl.bindTexture(WebGL.TEXTURE_2D, textureInfo.texture);
+        gls.bindTexture(WebGL.TEXTURE_2D, textureInfo.texture);
         gl.pixelStorei(WebGL.UNPACK_ALIGNMENT, 1);
 
         logVerbose("Uploading WebGL texture for: ${textureInfo.url}");
@@ -129,10 +133,13 @@ class TextureManager with GlContextManager, LoggableClass {
 
         // 3. Configure sampling parameters safely while the texture remains bound
         int minFilter = textureInfo.minFilter;
-        gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_WRAP_S, textureInfo.wrapS);
-        gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_WRAP_T, textureInfo.wrapT);
-        gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_MAG_FILTER, textureInfo.magFilter);
-        gl.texParameteri(WebGL.TEXTURE_2D, WebGL.TEXTURE_MIN_FILTER, minFilter);
+        gls.setTextureParameters(
+          textureInfo.texture!,
+          wrapS: textureInfo.wrapS,
+          wrapT: textureInfo.wrapT,
+          minFilter: minFilter,
+          magFilter: textureInfo.magFilter,
+        );
 
         if (minFilter == WebGL.NEAREST_MIPMAP_NEAREST ||
             minFilter == WebGL.LINEAR_MIPMAP_NEAREST ||
@@ -142,13 +149,14 @@ class TextureManager with GlContextManager, LoggableClass {
         }
 
         // 4. Unbind the texture immediately to clean up the state context
-        gl.bindTexture(WebGL.TEXTURE_2D, null);
+        gls.bindTexture(WebGL.TEXTURE_2D, null);
 
         textureInfo.isBound = true;
         _textures[textureInfo.url] = textureInfo;
-
       } catch (e) {
-        logError("Error processing WebGL texture allocation for ${textureInfo.url}: $e");
+        logError(
+          "Error processing WebGL texture allocation for ${textureInfo.url}: $e",
+        );
         incompleteTextures.add(textureInfo);
       }
     }

@@ -78,7 +78,7 @@ class BitmapTextScene extends Scene {
     dynamicTextItem?.setText("$frameCounter");
     for (BitmapText child in textItems) {
       if (child.needsRebuild) {
-        child.rebuild(gl);
+        child.rebuild(gls);
       }
     }
   }
@@ -124,7 +124,7 @@ class BitmapTextScene extends Scene {
       for (var text in textItems) {
         text.draw(gls);
       }
-      gls.bindTexture(WebGL.TEXTURE_2D, null);
+
     });
 
     requestRepaint();

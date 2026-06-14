@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fsg/fsg.dart';
 import '../fsg_singleton.dart';
 import '../logging.dart';
 import '../scene_layer.dart';
@@ -34,6 +35,8 @@ abstract class ScreenSpaceOverlay extends SceneLayer with LoggableClass {
   /// The size of the overlay in screen-space pixels.
   final Size screenSpaceSize;
 
+  late GlStateManager gls;
+
   /// Creates a screen-space overlay.
   ///
   /// An overlay must be anchored by providing either [top] or [bottom], and
@@ -51,6 +54,7 @@ abstract class ScreenSpaceOverlay extends SceneLayer with LoggableClass {
         'Must provide either left or right, but not both.');
     assert((top == null) != (bottom == null),
         'Must provide either top or bottom, but not both.');
+    gls = FSG().glStateManager;
   }
 
   /// Calculates the top-left corner of this overlay within the parent viewport.
@@ -98,8 +102,6 @@ abstract class ScreenSpaceOverlay extends SceneLayer with LoggableClass {
     final windowWidth = textureToScreenX(screenSpaceSize.width);
     final windowHeight = textureToScreenY(screenSpaceSize.height);
 
-
-    var gls = FSG().glStateManager;
     gls.scissorEnabled(true);
 
     gl.scissor(

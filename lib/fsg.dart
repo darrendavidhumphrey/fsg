@@ -31,6 +31,7 @@ export 'ui/indexed_scene_viewer.dart';
 export 'edge.dart';
 export 'float32_array_filler.dart';
 export 'gl_context_manager.dart';
+export 'gl_state_manager.dart';
 export 'logging.dart';
 export 'mesh_file_renderer.dart';
 export 'mesh_hit_tester.dart';

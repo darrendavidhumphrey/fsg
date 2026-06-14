@@ -26,7 +26,7 @@ class OrbitViewScene extends Scene {
   @override
   void init(RenderingContext gl) {
     super.init(gl);
-    exampleVbo.init(gl);
+    exampleVbo.init(gls);
     exampleVbo.uploadData();
   }
 

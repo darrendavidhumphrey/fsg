@@ -104,14 +104,14 @@ class BitmapText {
   }
 
   /// Rebuilds the vertex buffer object if the text or font has changed.
-  void rebuild(RenderingContext gl) {
+  void rebuild(GlStateManager gls) {
     // Guard against unnecessary, expensive rebuilds.
     if (!_needsRebuild) return;
 
     rebuildQuads();
 
     // Create the VBO if it doesn't exist.
-    vbo.init(gl);
+    vbo.init(gls);
 
     int vertexCount = quads.length * 6; // Two triangles per character quad.
 

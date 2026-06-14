@@ -19,7 +19,7 @@ class MeshFileRenderer {
   final WavefrontObjModel model;
 
   /// The WebGL rendering context.
-  final RenderingContext gl;
+  final GlStateManager gls;
 
   OneLightShader? shader;
 
@@ -27,8 +27,8 @@ class MeshFileRenderer {
   ///
   /// Upon creation, it immediately builds the index buffer for the given model,
   /// making the renderer ready to be drawn.
-  MeshFileRenderer(this.gl, this.model)
-      : ibo = IndexBuffer(gl),
+  MeshFileRenderer(this.gls, this.model)
+      : ibo = IndexBuffer(gls),
         vbo = model.vertexBuffer {
     buildIndexBuffer();
   }
@@ -64,7 +64,7 @@ class MeshFileRenderer {
 
   /// Configures and enables the lighting shader for drawing.
   void enableLightingShader(Matrix4 pMatrix, Matrix4 mvMatrix) {
-    FSG().glStateManager.useProgram(shader!.program);
+    gls.useProgram(shader!.program);
     ShaderList.setMatrixUniforms(shader!, pMatrix, mvMatrix);
 
     shader!.setLightPos(Vector3(40, 0, -200));
@@ -112,7 +112,7 @@ class MeshFileRenderer {
       setMaterial(materialName);
 
       // Draw the elements for the current mesh, using its specific length and offset.
-      gl.drawElements(WebGL.TRIANGLES, mesh.triangleIndices.length,
+      gls.gl.drawElements(WebGL.TRIANGLES, mesh.triangleIndices.length,
           WebGL.UNSIGNED_SHORT, mesh.bufferOffset * indexSize);
     }
     ibo.unbind();

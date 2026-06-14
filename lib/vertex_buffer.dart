@@ -1,10 +1,6 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsg.dart';
-import 'package:fsg/vbo_filler.dart';
-import 'package:vector_math/vector_math_64.dart';
 
 /// Represents the possible components a vertex can have.
 enum VertexComponent {
@@ -51,8 +47,9 @@ class VertexComponentFlags {
 
 /// Manages a WebGL Array Buffer / Vertex Buffer Object (VBO).
 class VertexBuffer with LoggableClass {
-  RenderingContext? _gl;
-  Buffer? _vboId;
+  late GlStateManager _gls;
+  late Buffer _vboId;
+  bool _initialized = false;
 
   final VertexComponentFlags enabledComponents;
   int _activeVertexCount = 0;
@@ -71,9 +68,10 @@ class VertexBuffer with LoggableClass {
       : _stride = _calculateStride(enabledComponents),
         _componentCount = _calculateComponentCount(enabledComponents);
 
-  void init(RenderingContext gl) {
-    _gl = gl;
-    _vboId = _gl!.createBuffer();
+  void init(GlStateManager gls) {
+    _gls = gls;
+    _vboId = _gls.gl.createBuffer();
+    _initialized = true;
   }
 
   // Convenience constructors
@@ -89,10 +87,10 @@ class VertexBuffer with LoggableClass {
 
   /// Sends the current CPU-side memory over to the GPU VBO.
   void uploadData() {
-    if (_gl != null && _vboId != null && _activeVertexCount > 0 && vertexData != null) {
-      _gl!.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
-      _gl!.bufferData(WebGL.ARRAY_BUFFER, vertexData, WebGL.STATIC_DRAW);
-      _gl!.bindBuffer(WebGL.ARRAY_BUFFER, null);
+    if (_initialized  && _activeVertexCount > 0 && vertexData != null) {
+      _gls.bindVertexBuffer(_vboId);
+      _gls.bufferData(WebGL.ARRAY_BUFFER, vertexData, WebGL.STATIC_DRAW);
+      _gls.bindVertexBuffer(null);
     }
   }
 
@@ -114,9 +112,9 @@ class VertexBuffer with LoggableClass {
 
   /// Binds the VBO and sets up layout pointers matching shader attributes layout locations.
   void bind() {
-    if (_gl == null || _vboId == null) return;
+    if (!_initialized) return;
 
-    _gl!.bindBuffer(WebGL.ARRAY_BUFFER, _vboId);
+    _gls.bindVertexBuffer(_vboId);
 
     int currentOffset = 0;
 
@@ -126,8 +124,8 @@ class VertexBuffer with LoggableClass {
 
       if (enabledComponents.contains(bitFlag)) {
         int loc = component.attributeLocation;
-        _gl!.enableVertexAttribArray(loc);
-        _gl!.vertexAttribPointer(
+        _gls.enableVertexAttribArray(loc);
+        _gls.vertexAttribPointer(
           loc,
           component.size,
           WebGL.FLOAT,
@@ -141,13 +139,13 @@ class VertexBuffer with LoggableClass {
   }
 
   void unbind() {
-    if (_gl == null) return;
-    _gl!.bindBuffer(WebGL.ARRAY_BUFFER, null);
+    if (!_initialized) return;
+    _gls.bindVertexBuffer(null);
   }
 
   void dispose() {
-    if (_gl != null && _vboId != null) {
-      _gl!.deleteBuffer(_vboId!);
+    if (_initialized) {
+      _gls.deleteBuffer(_vboId);
     }
     vertexData?.dispose();
     vertexData = null;
@@ -185,19 +183,10 @@ class VertexBuffer with LoggableClass {
     return count;
   }
 
-  /// Safe array-pointer attribute cleanup loop.
-  void disableAllVertexAttributes() {
-    if (_gl == null) return;
-    int maxAttributes = 16;
-    for (int i = 0; i < maxAttributes; i++) {
-      _gl!.disableVertexAttribArray(i);
-    }
-  }
-
   /// Draws the currently active vertices as triangles.
   void drawTriangles() {
     if (activeVertexCount > 0) {
-      _gl!.drawArrays(WebGL.TRIANGLES, 0, activeVertexCount);
+      _gls.gl.drawArrays(WebGL.TRIANGLES, 0, activeVertexCount);
     }
   }
 }
