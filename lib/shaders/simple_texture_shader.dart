@@ -29,7 +29,10 @@ uniform vec4 uTextColor;
 
 void main(void) {
     vec4 texColor = texture(uSampler, v_uv);
-    FragColor = texColor * uTextColor; // Modulates the quad texture color
+    
+    // Modulates the quad texture color
+    //FragColor = texColor * uTextColor; 
+    FragColor = texColor;
 }
 ''';
 

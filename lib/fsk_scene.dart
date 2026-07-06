@@ -177,13 +177,14 @@ void drawScene() {
 
        drawScene();
 
-        await renderToTextureId!.signalNewFrameAvailable();
+
 
         if (!kIsWeb) {
           if (Platform.isWindows) {
             gl.finish();
           }
         }
+        await renderToTextureId!.signalNewFrameAvailable();
 
         performanceMonitor.endFrame();
       }

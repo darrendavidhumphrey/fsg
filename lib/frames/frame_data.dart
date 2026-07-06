@@ -108,7 +108,8 @@ class FrameAnchorData {
 
 abstract class FrameObjectData {
   final String id;
-  FrameObjectData({required this.id});
+  final bool visible;
+  FrameObjectData({required this.id,required this.visible});
 }
 
 class QuadData extends FrameObjectData {
@@ -119,6 +120,7 @@ class QuadData extends FrameObjectData {
 
   QuadData({
     required super.id,
+    required super.visible,
     required this.texture,
     required this.screenRect,
     required this.textureRect,
@@ -132,6 +134,7 @@ class GroupData extends FrameObjectData {
 
   GroupData({
     required super.id,
+    required super.visible,
     required this.anchor,
     required this.children,
   });
@@ -147,6 +150,7 @@ class FrameTextData extends FrameObjectData {
 
   FrameTextData({
     required super.id,
+    required super.visible,
     required this.font,
     required this.text,
     required this.screenRect,

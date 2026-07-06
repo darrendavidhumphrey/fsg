@@ -60,29 +60,26 @@
                 <!-- Question Number One  -->
                 <group id="Question1" anchor="{228, 443, 0}">            
 
-                    	<quad id="Question1_Front" texture="Question1_Front" premultiplyAlpha="true"
-							screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
 						
                         <group id="Question1_Back" anchor="{0, 0, 0}">            
 
                                 <quad id="Question1_BackBox" texture="Question_Back" premultiplyAlpha="true"
 										screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
 										
-								<text id="Question1_Text" font="AnswerFont36" text="XXXX"
-										screenRect="{{12, -65}, {288, 91}}" scaleToFit="YES"/>
+								<text id="Question1_Text" font="AnswerFont36" text="Answer Number 1"
+										screenRect="{{12, -65}, {288, 91}}" scaleToFit="YES"	/>
 										
-        						<text id="Question1_Score" font="AnswerScoreFont" text="77"
-										screenRect="{{300, -63}, {90, 91}}" hJustify="JUSTIFY_RIGHT"/>
+        						<text id="Question1_Score" font="AnswerScoreFont" text="01"
+										screenRect="{{300, -63}, {90, 91}}" hJustify="JUSTIFY_RIGHT"	/>
 
 						</group>
-
+					<quad id="Question1_Front" texture="Question1_Front" premultiplyAlpha="true"
+						screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
               	</group>
               	
               	<!-- Question Number Two  -->
-              	<group id="Question2" anchor="{228, 348, 0}">            
+              	<group id="Question2" anchor="{228, 348, 0}" visible="false">
 
-                    	<quad id="Question2_Front" texture="Question2_Front" premultiplyAlpha="true"
-							screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
 						
                         <group id="Question2_Back" anchor="{0, 0, 0}">            
 
@@ -90,13 +87,14 @@
 										screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
 										
 								<text id="Question2_Text" font="AnswerFont36" text="XXXX"
-										screenRect="{{12, -65}, {288, 91}}" scaleToFit="YES"/>
+										screenRect="{{12, -65}, {288, 91}}" scaleToFit="YES"	/>
 										
         						<text id="Question2_Score" font="AnswerScoreFont" text="77"
-										screenRect="{{300, -63}, {90, 91}}" hJustify="JUSTIFY_RIGHT"/>
+										screenRect="{{300, -63}, {90, 91}}" hJustify="JUSTIFY_RIGHT"	/>
 
 						</group>
-
+					<quad id="Question2_Front" texture="Question2_Front" premultiplyAlpha="true"
+						screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
               	</group>
               	
                 <!-- Question Number Three  -->
@@ -110,10 +108,10 @@
                                 <quad id="Question3_BackBox" texture="Question_Back" premultiplyAlpha="true"
 										screenRect="{{0, -53}, {411, 91}}" textureRect="{{0, 0}, {1, 1}}" />
 										
-								<text id="Question3_Text" font="AnswerFont36" text="XXXX"
+								<text id="Question3_Text" font="AnswerFont36" text="Answer 3"
 										screenRect="{{12, -65}, {288, 91}}" scaleToFit="YES"/>
 										
-        						<text id="Question3_Score" font="AnswerScoreFont" text="77"
+        						<text id="Question3_Score" font="AnswerScoreFont" text="3"
 										screenRect="{{300, -63}, {90, 91}}" hJustify="JUSTIFY_RIGHT"/>
 
 						</group>
@@ -227,10 +225,10 @@
     	<!-- End of Questions Group -->
     	
 		<quad id="DoubleScore" texture="DoubleScore" premultiplyAlpha="true"
-				screenRect="{{228, 390}, {827, 92}}" textureRect="{{0, 0}, {1, 1}}" />
+				screenRect="{{228, 390}, {827, 92}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 			
 		<quad id="TripleScore" texture="TripleScore" premultiplyAlpha="true"
-				screenRect="{{228, 390}, {827, 92}}" textureRect="{{0, 0}, {1, 1}}" />
+				screenRect="{{228, 390}, {827, 92}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
         
         <!-- Scores -->
         <text id="LeftScore" font="Scoreboard100" text="999"
@@ -245,46 +243,46 @@
         <!-- Start of strikes  -->
         <group id="StrikesGroup" anchor="{0, 0, 0}">            
             				<quad id="Strike1" texture="Strike"
-					screenRect="{{30, 104}, {450, 450}}" textureRect="{{0, 0}, {1, 1}}" />
+					screenRect="{{30, 104}, {450, 450}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 					
                	<quad id="Strike2" texture="Strike"
-					screenRect="{{414, 104}, {450, 450}}" textureRect="{{0, 0}, {1, 1}}" /> 
+					screenRect="{{414, 104}, {450, 450}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
                 
               	<quad id="Strike3" texture="Strike"
-					screenRect="{{798, 104}, {450, 450}}" textureRect="{{0, 0}, {1, 1}}" />
+					screenRect="{{798, 104}, {450, 450}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
         </group> 
         
         
 		<quad id="MiniStrike1" texture="Strike"
-				screenRect="{{515, 0}, {90, 90}}" textureRect="{{0, 0}, {1, 1}}" />        
+				screenRect="{{515, 0}, {90, 90}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
  		<quad id="MiniStrike2" texture="Strike"
-				screenRect="{{595, 0}, {90, 90}}" textureRect="{{0, 0}, {1, 1}}" />  
+				screenRect="{{595, 0}, {90, 90}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 				
 		<quad id="MiniStrike3" texture="Strike"
-				screenRect="{{675, 0}, {90, 90}}" textureRect="{{0, 0}, {1, 1}}" />  
+				screenRect="{{675, 0}, {90, 90}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 				       
 		<quad id="Logo" texture="FamilyFeudGameScreenTransition"
-				screenRect="{{0, 0}, {1280, 720}}" textureRect="{{0, 0}, {1, 1}}" />  
+				screenRect="{{0, 0}, {1280, 720}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
         <!-- Start of RightArrows  -->
         <group id="RightArrows" anchor="{0, 0, 0}">            
 
 				<quad id="RightArrows1" texture="Arrows1"
-					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />  
+					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 					   
   				<quad id="RightArrows2" texture="Arrows2"
-					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
   				<quad id="RightArrows3" texture="Arrows3"
-					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
   				<quad id="RightArrows4" texture="Arrows4"
-					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
   				<quad id="RightArrows5" texture="Arrows5"
-					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{660, 145}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
         </group> 
         
@@ -292,24 +290,26 @@
         <group id="LeftArrows" anchor="{413, 315, 0}">            
 
 				<quad id="LeftArrows1" texture="Arrows1"
-					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />  
+					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 					   
   				<quad id="LeftArrows2" texture="Arrows2"
-					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
   				<quad id="LeftArrows3" texture="Arrows3"
-					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
   				<quad id="LeftArrows4" texture="Arrows4"
-					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
   				<quad id="LeftArrows5" texture="Arrows5"
-					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" />                 
+					screenRect="{{-210, -130}, {420, 260}}" textureRect="{{0, 0}, {1, 1}}" 	visible="false"/>
 
         </group> 
                 
 		<quad id="TestPattern" texture="TestPattern"
-					screenRect="{{0, 0}, {1280, 720}}" textureRect="{{0, 0}, {1, 1}}" />  
+					screenRect="{{0, 0}, {1280, 720}}" textureRect="{{0, 0}, {1, 1}}"
+			visible="false"
+		/>
 	</objects>
  
 </frameScene>

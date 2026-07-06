@@ -16,6 +16,7 @@ class BitmapTextScene extends FskScene {
   void init(RenderingContext gl) {
     super.init(gl);
 
+
     loadCustomFonts();
   }
 
@@ -73,6 +74,9 @@ class BitmapTextScene extends FskScene {
   void updateTextItems() {
     if (textItems.isEmpty) {
       createTextItems();
+      for (var text in textItems) {
+        text.init(gls);
+      }
     }
 
     dynamicTextItem?.setText("$frameCounter");

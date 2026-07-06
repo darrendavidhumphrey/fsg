@@ -17,6 +17,14 @@ class FrameSceneParser {
     return parse(xmlString);
   }
 
+  static bool isVisible(XmlElement node) {
+    String? visibleStr = node.getAttribute('visible');
+
+    if (visibleStr != null) {
+      return (visibleStr.toLowerCase() == 'true');
+    }
+    return true;
+  }
   static Future<FrameData> parseFromFile(File file) async {
     final String xmlString = await file.readAsString();
     return parse(xmlString);
@@ -92,6 +100,7 @@ class FrameSceneParser {
       case 'quad':
         return QuadData(
           id: node.getAttribute('id')!,
+          visible: FrameSceneParser.isVisible(node),
           texture: node.getAttribute('texture')!,
           screenRect: _parseRect(node.getAttribute('screenRect')!),
           textureRect: _parseRect(node.getAttribute('textureRect')!),
@@ -108,12 +117,14 @@ class FrameSceneParser {
         }
         return GroupData(
           id: node.getAttribute('id')!,
+          visible: FrameSceneParser.isVisible(node),
           anchor: _parseVector3(node.getAttribute('anchor')!, anchors),
           children: children,
         );
       case 'text':
         return FrameTextData(
           id: node.getAttribute('id')!,
+          visible: FrameSceneParser.isVisible(node),
           font: node.getAttribute('font')!,
           text: node.getAttribute('text')!,
           screenRect: _parseRect(node.getAttribute('screenRect')!),

@@ -173,12 +173,21 @@ class FSK with LoggableClass {
   /// Registers a scene with the engine and allocates a texture for it to render to.
   /// This is the primary method for setting up a new renderable scene.
   Future<bool> registerSceneAndAllocateTexture(FskScene scene) async {
+
+    bool useSurface = true;
+
+    if (!kIsWeb) {
+       if (Platform.isWindows) {
+         useSurface = false;
+       }
+    }
+
     final options = AngleOptions(
       width: scene.textureWidth,
       height: scene.textureHeight,
       dpr: 1,
       antialias: true,
-      useSurfaceProducer: true,
+      useSurfaceProducer: useSurface,
     );
 
     // Allocate an OpenGL texture for the scene.

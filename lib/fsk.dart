@@ -1,15 +1,16 @@
 export 'bitmap_fonts/bitmap_font.dart';
 export 'bitmap_fonts/bitmap_font_manager.dart';
-export 'scene_graph/fsk_bitmap_text.dart';
 
-export 'shaders/materials.dart';
-export 'shaders/shaders.dart';
-export 'shaders/lighting_shader.dart';
-export 'shaders/one_light_shader.dart';
+
+export 'shaders/bitmap_text_shader.dart';
 export 'shaders/checkerboard_shader.dart';
 export 'shaders/flat_shader.dart';
 export 'shaders/grid_shader.dart';
-export 'shaders/bitmap_text_shader.dart';
+export 'shaders/lighting_shader.dart';
+export 'shaders/materials.dart';
+export 'shaders/one_light_shader.dart';
+export 'shaders/shaders.dart';
+export 'shaders/simple_texture_shader.dart';
 
 export 'fsk_singleton.dart';
 export 'glsl_shader.dart';
@@ -23,14 +24,23 @@ export 'util.dart';
 export 'vertex_buffer.dart';
 
 export 'frames/frame_scene.dart';
+export 'frames/frame_scene_nodes.dart';
 export 'frames/frame_scene_parser.dart';
 
 export 'ui/render_to_texture.dart';
 export 'ui/screen_space_overlay.dart';
+
+export 'scene_graph/fsk_bitmap_text.dart';
+export 'scene_graph/fsk_quad.dart';
+export 'scene_graph/fsk_scene_object.dart';
+
 export 'ui/navigation_delegates/orbit_view_delegate.dart';
+export 'ui/navigation_delegates/ortho_view_delegate.dart';
 export 'ui/navigation_delegates/static_view_delegate.dart';
 export 'ui/navigation_delegates/scene_navigation_delegate.dart';
+
 export 'ui/indexed_scene_viewer.dart';
+
 export 'edge.dart';
 export 'float32_array_filler.dart';
 export 'gl_context_manager.dart';

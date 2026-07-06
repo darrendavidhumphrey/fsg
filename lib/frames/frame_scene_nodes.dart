@@ -23,6 +23,7 @@ class FrameGroupNode extends FrameNode {
 
   @override
   void init(GlStateManager gls) {
+    visible = data.visible;
     for (var child in children) {
       child.init(gls);
     }
@@ -64,6 +65,11 @@ abstract class FrameObjectNode<T extends FskSceneObject> extends FrameNode {
   }
 
   @override
+  void init(GlStateManager gls) {
+    visible = data.visible;
+  }
+
+  @override
   void dispose() {
     object?.dispose();
   }
@@ -74,6 +80,7 @@ class FrameQuadNode extends FrameObjectNode<FskQuad> {
 
   @override
   void init(GlStateManager gls) {
+    super.init(gls);
     final quadData = data as QuadData;
 
     final rect = Quad.points(
@@ -93,6 +100,7 @@ class FrameTextNode extends FrameObjectNode<FskBitmapText> {
 
   @override
   void init(GlStateManager gls) {
+    super.init(gls);
     final textData = data as FrameTextData;
     var font = BitmapFontManager().getFont(textData.font);
 

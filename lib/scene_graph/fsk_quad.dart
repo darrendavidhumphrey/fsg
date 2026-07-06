@@ -49,6 +49,7 @@ class FskQuad extends FskSceneObject {
   }
 
   /// Disposes the vertex buffer associated with this text.
+  @override
   void dispose() {
     _vbo.dispose();
   }
@@ -83,6 +84,7 @@ class FskQuad extends FskSceneObject {
     gls.setBlend(true);
     gls.setTexturingEnabled(true);
     gls.activeTexture(WebGL.TEXTURE0);
+    gls.setDepthTest(false);
 
     gls.blendFuncSeparate(
       WebGL.ONE,

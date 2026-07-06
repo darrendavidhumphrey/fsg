@@ -47,7 +47,7 @@ class FskBitmapText extends FskSceneObject {
   Color textColor = const Color(0xFFFFFFFF);
 
   /// The vertex buffer object that holds the geometry for rendering.
-  VertexBuffer vbo = VertexBuffer.v3t2();
+  final VertexBuffer _vbo = VertexBuffer.v3t2();
 
   // One shader shared by all text instances
   static BitmapTextShader? shader;
@@ -84,8 +84,9 @@ class FskBitmapText extends FskSceneObject {
   }
 
   /// Disposes the vertex buffer associated with this text.
+  @override
   void dispose() {
-      vbo.dispose();
+      _vbo.dispose();
   }
 
   /// Sets a new font and flags the text for a rebuild.
@@ -106,7 +107,7 @@ class FskBitmapText extends FskSceneObject {
 
   @override
   void init(GlStateManager gls) {
-    vbo.init(gls);
+    _vbo.init(gls);
     rebuild(gls);
   }
   /// Rebuilds the vertex buffer object if the text or font has changed.
@@ -119,14 +120,14 @@ class FskBitmapText extends FskSceneObject {
 
     int vertexCount = quads.length * 6; // Two triangles per character quad.
 
-    Float32Array? vertexTexCoordArray = vbo.requestBuffer(vertexCount);
+    Float32Array? vertexTexCoordArray = _vbo.requestBuffer(vertexCount);
 
     if (vertexTexCoordArray != null) {
       // Fill the VBO with the generated quad data.
-      VboFiller.addTexturedQuads(quads, textureQuads,vbo);
+      VboFiller.addTexturedQuads(quads, textureQuads,_vbo);
     }
 
-    vbo.setActiveVertexCount(vertexCount);
+    _vbo.setActiveVertexCount(vertexCount);
     _needsRebuild = false; // Reset the flag after a successful rebuild.
   }
 
@@ -220,7 +221,7 @@ class FskBitmapText extends FskSceneObject {
     gls.setBlend(true);
     gls.setTexturingEnabled(true);
     gls.activeTexture(WebGL.TEXTURE0);
-
+    gls.setDepthTest(false);
     gls.blendFuncSeparate(
       WebGL.ONE,
       WebGL.ONE_MINUS_SRC_ALPHA,
@@ -238,8 +239,8 @@ class FskBitmapText extends FskSceneObject {
 
     gls.bindTexture(WebGL.TEXTURE_2D, font!.textureInfo!.texture);
 
-    vbo.bind();
-    vbo.drawTriangles();
+    _vbo.bind();
+    _vbo.drawTriangles();
 
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/fsk.dart';
 import 'package:fsg/indexed_stack_scene.dart';
@@ -22,7 +24,7 @@ class ExampleScenes extends IndexedStackScene {
     addScene(AnimatedCheckerBoardScene(),StaticViewDelegate());
     addScene(OrbitViewScene(),OrbitViewDelegate());
     addScene(BitmapTextScene(),OrbitViewDelegate());
-    addScene(FrameSceneExample(),OrbitViewDelegate());
+    addScene(FrameSceneExample(),OrthoViewDelegate(viewRect: Rect.fromLTWH(0, 0, 1280, 720)));
 
     setCurrentScene(0);
   }
