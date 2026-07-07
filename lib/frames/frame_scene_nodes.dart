@@ -116,7 +116,7 @@ class FrameTextNode extends FrameObjectNode<FskBitmapText> {
     );
     print("Height for ${data.id} is ${refBox.yVector.length}");
     // TODO: pass in justify fields, scaleToFit setting?
-    object = FskBitmapText(font, textData.text, refBox);
+    object = FskBitmapText(font, textData.text, refBox, horizontalJustification:  textData.hJustify, verticalJustification: textData.vJustify);
     object!.init(gls);
   }
 }

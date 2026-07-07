@@ -189,7 +189,6 @@ class FskBitmapText extends FskSceneObject {
   }
 
   /// Rebuilds the list of geometry and texture quads for the current text string.
-
   void rebuildQuads() {
     if ((text.isEmpty) || (font == null)) {
       quads = [];
@@ -226,19 +225,39 @@ class FskBitmapText extends FskSceneObject {
     quads = List<Quad>.filled(characterCount, Quad());
     textureQuads = List<Rect>.filled(characterCount, Rect.zero);
 
-    double currentX = 0;
-
     // Calculate the ratio needed to fit or size the text horizontally
     double ratio = (lineLength > 0) ? _width / lineLength : 1.0;
 
     // Don't let characters get bigger than the box
     ratio = min(1.0, ratio);
 
-    // --- Pass 3: Vertical Justification (Calculated in Pure Unscaled Font Space) ---
+    // --- Pass 3: Horizontal Justification (Calculated in Pure Unscaled Font Space) ---
+    // Bring target width into unscaled font space to prevent drift on small ratios
+    final double unscaledBoxWidth = _width / ratio;
+    double currentX = 0.0;
+
+
+
+    switch (horizontalJustification) {
+      case TextHorizontalJustification.left:
+      // Text starts flush at X = 0
+        currentX = 0.0;
+        break;
+      case TextHorizontalJustification.center:
+      // Centers the line block cleanly within the unscaled virtual width
+        currentX = (unscaledBoxWidth - lineLength) / 2;
+        break;
+      case TextHorizontalJustification.right:
+      // Pushes the entire line layout flush against the right container wall
+        currentX = unscaledBoxWidth - lineLength;
+        break;
+    }
+
+    // --- Pass 4: Vertical Justification (Calculated in Pure Unscaled Font Space) ---
     final double boxHeight = _screenRect.yVector.length;
     final double unscaledLineHeight = _font!.lineHeight.toDouble();
 
-    // Fixed: Map the box height into unscaled font space using the ratio
+    // Map the box height into unscaled font space using the ratio
     final double unscaledBoxHeight = boxHeight / ratio;
     double unscaledVAdjust = 0.0;
 
@@ -257,7 +276,7 @@ class FskBitmapText extends FskSceneObject {
         break;
     }
 
-    // --- Pass 4: Quad Construction Loop ---
+    // --- Pass 5: Quad Construction Loop ---
     for (int i = 0; i < characterCount; i++) {
       final data = layoutData[i];
       final charInfo = data.char;
@@ -274,7 +293,7 @@ class FskBitmapText extends FskSceneObject {
       // The bottom of the glyph is physically below qTop, so we subtract the visual height
       double qBottom = qTop - charInfo.region.height;
 
-      // Fixed: To shift the quad anchor relative to the reference frame box,
+      // To shift the quad anchor relative to the reference frame box,
       // do it in unscaled coordinates so the shift scales uniformly with the ratio!
       qTop -= unscaledBoxHeight;
       qBottom -= unscaledBoxHeight;
@@ -305,6 +324,7 @@ class FskBitmapText extends FskSceneObject {
       currentX += charInfo.xAdvance + kerning;
     }
   }
+
 
   @override
   void drawSetup(GlStateManager gls, Matrix4 pMatrix, Matrix4 mvMatrix) {

@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:xml/xml.dart';
+import '../scene_graph/fsk_bitmap_text.dart';
 import 'frame_data.dart';
 
 class FrameSceneParser {
@@ -132,13 +133,21 @@ class FrameSceneParser {
           children: children,
         );
       case 'text':
+        final String rawHJustify = node.getAttribute('hJustify') ?? 'left';
+        final String rawVJustify = node.getAttribute('vJustify') ?? 'top';
+
+        // Parse strings safely into their type-safe enum abstractions
+        final hJustification = TextHorizontalJustification.fromString(rawHJustify, defaultValue: TextHorizontalJustification.left);
+        final vJustification = TextVerticalJustification.fromString(rawVJustify, defaultValue: TextVerticalJustification.top);
+
         return FrameTextData(
           id: node.getAttribute('id')!,
           visible: FrameSceneParser.isVisible(node),
           font: node.getAttribute('font')!,
           text: node.getAttribute('text')!,
           screenRect: _parseRect(node.getAttribute('screenRect')!),
-          hJustify: node.getAttribute('hJustify'),
+          hJustify: hJustification, // Updated to pass the enum object instead of raw String
+          vJustify: vJustification,
           maxLen: int.tryParse(node.getAttribute('maxLen') ?? ''),
           scaleToFit: node.getAttribute('scaleToFit') == 'YES',
         );

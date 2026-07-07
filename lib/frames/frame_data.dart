@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:vector_math/vector_math_64.dart';
 
 import '../logging.dart';
+import '../scene_graph/fsk_bitmap_text.dart';
 
 class FrameData with LoggableClass {
   final String version;
@@ -144,7 +145,8 @@ class FrameTextData extends FrameObjectData {
   final String font;
   final String text;
   final Rect screenRect;
-  final String? hJustify;
+  final TextHorizontalJustification hJustify;
+  final TextVerticalJustification vJustify;
   final int? maxLen;
   final bool scaleToFit;
 
@@ -154,7 +156,8 @@ class FrameTextData extends FrameObjectData {
     required this.font,
     required this.text,
     required this.screenRect,
-    this.hJustify,
+    required this.hJustify,
+    required this.vJustify,
     this.maxLen,
     this.scaleToFit = false,
   });
