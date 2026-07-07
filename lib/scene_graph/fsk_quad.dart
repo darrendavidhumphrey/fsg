@@ -1,15 +1,7 @@
 import 'package:flutter/material.dart'; // Adds the 'Colors' constant utility
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:fsg/gl_state_manager.dart';
-import 'package:fsg/scene_graph/fsk_scene_object.dart';
-import 'package:fsg/vbo_filler.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-import '../fsk_singleton.dart';
-import '../glsl_shader.dart';
-import '../shaders/shaders.dart';
-import '../shaders/simple_texture_shader.dart';
-import '../texture_manager.dart';
-import '../vertex_buffer.dart';
+import '../fsk.dart';
 
 /// A class that manages the geometry and rendering for a single textured quad
 class FskQuad extends FskSceneObject {
@@ -25,7 +17,7 @@ class FskQuad extends FskSceneObject {
   String _textureId;
 
   // Pointer to the texture in the texture manager
-  TextureInfo? _textureInfo;
+  FskTextureInfo? _textureInfo;
 
   bool _needsRebuild = true;
 

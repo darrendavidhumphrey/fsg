@@ -3,13 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:fsg/gl_context_manager.dart';
-import 'package:fsg/matrix_stack.dart';
+import 'package:fsg/fsk.dart';
 import 'package:fsg/performance_monitor.dart';
-import 'gl_state_manager.dart';
-import 'logging.dart';
-import 'fsk_singleton.dart';
-import 'fsk_scene_layer.dart';
 
 /// An abstract base class for a 3D scene, representing the root of a scene graph.
 ///

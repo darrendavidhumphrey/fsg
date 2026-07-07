@@ -2,7 +2,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'gl_state_manager.dart';
-import 'logging.dart';
+import '../logging.dart';
 
 /// A class that encapsulates a WebGL shader program.
 class GlslShader with LoggableClass {

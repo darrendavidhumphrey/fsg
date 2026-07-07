@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsg/shaders/shaders.dart';
 import 'package:fsg/shaders/materials.dart';
-import 'package:fsg/texture_manager.dart';
+import 'package:fsg/fsk_texture_manager.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-import 'gl_state_manager.dart';
+import 'angle/gl_state_manager.dart';
 import 'logging.dart';
 
 import 'fsk_scene.dart';
@@ -56,7 +56,7 @@ class FSK with LoggableClass {
   final materials = MaterialList();
 
   /// The manager for textures loaded from assets.
-  late TextureManager textureManager;
+  late FskTextureManager textureManager;
 
   /// OpenGL State manager to reduce unneeded OpenGL state changes
   final GlStateManager glStateManager = GlStateManager();
@@ -71,7 +71,7 @@ class FSK with LoggableClass {
 
   /// Internal constructor for the singleton.
   FSK._internal() {
-    textureManager = TextureManager(glStateManager);
+    textureManager = FskTextureManager(glStateManager);
   }
 
 

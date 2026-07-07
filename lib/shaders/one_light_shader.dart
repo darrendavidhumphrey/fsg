@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter_angle/shared/classes.dart';
-import 'package:fsg/gl_state_manager.dart';
+import 'package:fsg/angle/gl_state_manager.dart';
 import 'package:vector_math/vector_math_64.dart';
-import '../glsl_shader.dart';
+import '../angle/glsl_shader.dart';
 
 const String _vertexShader = """
 #version 300 es

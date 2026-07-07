@@ -1,4 +1,4 @@
-import 'package:fsg/triangle_mesh.dart';
+import 'package:fsg/fsk.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 /// A data class containing detailed information about a ray-mesh intersection.

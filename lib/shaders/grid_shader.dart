@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter_angle/shared/classes.dart';
 
-import '../gl_state_manager.dart';
-import '../glsl_shader.dart';
+import '../angle/gl_state_manager.dart';
+import '../angle/glsl_shader.dart';
 
 String _gridVertexShader = '''
 #version 300 es

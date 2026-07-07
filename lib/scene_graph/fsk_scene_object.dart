@@ -1,6 +1,6 @@
 import 'package:vector_math/vector_math_64.dart';
 
-import '../gl_state_manager.dart';
+import '../angle/gl_state_manager.dart';
 
 abstract class FskSceneObject {
 

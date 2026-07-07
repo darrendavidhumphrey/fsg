@@ -1,8 +1,8 @@
 import 'package:flutter_angle/shared/classes.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import '../gl_state_manager.dart';
-import '../glsl_shader.dart';
+import '../angle/gl_state_manager.dart';
+import '../angle/glsl_shader.dart';
 
 const String _lightingVertexShader = """
 #version 300 es

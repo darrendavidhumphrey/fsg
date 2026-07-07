@@ -1,5 +1,5 @@
-import '../gl_state_manager.dart';
-import '../glsl_shader.dart';
+import '../angle/gl_state_manager.dart';
+import '../angle/glsl_shader.dart';
 
 String _vertexShader = '''
           #version 300 es       

@@ -1,15 +1,8 @@
 import 'package:flutter/material.dart'; // Adds the 'Colors' constant utility
 import 'package:flutter_angle/flutter_angle.dart';
-import 'package:fsg/gl_state_manager.dart';
-import 'package:fsg/vbo_filler.dart';
 import 'package:vector_math/vector_math_64.dart' hide Colors;
-import '../fsk_singleton.dart';
-import '../reference_box.dart';
-import '../shaders/bitmap_text_shader.dart';
-import '../shaders/shaders.dart';
-import '../vertex_buffer.dart';
-import '../bitmap_fonts/bitmap_font.dart';
-import 'fsk_scene_object.dart';
+import '../fsk.dart';
+
 
 /// A class that manages the geometry and rendering for a single line of text
 /// using a [BitmapFont].

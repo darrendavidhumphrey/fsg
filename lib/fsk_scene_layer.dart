@@ -1,8 +1,6 @@
 import 'dart:ui';
-import 'package:flutter_angle/flutter_angle.dart';
-import 'package:fsg/gl_context_manager.dart';
+import 'package:fsg/fsk.dart';
 import 'package:vector_math/vector_math_64.dart';
-import 'fsk_scene.dart';
 
 /// An abstract base class for a layer within a [FskScene].
 ///

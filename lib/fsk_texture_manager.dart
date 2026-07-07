@@ -1,11 +1,10 @@
-import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:fsg/fsk.dart';
 import 'package:mutex/mutex.dart';
 import 'package:flutter_angle/flutter_angle.dart';
 
-class TextureInfo {
+class FskTextureInfo {
   String id;
   String url;
   WebGLTexture? texture;
@@ -17,16 +16,16 @@ class TextureInfo {
   bool isLoaded = false;
   bool isBound = false;
 
-  TextureInfo(this.id,this.url, this.magFilter, this.minFilter, this.wrapS, this.wrapT);
+  FskTextureInfo(this.id,this.url, this.magFilter, this.minFilter, this.wrapS, this.wrapT);
 }
 
 /// A manager for loading, creating, and caching WebGL textures for a given GL context.
-class TextureManager with GlContextManager, LoggableClass {
-  final Map<String, TextureInfo> _textures = {};
+class FskTextureManager with GlContextManager, LoggableClass {
+  final Map<String, FskTextureInfo> _textures = {};
 
   static String assetsRoot = "assets/";
   // List of textures that are loaded but unbound
-  final List<TextureInfo> _unBoundTextures = [];
+  final List<FskTextureInfo> _unBoundTextures = [];
   final Mutex _unBoundTexturesLock = Mutex();
 
   GlStateManager gls;
@@ -34,7 +33,7 @@ class TextureManager with GlContextManager, LoggableClass {
   /// Creates a new TextureManager.
   /// This class is intended to be held by a central singleton (e.g., FSG)
   /// rather than being a singleton itself.
-  TextureManager(this.gls);
+  FskTextureManager(this.gls);
 
   void dump() {
     for (var textureInfo in _textures.values) {
@@ -46,7 +45,7 @@ class TextureManager with GlContextManager, LoggableClass {
   /// Textures are cached based on their asset [url]. If a texture is already
   /// in the cache, the existing instance is returned. Otherwise, a new texture
   /// is created with the specified filtering and wrapping parameters.
-  Future<TextureInfo> createTextureFromAsset(
+  Future<FskTextureInfo> createTextureFromAsset(
       String id,
     String url, {
     int magFilter = WebGL.LINEAR,
@@ -55,7 +54,7 @@ class TextureManager with GlContextManager, LoggableClass {
     int wrapT = WebGL.REPEAT,
   }) async {
     if (!_textures.containsKey(id)) {
-      var textureInfo = TextureInfo(id,url, magFilter, minFilter, wrapS, wrapT);
+      var textureInfo = FskTextureInfo(id,url, magFilter, minFilter, wrapS, wrapT);
       _textures[id] = textureInfo;
 
       String fullPath = '$assetsRoot$url';
@@ -82,13 +81,13 @@ class TextureManager with GlContextManager, LoggableClass {
     return _textures[id]!;
   }
 
-  TextureInfo? getTextureInfo(String id) {
+  FskTextureInfo? getTextureInfo(String id) {
     return _textures[id];
   }
 
   Future<void> bindUnboundTextures() async {
-    List<TextureInfo> texturesToBind = [];
-    List<TextureInfo> incompleteTextures = [];
+    List<FskTextureInfo> texturesToBind = [];
+    List<FskTextureInfo> incompleteTextures = [];
 
     // 1. Safely copy elements out of the thread-lock
     await _unBoundTexturesLock.protect(() async {

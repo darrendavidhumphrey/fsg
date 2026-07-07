@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math_64.dart';
-import 'package:fsg/polyline.dart';
+import 'package:fsg/geometry/polyline.dart';
 
 void main() {
   group('Polyline', () {

@@ -3,7 +3,7 @@ import 'package:flutter_angle/flutter_angle.dart';
 import 'package:xml/xml.dart';
 import '../fsk_singleton.dart';
 import '../logging.dart';
-import '../texture_manager.dart';
+import '../fsk_texture_manager.dart';
 
 /// A data class that holds rendering information for a single character
 /// in a [BitmapFont].
@@ -67,7 +67,7 @@ class BitmapFont with LoggableClass {
 
   /// The WebGL texture containing the rendered font characters (the texture atlas).
   /// This is null until [loadTexture] is called and completes.
-  TextureInfo? textureInfo;
+  FskTextureInfo? textureInfo;
 
   /// Returns true if the font's texture has been loaded and is ready for use.
   bool get isInitialized => (textureInfo != null) && (textureInfo!.isBound);

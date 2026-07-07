@@ -2,11 +2,8 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:fsg/vbo_filler.dart';
-import 'package:fsg/vertex_buffer.dart';
+import 'package:fsg/fsk.dart';
 import 'package:vector_math/vector_math_64.dart';
-
-import 'gl_state_manager.dart';
 
 /// A record type representing a unique combination of position, texture coordinate,
 /// and normal indices. Used as a key to de-duplicate vertices.
