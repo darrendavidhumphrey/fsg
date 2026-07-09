@@ -17,11 +17,14 @@ enum TextVerticalJustification {
 
   /// Parses a string into a [TextVerticalJustification].
   /// Returns the matching enum, or [defaultValue] if no match is found.
-  static TextVerticalJustification fromString(String input, {TextVerticalJustification defaultValue = TextVerticalJustification.top}) {
+  static TextVerticalJustification fromString(
+    String input, {
+    TextVerticalJustification defaultValue = TextVerticalJustification.top,
+  }) {
     final cleanInput = input.trim().toLowerCase();
 
     return TextVerticalJustification.values.firstWhere(
-          (element) => element.value == cleanInput,
+      (element) => element.value == cleanInput,
       orElse: () => defaultValue,
     );
   }
@@ -40,11 +43,14 @@ enum TextHorizontalJustification {
 
   /// Parses a string into a [TextHorizontalJustification].
   /// Returns the matching enum, or [defaultValue] if no match is found.
-  static TextHorizontalJustification fromString(String input, {TextHorizontalJustification defaultValue = TextHorizontalJustification.left}) {
+  static TextHorizontalJustification fromString(
+    String input, {
+    TextHorizontalJustification defaultValue = TextHorizontalJustification.left,
+  }) {
     final cleanInput = input.trim().toLowerCase();
 
     return TextHorizontalJustification.values.firstWhere(
-          (element) => element.value == cleanInput,
+      (element) => element.value == cleanInput,
       orElse: () => defaultValue,
     );
   }
@@ -82,6 +88,19 @@ class FskBitmapText extends FskSceneObject {
 
   late double _width;
 
+  // Optional max length field
+  int? _maxLen;
+  int? get maxLen => _maxLen;
+  set maxLen(int? value) {
+    _maxLen = value;
+
+    // Truncate the text if required
+    if (_maxLen != null) {
+      _text = _text.substring(0, min(_maxLen!, text.length));
+    }
+    _needsRebuild = true;
+  }
+
   /// The color applied to modulate the text texture quads.
   Color textColor = const Color(0xFFFFFFFF);
 
@@ -95,33 +114,44 @@ class FskBitmapText extends FskSceneObject {
 
   TextVerticalJustification get verticalJustification => _verticalJustification;
 
-  set verticalJustification (TextVerticalJustification value) {
+  set verticalJustification(TextVerticalJustification value) {
     _verticalJustification = value;
     _needsRebuild = true;
   }
 
   TextHorizontalJustification _horizontalJustification;
-  TextHorizontalJustification get horizontalJustification => _horizontalJustification;
-  set horizontalJustification (TextHorizontalJustification value) {
+  TextHorizontalJustification get horizontalJustification =>
+      _horizontalJustification;
+  set horizontalJustification(TextHorizontalJustification value) {
     _horizontalJustification = value;
     _needsRebuild = true;
   }
 
-
   /// Creates a [FskBitmapText] object.
-  ///
-  /// - [_font]: The font to use for rendering.
-  /// - [_text]: The initial text string.
-  /// - [_screenRect]: The target area for the text.
-  FskBitmapText(this._font, this._text, this._screenRect,{this._verticalJustification = TextVerticalJustification.bottom,this._horizontalJustification = TextHorizontalJustification.left}) {
+  FskBitmapText(
+    this._font,
+    this._text,
+    this._screenRect, {
+    this._verticalJustification = TextVerticalJustification.bottom,
+    this._horizontalJustification = TextHorizontalJustification.left,
+    this._maxLen,
+  }) {
     // Cache the target width from the reference box.
     _width = _screenRect.xVector.length;
   }
 
-  FskBitmapText.origin({required this._text,required BitmapFont font,Vector3? origin,Color? color,double? width,this._verticalJustification = TextVerticalJustification.bottom,this._horizontalJustification = TextHorizontalJustification.left}) {
+  FskBitmapText.origin({
+    required this._text,
+    required BitmapFont font,
+    Vector3? origin,
+    Color? color,
+    double? width,
+    this._verticalJustification = TextVerticalJustification.bottom,
+    this._horizontalJustification = TextHorizontalJustification.left,
+    this._maxLen,
+  }) {
     origin ??= Vector3.zero();
     _font = font;
-
 
     if (width == null) {
       _width = _font!.widthOfString(_text);
@@ -142,7 +172,7 @@ class FskBitmapText extends FskSceneObject {
   /// Disposes the vertex buffer associated with this text.
   @override
   void dispose() {
-      _vbo.dispose();
+    _vbo.dispose();
   }
 
   /// Sets a new font and flags the text for a rebuild.
@@ -155,6 +185,11 @@ class FskBitmapText extends FskSceneObject {
 
   /// Sets a new text string and flags the text for a rebuild.
   void setText(String text) {
+
+    if (_maxLen != null) {
+      text = text.substring(0, min(_maxLen!, text.length));
+    }
+
     if (_text != text) {
       _text = text;
       _needsRebuild = true;
@@ -181,7 +216,7 @@ class FskBitmapText extends FskSceneObject {
 
     if (vertexTexCoordArray != null) {
       // Fill the VBO with the generated quad data.
-      VboFiller.addTexturedQuads(quads, textureQuads,_vbo);
+      VboFiller.addTexturedQuads(quads, textureQuads, _vbo);
     }
 
     _vbo.setActiveVertexCount(vertexCount);
@@ -236,19 +271,17 @@ class FskBitmapText extends FskSceneObject {
     final double unscaledBoxWidth = _width / ratio;
     double currentX = 0.0;
 
-
-
     switch (horizontalJustification) {
       case TextHorizontalJustification.left:
-      // Text starts flush at X = 0
+        // Text starts flush at X = 0
         currentX = 0.0;
         break;
       case TextHorizontalJustification.center:
-      // Centers the line block cleanly within the unscaled virtual width
+        // Centers the line block cleanly within the unscaled virtual width
         currentX = (unscaledBoxWidth - lineLength) / 2;
         break;
       case TextHorizontalJustification.right:
-      // Pushes the entire line layout flush against the right container wall
+        // Pushes the entire line layout flush against the right container wall
         currentX = unscaledBoxWidth - lineLength;
         break;
     }
@@ -263,15 +296,15 @@ class FskBitmapText extends FskSceneObject {
 
     switch (verticalJustification) {
       case TextVerticalJustification.top:
-      // Pushes the line block to the top ceiling edge of the container box
+        // Pushes the line block to the top ceiling edge of the container box
         unscaledVAdjust = unscaledBoxHeight - unscaledLineHeight;
         break;
       case TextVerticalJustification.center:
-      // Centers the line block cleanly within the unscaled virtual container height
+        // Centers the line block cleanly within the unscaled virtual container height
         unscaledVAdjust = (unscaledBoxHeight - unscaledLineHeight) / 2;
         break;
       case TextVerticalJustification.bottom:
-      // Anchors the line block directly to the floor of the box (Y = 0)
+        // Anchors the line block directly to the floor of the box (Y = 0)
         unscaledVAdjust = 0.0;
         break;
     }
@@ -300,15 +333,21 @@ class FskBitmapText extends FskSceneObject {
 
       // Keep points configured for Y-up projection context
       final unscaledQuad = Quad.points(
-        Vector3(left, qBottom, 0),  // Bottom-left
+        Vector3(left, qBottom, 0), // Bottom-left
         Vector3(right, qBottom, 0), // Bottom-right
-        Vector3(right, qTop, 0),    // Top-right
-        Vector3(left, qTop, 0),     // Top-left
+        Vector3(right, qTop, 0), // Top-right
+        Vector3(left, qTop, 0), // Top-left
       );
 
       // Uniformly scale the 2D coordinates using the ratio multiplier
-      final blc = Vector2(unscaledQuad.point0.x * ratio, unscaledQuad.point0.y * ratio);
-      final trc = Vector2(unscaledQuad.point2.x * ratio, unscaledQuad.point2.y * ratio);
+      final blc = Vector2(
+        unscaledQuad.point0.x * ratio,
+        unscaledQuad.point0.y * ratio,
+      );
+      final trc = Vector2(
+        unscaledQuad.point2.x * ratio,
+        unscaledQuad.point2.y * ratio,
+      );
 
       // Transform the 2D scaled quad into the 3D space of the reference box
       quads[i] = _screenRect.calcQuadFrom2DVectors(blc, trc);
@@ -316,8 +355,10 @@ class FskBitmapText extends FskSceneObject {
       // Calculate standard normalized texture coordinates from the font atlas region
       final tLeft = charInfo.region.left / _font!.scaleW;
       final tTop = charInfo.region.top / _font!.scaleH;
-      final tRight = (charInfo.region.left + charInfo.region.width) / _font!.scaleW;
-      final tBottom = (charInfo.region.top + charInfo.region.height) / _font!.scaleH;
+      final tRight =
+          (charInfo.region.left + charInfo.region.width) / _font!.scaleW;
+      final tBottom =
+          (charInfo.region.top + charInfo.region.height) / _font!.scaleH;
       textureQuads[i] = Rect.fromLTRB(tLeft, tTop, tRight, tBottom);
 
       // Advance the cursor position for the next character
@@ -325,14 +366,12 @@ class FskBitmapText extends FskSceneObject {
     }
   }
 
-
   @override
   void drawSetup(GlStateManager gls, Matrix4 pMatrix, Matrix4 mvMatrix) {
-
     // TODO: Clean this up .. Don't do it in the loop
     shader ??= FSK().shaders.getShader<BitmapTextShader>();
 
-    if ((font == null) || (shader==null)) return;
+    if ((font == null) || (shader == null)) return;
 
     gls.useProgram(shader!.program);
     ShaderList.setMatrixUniforms(shader!, pMatrix, mvMatrix);
@@ -352,7 +391,7 @@ class FskBitmapText extends FskSceneObject {
 
   @override
   void draw(GlStateManager gls) {
-    if ((font == null) || (!font!.isInitialized) || (shader==null)) return;
+    if ((font == null) || (!font!.isInitialized) || (shader == null)) return;
 
     shader!.setTextColor(textColor);
 
@@ -363,6 +402,5 @@ class FskBitmapText extends FskSceneObject {
 
     _vbo.bind();
     _vbo.drawTriangles();
-
   }
 }

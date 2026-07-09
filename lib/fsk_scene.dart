@@ -45,6 +45,7 @@ abstract class FskScene with LoggableClass, GlContextManager {
   FlutterAngleTexture? renderToTextureId;
 
   late GlStateManager gls;
+
   /// Creates a new scene and its associated performance monitor.
   FskScene() {
     performanceMonitor = PerformanceMonitor(tag: runtimeType.toString());
@@ -94,7 +95,7 @@ abstract class FskScene with LoggableClass, GlContextManager {
   /// The core drawing logic to be implemented by subclasses.
   /// This method is called within the rendering loop when a repaint is needed.
   @mustCallSuper
-void drawScene() {
+  void drawScene() {
     gls.startFrame();
     _frameCounter++;
   }
@@ -105,7 +106,6 @@ void drawScene() {
       layer.dispose();
     }
     layers.clear();
-
   }
 
   /// Adds a [FskSceneLayer] to this scene.
@@ -145,13 +145,11 @@ void drawScene() {
 
   bool frameProcessing = false;
 
-  Future<void> renderSceneToTexture() async  {
-
+  Future<void> renderSceneToTexture() async {
     if (frameProcessing) return;
     frameProcessing = true;
 
     try {
-
       if (renderToTextureId == null) {
         frameProcessing = false;
         return;
@@ -170,21 +168,19 @@ void drawScene() {
           FSK().initScene(this);
         }
 
-       drawScene();
-
-
+        drawScene();
 
         if (!kIsWeb) {
           if (Platform.isWindows) {
             gl.finish();
           }
         }
-        await renderToTextureId!.signalNewFrameAvailable();
-
         performanceMonitor.endFrame();
+        await renderToTextureId!.signalNewFrameAvailable();
       }
     } finally {
       frameProcessing = false;
     }
   }
 }
+

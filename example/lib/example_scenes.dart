@@ -20,11 +20,11 @@ class ExampleScenes extends IndexedStackScene {
   void init(RenderingContext gl) {
     super.init(gl);
 
-    addScene(CheckerBoardScene(),StaticViewDelegate());
+    addScene(CheckerBoardScene(),OrthoViewDelegate(viewRect: Rect.fromLTWH(0, 0, 1280, 720))); //StaticViewDelegate());
     addScene(AnimatedCheckerBoardScene(),StaticViewDelegate());
     addScene(OrbitViewScene(),OrbitViewDelegate());
     addScene(BitmapTextScene(),OrbitViewDelegate());
-    addScene(FrameSceneExample(),OrthoViewDelegate(viewRect: Rect.fromLTWH(0, 0, 1280, 720)));
+    addScene(FrameSceneExample(), OrthoViewDelegate(viewRect: Rect.fromLTWH(0, 0, 1280, 720)));
 
     setCurrentScene(0);
   }

@@ -1,9 +1,6 @@
-import 'package:fsg/scene_graph/fsk_quad.dart';
-import 'package:fsg/scene_graph/fsk_scene_object.dart';
 import 'package:vector_math/vector_math_64.dart';
 import 'package:fsg/fsk.dart';
 import 'frame_data.dart';
-import '../matrix_stack.dart';
 
 abstract class FrameNode with LoggableClass {
   final FrameObjectData data;
@@ -114,9 +111,8 @@ class FrameTextNode extends FrameObjectNode<FskBitmapText> {
       Vector3(0, textData.screenRect.height, 0),
       Vector3(0, 0, 1),
     );
-    print("Height for ${data.id} is ${refBox.yVector.length}");
-    // TODO: pass in justify fields, scaleToFit setting?
-    object = FskBitmapText(font, textData.text, refBox, horizontalJustification:  textData.hJustify, verticalJustification: textData.vJustify);
+
+    object = FskBitmapText(font, textData.text, refBox, horizontalJustification:  textData.hJustify, verticalJustification: textData.vJustify,maxLen:textData.maxLen);
     object!.init(gls);
   }
 }

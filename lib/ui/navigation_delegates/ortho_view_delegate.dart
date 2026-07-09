@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:fsg/ui/navigation_delegates/scene_navigation_delegate.dart';
 import 'package:vector_math/vector_math_64.dart';
 import '../../fsk_singleton.dart';
@@ -37,16 +38,26 @@ class OrthoViewDelegate extends SceneNavigationDelegate {
   @override
   Matrix4 createViewMatrix() {
     // Fill the render area with the content
-    return Matrix4.identity();
+    var view = Matrix4.identity();
+    return view;
   }
 
   @override
   Matrix4 createProjectionMatrix() {
     Matrix4 proj = Matrix4.identity();
-    setOrthographicMatrix(proj, _viewRect.left, _viewRect.right, _viewRect.bottom, _viewRect.top, _zNear, _zFar);
-
-    // Ensure Y Axis is the same regardless of platform
-    FSK.normalizeUpAxis(proj);
+    print("OrthoViewDelegate: ${_viewRect.toString()}");
+    if (kIsWeb) {
+      setOrthographicMatrix(proj, _viewRect.left, _viewRect.right, _viewRect.top, _viewRect.bottom, _zNear, _zFar);
+    } else {
+      setOrthographicMatrix(
+          proj,
+          _viewRect.left,
+          _viewRect.right,
+          _viewRect.bottom,
+          _viewRect.top,
+          _zNear,
+          _zFar);
+    }
 
     return proj;
   }
