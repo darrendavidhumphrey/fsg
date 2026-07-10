@@ -70,7 +70,6 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
 
         var layerName = layer.name.replace(/[:\/\\*\?"<>\|]/g, "_");
         
-        // Reverted to original working bounds measurement method
         var bounds = layer.bounds;
         var x = parseInt(bounds[0].as("px"));
         var topY = parseInt(bounds[1].as("px"));
@@ -78,10 +77,7 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
         var h = parseInt(bounds[3].as("px")) - topY;
         var isVisible = layer.visible ? "true" : "false";
         
-        // Get Layer Opacity (0.0 to 1.0)
         var layerOpacityNormalized = layer.opacity / 100.0;
-
-        // Reversed Y-axis calculation
         var reversedY = docHeight - (topY + h);
 
         if (layer.kind === LayerKind.TEXT) {
@@ -92,7 +88,6 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
             
             usedFonts[fontId] = { name: fontName, size: fontSize };
 
-            // Calculate text alpha based on Photoshop layer opacity
             var calculatedAlpha = Math.round(layerOpacityNormalized * 255);
             var hexColor = "#FFFFFFFF"; 
             try {
@@ -102,8 +97,63 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
                 hexColor = rgbToHexWithAlpha(255, 255, 255, calculatedAlpha);
             }
 
+            // Detect Horizontal Justification
+            var hJustify = "left";
+            try {
+                switch (textItem.justification) {
+                    case Justification.CENTER:
+                    case Justification.CENTERJUSTIFIED:
+                        hJustify = "center";
+                        break;
+                    case Justification.RIGHT:
+                    case Justification.RIGHTJUSTIFIED:
+                        hJustify = "right";
+                        break;
+                    default:
+                        hJustify = "left";
+                }
+            } catch(e) {
+                hJustify = "left";
+            }
+
+            // Detect Vertical Justification
+            var vJustify = "top"; 
+            try {
+                // Check if text is a Paragraph/Box text layout container
+                if (textItem.kind === TextType.PARAGRAPHTEXT) {
+                    // ActionManager API check for paragraph vertical justification properties
+                    var ref = new ActionReference();
+                    ref.playProperty(charIDToTypeID('Prpr'), charIDToTypeID('Txt '));
+                    ref.putEnumerated(charIDToTypeID('Lyr '), charIDToTypeID('Ordn'), charIDToTypeID('Trgt'));
+                    var desc = executeActionGet(ref);
+                    if (desc.hasKey(charIDToTypeID('Txt '))) {
+                        var textDesc = desc.getObjectValue(charIDToTypeID('Txt '));
+                        if (textDesc.hasKey(stringIDToTypeID('textStyleRange'))) {
+                            var textStyleRange = textDesc.getList(stringIDToTypeID('textStyleRange'));
+                            if (textStyleRange.count > 0) {
+                                var firstRange = textStyleRange.getObjectValue(0);
+                                if (firstRange.hasKey(stringIDToTypeID('textStyle'))) {
+                                    var styleDesc = firstRange.getObjectValue(stringIDToTypeID('textStyle'));
+                                    if (styleDesc.hasKey(stringIDToTypeID('verticalJustification'))) {
+                                        var vjEnum = styleDesc.getEnumerationValue(stringIDToTypeID('verticalJustification'));
+                                        var vjStr = typeIDToStringID(vjEnum);
+                                        if (vjStr === "center") vJustify = "center";
+                                        if (vjStr === "bottom") vJustify = "bottom";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // Point text handles alignment relative to its baseline layout transform anchor
+                    vJustify = "bottom"; 
+                }
+            } catch(e) {
+                vJustify = "bottom"; // Safe system fallback alignment
+            }
+
             var textStr = '        <text id="' + layerName + '" font="' + fontId + '" text="' + textItem.contents + '"\n';
-            textStr += '            screenRect="{{' + x + ', ' + reversedY + '}, {' + w + ', ' + h + '}}" hJustify="center" vJustify="bottom" visible="' + isVisible + '" textColor="' + hexColor + '" />\n\n';
+            textStr += '            screenRect="{{' + x + ', ' + reversedY + '}, {' + w + ', ' + h + '}}" hJustify="' + hJustify + '" vJustify="' + vJustify + '" visible="' + isVisible + '" textColor="' + hexColor + '" />\n\n';
             objectNodes.push(textStr);
         } else {
             exportPngLayer(layer, layerName, framesFolder);
@@ -111,7 +161,6 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
             var texStr = '        <texture id="' + layerName + '" file="' + layerName + '.png" />\n';
             textureNodes.push(texStr);
 
-            // Format float to 2 decimal places max
             var opacityAttr = layerOpacityNormalized.toFixed(2).replace(/\.?0+$/, '');
 
             var quadStr = '        <quad id="' + layerName + '" texture="' + layerName + '" screenRect="{{' + x + ', ' + reversedY + '}, {' + w + ', ' + h + '}}" visible="' + isVisible + '" opacity="' + opacityAttr + '" />\n\n';
