@@ -1,6 +1,27 @@
+import 'dart:ui';
+
 import 'package:vector_math/vector_math_64.dart';
 import 'package:fsk/fsk.dart';
 import 'frame_data.dart';
+
+/// Parses a #RRGGBBAA hex string into a normalized Vector4(r, g, b, a).
+/// Returns solid white Vector4(1.0, 1.0, 1.0, 1.0) on failure or if null.
+Color parseHexToColor(String? hex) {
+  if (hex == null || !hex.startsWith('#') || hex.length != 9) {
+    return const Color(0xFFFFFFFF); // Default to solid white
+  }
+
+  try {
+    final String cleanHex = hex.substring(1); // Drops the '#' character to leave RRGGBBAA
+    final String rrgg = cleanHex.substring(0, 6);
+    final String aa = cleanHex.substring(6, 8);
+
+    // Re-orders bytes from RRGGBBAA to Flutter's expected AARRGGBB format
+    return Color(int.parse('0x$aa$rrgg'));
+  } catch (_) {
+    return const Color(0xFFFFFFFF); // Fallback on parsing exceptions
+  }
+}
 
 abstract class FrameNode with LoggableClass {
   final FrameObjectData data;
@@ -112,7 +133,12 @@ class FrameTextNode extends FrameObjectNode<FskBitmapText> {
       Vector3(0, 0, 1),
     );
 
-    object = FskBitmapText(font, textData.text, refBox, horizontalJustification:  textData.hJustify,
+    // Parse the hex string or default to solid white Vector4(1.0, 1.0, 1.0, 1.0)
+    final textColorVector = parseHexToColor(textData.textColor);
+
+    object = FskBitmapText(font, textData.text, refBox,
+
+        textColor: textColorVector,horizontalJustification:  textData.hJustify,
         verticalJustification: textData.vJustify,maxLen:textData.maxLen);
     object!.init(gls);
   }

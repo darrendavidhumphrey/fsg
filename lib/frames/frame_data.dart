@@ -149,6 +149,7 @@ class FrameTextData extends FrameObjectData {
   final TextVerticalJustification vJustify;
   final int? maxLen;
   final bool scaleToFit;
+  final String? textColor;
 
   FrameTextData({
     required super.id,
@@ -160,5 +161,6 @@ class FrameTextData extends FrameObjectData {
     required this.vJustify,
     this.maxLen,
     this.scaleToFit = false,
+    this.textColor,
   });
 }

@@ -30,6 +30,7 @@ class BitmapTextScene extends FrameScene {
       return;
     }
 
+    gls.clearColor(1,1,1,1);
     // Access text object by ID in skin file
     frameCountText?.object!.setText("$frameCounter");
 

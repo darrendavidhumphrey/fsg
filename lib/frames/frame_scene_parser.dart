@@ -161,6 +161,7 @@ class FrameSceneParser with LoggableClass {
           vJustify: vJustification,
           maxLen: int.tryParse(node.getAttribute('maxLen') ?? ''),
           scaleToFit: node.getAttribute('scaleToFit') == 'YES',
+          textColor: node.getAttribute('textColor'),
         );
       default:
         return null;

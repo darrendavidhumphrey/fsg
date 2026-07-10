@@ -113,7 +113,6 @@ class FrameScene extends FskScene {
   @override
   void drawScene() {
     super.drawScene();
-    gls.clearColor(0, 0, 0, 1);
     gl.clear(WebGL.COLOR_BUFFER_BIT | WebGL.DEPTH_BUFFER_BIT);
 
     gls.setDepthTest(false);
