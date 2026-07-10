@@ -132,6 +132,7 @@ class FskBitmapText extends FskSceneObject {
     this._font,
     this._text,
     this._screenRect, {
+    this.textColor = const Color(0xFFFFFFFF),
     this._verticalJustification = TextVerticalJustification.bottom,
     this._horizontalJustification = TextHorizontalJustification.left,
     this._maxLen,

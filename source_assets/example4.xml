@@ -5,15 +5,16 @@
     </textures>
 
     <fonts>
-        <font id="Arial36" fntFile="Arial36.fnt" texture="Arial36.png" />
+        <font id="SourceCodePro-Regular30" fntFile="SourceCodePro-Regular30.fnt" texture="SourceCodePro-Regular30.png" />
+        <font id="ArialMT36" fntFile="ArialMT36.fnt" texture="ArialMT36.png" />
     </fonts>
 
     <!-- Start of SCENE  -->
     <objects>
-        <text id="Text1" font="Arial36" text="Text Item "
+        <text id="Text1" font="SourceCodePro-Regular30" text="Text Item "
             screenRect="{{440, 457}, {160, 21}}" hJustify="center" vJustify="bottom" visible="true" textColor="#000000FF" />
 
-        <text id="Text2" font="Arial36" text="Another Text Item "
+        <text id="Text2" font="ArialMT36" text="Another Text Item "
             screenRect="{{401, 577}, {280, 26}}" hJustify="center" vJustify="bottom" visible="true" textColor="#FF0000FF" />
 
         <quad id="Penelope" texture="Penelope" screenRect="{{430, 199}, {221, 238}}" visible="true" opacity="1" />

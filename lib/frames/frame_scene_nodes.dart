@@ -112,7 +112,8 @@ class FrameTextNode extends FrameObjectNode<FskBitmapText> {
       Vector3(0, 0, 1),
     );
 
-    object = FskBitmapText(font, textData.text, refBox, horizontalJustification:  textData.hJustify, verticalJustification: textData.vJustify,maxLen:textData.maxLen);
+    object = FskBitmapText(font, textData.text, refBox, horizontalJustification:  textData.hJustify,
+        verticalJustification: textData.vJustify,maxLen:textData.maxLen);
     object!.init(gls);
   }
 }
