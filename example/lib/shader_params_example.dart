@@ -1,9 +1,9 @@
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsk/fsk.dart';
 
-class FrameSceneExample extends FrameScene {
+class ShaderParamsExample extends FrameScene {
 
-  FrameSceneExample({super.navigationDelegate});
+  ShaderParamsExample({super.navigationDelegate});
 
   @override
   void init(RenderingContext gl) {

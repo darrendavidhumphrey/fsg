@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
+import 'package:fsk/fsk.dart';
 import 'package:fsk/ui/navigation_delegates/scene_navigation_delegate.dart';
 import 'package:vector_math/vector_math_64.dart';
 
@@ -47,15 +48,24 @@ class OrthoViewDelegate extends FskSceneNavigationDelegate implements ScreenRect
   Matrix4 createProjectionMatrix() {
     Matrix4 proj = Matrix4.identity();
 
-    if (kIsWeb) {
-      setOrthographicMatrix(proj, _viewRect.left, _viewRect.right, _viewRect.top, _viewRect.bottom, _zNear, _zFar);
+    // Web and Android require Y-UP orientation for this ortho view, 
+    // while Desktop/iOS use Y-DOWN to match Flutter's coordinate system.
+    if (kIsWeb || defaultTargetPlatform == TargetPlatform.android) {
+      setOrthographicMatrix(
+          proj,
+          _viewRect.left,
+          _viewRect.right,
+          _viewRect.top, // Maps to -1 (bottom of NDC)
+          _viewRect.bottom, // Maps to 1 (top of NDC)
+          _zNear,
+          _zFar);
     } else {
       setOrthographicMatrix(
           proj,
           _viewRect.left,
           _viewRect.right,
-          _viewRect.bottom,
-          _viewRect.top,
+          _viewRect.bottom, // Maps to -1 (bottom of NDC)
+          _viewRect.top, // Maps to 1 (top of NDC)
           _zNear,
           _zFar);
     }

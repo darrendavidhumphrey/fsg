@@ -208,15 +208,24 @@ class FrameSceneParser with LoggableClass {
     return Vector3.zero();
   }
 
-  /// Converts a comma-separated key:value string into a Map configuration profile
+  /// Converts a semicolon or comma-separated key:value string into a Map configuration profile.
+  /// Semicolons are preferred as delimiters when values (like vectors) contain commas.
   static Map<String, String> _parseShaderParams(String? rawParams) {
     final Map<String, String> paramsMap = {};
     if (rawParams == null || rawParams.trim().isEmpty) {
       return paramsMap;
     }
 
-    // Split parameters by comma separation fields safely
-    final pairs = rawParams.split(',');
+    // Try splitting by semicolon first as it's the safer delimiter for complex values
+    List<String> pairs;
+    if (rawParams.contains(';')) {
+      pairs = rawParams.split(';');
+    } else {
+      // Fallback to comma if no semicolons are found, 
+      // but this may fail if vector values also use commas.
+      pairs = rawParams.split(',');
+    }
+
     for (final pair in pairs) {
       final indexOfColon = pair.indexOf(':');
       if (indexOfColon != -1) {

@@ -197,20 +197,28 @@ Color parseHexColor(String? hex) {
   }
 }
 
-/// Parses a comma-separated string into a [Vector2].
+/// Parses a space or comma-separated string into a [Vector2].
 /// Returns [Vector2.zero] on failure.
 Vector2 parseVector2(String value) {
-  final parts = value.split(',').map((p) => double.tryParse(p.trim())).toList();
+  final parts = value
+      .split(RegExp(r'[,\s]+'))
+      .where((s) => s.isNotEmpty)
+      .map((p) => double.tryParse(p.trim()))
+      .toList();
   if (parts.length >= 2 && parts[0] != null && parts[1] != null) {
     return Vector2(parts[0]!, parts[1]!);
   }
   return Vector2.zero();
 }
 
-/// Parses a comma-separated string into a [Vector3].
+/// Parses a space or comma-separated string into a [Vector3].
 /// Returns [Vector3.zero] on failure.
 Vector3 parseVector3(String value) {
-  final parts = value.split(',').map((p) => double.tryParse(p.trim())).toList();
+  final parts = value
+      .split(RegExp(r'[,\s]+'))
+      .where((s) => s.isNotEmpty)
+      .map((p) => double.tryParse(p.trim()))
+      .toList();
   if (parts.length >= 3 &&
       parts[0] != null &&
       parts[1] != null &&
@@ -220,10 +228,14 @@ Vector3 parseVector3(String value) {
   return Vector3.zero();
 }
 
-/// Parses a comma-separated string into a [Vector4].
+/// Parses a space or comma-separated string into a [Vector4].
 /// Returns [Vector4.zero] on failure.
 Vector4 parseVector4(String value) {
-  final parts = value.split(',').map((p) => double.tryParse(p.trim())).toList();
+  final parts = value
+      .split(RegExp(r'[,\s]+'))
+      .where((s) => s.isNotEmpty)
+      .map((p) => double.tryParse(p.trim()))
+      .toList();
   if (parts.length >= 4 &&
       parts[0] != null &&
       parts[1] != null &&

@@ -18,18 +18,27 @@ function main() {
     var docWidth = doc.width.as("px");
     var docHeight = doc.height.as("px");
 
-    var textureNodes = [];
+    var textureCache = {};
+    var usedIds = {};
+    var usedObjectIds = {};
     var objectNodes = [];
     var usedFonts = {};
 
-    processLayers(doc.layers, framesFolder, textureNodes, objectNodes, docHeight, usedFonts);
+    processLayers(doc.layers, framesFolder, textureCache, objectNodes, docHeight, usedFonts, usedIds, usedObjectIds);
 
     var xmlStr = '<?xml version="1.0" encoding="utf-8"?>\n';
     xmlStr += '<frameScene version="1.0" width="' + docWidth + '" height="' + docHeight + '" assetsPath="frames">\n';
     
     xmlStr += '    <textures>\n';
-    for (var i = 0; i < textureNodes.length; i++) {
-        xmlStr += textureNodes[i];
+    var exportedTextures = {};
+    for (var sig in textureCache) {
+        if (textureCache.hasOwnProperty(sig)) {
+            var t = textureCache[sig];
+            if (!exportedTextures[t.id]) {
+                xmlStr += '        <texture id="' + t.id + '" file="' + t.file + '" />\n';
+                exportedTextures[t.id] = true;
+            }
+        }
     }
     xmlStr += '    </textures>\n\n';
 
@@ -59,22 +68,26 @@ function main() {
     alert("Export completed successfully!");
 }
 
-function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeight, usedFonts) {
+function processLayers(layers, framesFolder, textureCache, objectNodes, docHeight, usedFonts, usedIds, usedObjectIds) {
     for (var i = layers.length - 1; i >= 0; i--) {
         var layer = layers[i];
 
         if (layer.typename === "LayerSet") {
-            processLayers(layer.layers, framesFolder, textureNodes, objectNodes, docHeight, usedFonts);
+            processLayers(layer.layers, framesFolder, textureCache, objectNodes, docHeight, usedFonts, usedIds, usedObjectIds);
             continue;
         }
 
-        var layerName = layer.name.replace(/[:\/\\*\?"<>\|]/g, "_");
+        var baseName = layer.name.replace(/ copy( \d+)?$/g, "");
+        var sanitizedBaseName = baseName.replace(/[:\/\\*\?"<>\|]/g, "_");
         
         var bounds = layer.bounds;
         var x = parseInt(bounds[0].as("px"));
         var topY = parseInt(bounds[1].as("px"));
         var w = parseInt(bounds[2].as("px")) - x;
         var h = parseInt(bounds[3].as("px")) - topY;
+
+        if (w <= 0 || h <= 0) continue;
+
         var isVisible = layer.visible ? "true" : "false";
         
         var layerOpacityNormalized = layer.opacity / 100.0;
@@ -123,7 +136,7 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
                 if (textItem.kind === TextType.PARAGRAPHTEXT) {
                     // ActionManager API check for paragraph vertical justification properties
                     var ref = new ActionReference();
-                    ref.playProperty(charIDToTypeID('Prpr'), charIDToTypeID('Txt '));
+                    ref.putProperty(charIDToTypeID('Prpr'), charIDToTypeID('Txt '));
                     ref.putEnumerated(charIDToTypeID('Lyr '), charIDToTypeID('Ordn'), charIDToTypeID('Trgt'));
                     var desc = executeActionGet(ref);
                     if (desc.hasKey(charIDToTypeID('Txt '))) {
@@ -152,18 +165,44 @@ function processLayers(layers, framesFolder, textureNodes, objectNodes, docHeigh
                 vJustify = "bottom"; // Safe system fallback alignment
             }
 
-            var textStr = '        <text id="' + layerName + '" font="' + fontId + '" text="' + textItem.contents + '"\n';
+            var textId = layer.name.replace(/[:\/\\*\?"<>\|]/g, "_");
+            if (usedObjectIds[textId]) {
+                var tCount = 2;
+                while (usedObjectIds[textId + "_" + tCount]) tCount++;
+                textId = textId + "_" + tCount;
+            }
+            usedObjectIds[textId] = true;
+
+            var textStr = '        <text id="' + textId + '" font="' + fontId + '" text="' + textItem.contents + '"\n';
             textStr += '            screenRect="{{' + x + ', ' + reversedY + '}, {' + w + ', ' + h + '}}" hJustify="' + hJustify + '" vJustify="' + vJustify + '" visible="' + isVisible + '" textColor="' + hexColor + '" />\n\n';
             objectNodes.push(textStr);
         } else {
-            exportPngLayer(layer, layerName, framesFolder);
+            var sig = sanitizedBaseName + "_" + w + "x" + h;
+            var textureId;
 
-            var texStr = '        <texture id="' + layerName + '" file="' + layerName + '.png" />\n';
-            textureNodes.push(texStr);
+            if (textureCache[sig]) {
+                textureId = textureCache[sig].id;
+            } else {
+                textureId = sanitizedBaseName;
+                if (usedIds[textureId]) {
+                    textureId = sanitizedBaseName + "_" + w + "x" + h;
+                }
+
+                exportPngLayer(layer, textureId, framesFolder);
+                textureCache[sig] = { id: textureId, file: textureId + ".png" };
+                usedIds[textureId] = true;
+            }
 
             var opacityAttr = layerOpacityNormalized.toFixed(2).replace(/\.?0+$/, '');
+            var quadId = layer.name.replace(/[:\/\\*\?"<>\|]/g, "_");
+            if (usedObjectIds[quadId]) {
+                var qCount = 2;
+                while (usedObjectIds[quadId + "_" + qCount]) qCount++;
+                quadId = quadId + "_" + qCount;
+            }
+            usedObjectIds[quadId] = true;
 
-            var quadStr = '        <quad id="' + layerName + '" texture="' + layerName + '" screenRect="{{' + x + ', ' + reversedY + '}, {' + w + ', ' + h + '}}" visible="' + isVisible + '" opacity="' + opacityAttr + '" />\n\n';
+            var quadStr = '        <quad id="' + quadId + '" texture="' + textureId + '" screenRect="{{' + x + ', ' + reversedY + '}, {' + w + ', ' + h + '}}" visible="' + isVisible + '" opacity="' + opacityAttr + '" />\n\n';
             objectNodes.push(quadStr);
         }
     }
@@ -187,7 +226,7 @@ function exportPngLayer(layer, filename, folder) {
 
     newDoc.exportDocument(saveFile, ExportType.SAVEFORWEB, exportOptions);
     newDoc.close(SaveOptions.DONOTSAVECHANGES);
-    
+
     doc.activeHistoryState = rememberState;
 }
 
