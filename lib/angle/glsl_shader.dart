@@ -162,6 +162,11 @@ class GlslShader with LoggableClass {
   /// [uMinorLineSpacingMM], [uMajorLineThickness], [uMinorLineThickness],
   /// [ummLineThickness], [uMajorLineColor], [uMinorLineColor], [ummLineColor].
   void setUniformValue(String name, String value) {
-    logWarning("setUniformValue not implemented for uniform $name");
+    if (name == GlslShader.textureSamplerAttrib) {
+      setTextureSampler(int.parse(value));
+
+    } else {
+      logWarning("setUniformValue not implemented for uniform $name");
+    }
   }
 }

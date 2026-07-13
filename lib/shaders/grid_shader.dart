@@ -157,7 +157,6 @@ class GridShader extends GlslShader {
     _majorLineColorLocation = uniforms[uMajorLineColor]!;
     _minorLineColorLocation = uniforms[uMinorLineColor]!;
     _mmLineColorLocation = uniforms[ummLineColor]!;
-    print("BUILDING GRID SHADER");
   }
 
   void setResolutionMM(num width, num height) {

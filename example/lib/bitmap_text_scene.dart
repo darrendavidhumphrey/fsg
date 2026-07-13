@@ -22,7 +22,7 @@ class BitmapTextScene extends FrameScene {
   @override
   void onSceneReady() {
     drawScene();
-    frameCountText ??= findNodeByType<FrameTextNode>("FrameCount");
+    frameCountText ??= findNodeByType<FrameTextNode>("Text1");
     sourceCode1 ??= findNodeByType<FrameTextNode>("sourceCode1");
     sourceCode2 ??= findNodeByType<FrameTextNode>("sourceCode2");
     sourceCode3 ??= findNodeByType<FrameTextNode>("sourceCode3");

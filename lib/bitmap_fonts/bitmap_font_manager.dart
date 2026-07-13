@@ -64,13 +64,21 @@ class BitmapFontManager with LoggableClass {
     final fontPath = "$assetsRoot$filename";
 
     try {
+      // A robust way to check for asset existence using the manifest
+      // instead of catching broad exceptions.
+      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+      if (!manifest.listAssets().contains(fontPath)) {
+        logError("Font file not found in asset manifest: '$fontPath'");
+        return;
+      }
+
       final xmlData = await rootBundle.loadString(fontPath);
 
       logVerbose("createFontFromFile: $fontName, $filename, $textureName");
       // Call the createFont method with the retrieved data
       createFont(fontName, xmlData, textureName);
     } catch (e, stackTrace) {
-      logError("Error loading font XML '$fontPath': $e");
+      logError("Error loading or parsing font XML '$fontPath': $e");
       logError("StackTrace: $stackTrace");
     }
   }
