@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -50,14 +51,19 @@ class OrthoViewDelegate extends FskSceneNavigationDelegate implements ScreenRect
     if (kIsWeb) {
       setOrthographicMatrix(proj, _viewRect.left, _viewRect.right, _viewRect.top, _viewRect.bottom, _zNear, _zFar);
     } else {
-      setOrthographicMatrix(
-          proj,
-          _viewRect.left,
-          _viewRect.right,
-          _viewRect.bottom,
-          _viewRect.top,
-          _zNear,
-          _zFar);
+
+      if (Platform.isAndroid) {
+        setOrthographicMatrix(proj, _viewRect.left, _viewRect.right, _viewRect.top, _viewRect.bottom, _zNear, _zFar);
+      } else {
+        setOrthographicMatrix(
+            proj,
+            _viewRect.left,
+            _viewRect.right,
+            _viewRect.bottom,
+            _viewRect.top,
+            _zNear,
+            _zFar);
+      }
     }
 
     return proj;
