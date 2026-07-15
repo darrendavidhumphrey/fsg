@@ -135,13 +135,11 @@ class FSK with LoggableClass {
       return;
     }
 
-    print("FSK: Initializing GL Context. Viewport size: ${gl.width}x${gl.height}");
     glStateManager.initializeGl(gl);
     textureManager.initializeGl(gl);
     initDefaultMaterial();
     shaders.init(gl);
     _state = FskState.contextInitialized;
-    print("FSK: GL Context initialization complete.");
   }
 
   /// Disposes all scenes, textures, shaders, and other GPU resources.
@@ -177,7 +175,6 @@ class FSK with LoggableClass {
   /// Registers a scene with the engine and allocates a texture for it to render to.
   /// This is the primary method for setting up a new renderable scene.
   Future<bool> registerSceneAndAllocateTexture(FskScene scene, {double? dpr}) async {
-    print("FSK: Registering scene and allocating texture...");
     bool useSurface = true;
 
     if (!kIsWeb) {
@@ -199,7 +196,6 @@ class FSK with LoggableClass {
 
     bool success = (textureId != null);
     if (success) {
-      print("FSK: Texture allocation success. ID: ${textureId.textureId}");
       scene.renderToTextureId = textureId;
       scenes[scene] = textureId;
 
@@ -207,7 +203,6 @@ class FSK with LoggableClass {
         // Apply CSS to the canvas to ensure it fills the container and is visible.
         try {
           final dynamic canvas = textureId.surfaceId;
-          print("FSK: Web Canvas retrieved: $canvas");
           canvas.style.width = '100%';
           canvas.style.height = '100%';
           canvas.style.display = 'block';
@@ -220,8 +215,6 @@ class FSK with LoggableClass {
           logWarning("Failed to apply CSS to web canvas: $e");
         }
       }
-    } else {
-      print("FSK: Failed to allocate texture for scene");
     }
     return success;
   }
@@ -236,8 +229,6 @@ class FSK with LoggableClass {
     if (_state == FskState.uninitialized) {
       return;
     }
-
-    print("FSK: Resizing texture to ${options.width}x${options.height} @ ${options.dpr}x");
 
     // The flutter_angle plugin currently does not support resizing textures on Android.
     // We skip the resize and metadata update to prevent viewport mismatches.
@@ -256,7 +247,6 @@ class FSK with LoggableClass {
       // We must force the state manager to resync with the hardware,
       // but only if it has already been initialized.
       if (glStateManager.isInitialized) {
-        print("FSK: Web detected - Resetting GL State after resize.");
         glStateManager.hardReset();
         glStateManager.resetToDefaultState();
       }

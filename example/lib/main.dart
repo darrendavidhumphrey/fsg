@@ -28,12 +28,6 @@ class TestAppState extends State<TestApp> {
   ExampleScenes? scene;
 
   Future<void> initAngle(double dpr) async {
-    // Override the size of the render to texture buffer here (defaults to 4096)
-    //FSK.renderToTextureSize = 4096;
-
-    // Set a specific device pixel ratio (defaults to 1.0)
-    //FSK.devicePixelRatio = 1.0;
-
     // Initialize FSK. This call immediately sets FSK().state to inProgress
     await FSK().initPlatformState();
 

@@ -174,8 +174,6 @@ abstract class FskScene with LoggableClass, GlContextManager {
 
   bool frameProcessing = false;
 
-  int _renderPrintCount = 0;
-
   Future<void> renderSceneToTexture() async {
     if (frameProcessing) return;
     frameProcessing = true;
@@ -187,11 +185,6 @@ abstract class FskScene with LoggableClass, GlContextManager {
       }
 
       if (_needsRepaint || needsRebuild()) {
-        if (_renderPrintCount < 5) {
-          print("FskScene: Render Loop - Physical Viewport: ${physicalTextureWidth}x${physicalTextureHeight} Logical: ${viewportSize.width}x${viewportSize.height}");
-          _renderPrintCount++;
-        }
-
         // Set [_needsRepaint] to false at the start of the loop.
         // The [drawScene] implementation is expected to call [requestRepaint] if it
         // needs to continue animating.

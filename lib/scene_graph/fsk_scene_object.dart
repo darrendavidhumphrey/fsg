@@ -72,7 +72,7 @@ class FskRenderableObject extends FskSceneObject {
   void dumpShaderParams() {
     print("Shader params for ${this.runtimeType}");
     for (var uniform in uniformValues) {
-      print("Uniform ${uniform.definition.name} = ${uniform.value}, ${uniform.definition.type}");
+       print("Uniform ${uniform.definition.name} = ${uniform.value}, ${uniform.definition.type}");
     }
   }
 

@@ -162,7 +162,6 @@ class GlStateManager {
   void useProgram(Program? program, {bool force = false}) {
     if (program == null) return;
     if (force || _currentProgram != program) {
-      if (kIsWeb) print("GLStateManager: Switching Program to ${program.id}");
       _currentProgram = program;
       gl.useProgram(program);
       _shaderUniformCache.putIfAbsent(program, () => {});
@@ -362,7 +361,6 @@ class GlStateManager {
         _viewport[1] != y ||
         _viewport[2] != width ||
         _viewport[3] != height) {
-      if (kIsWeb) print("GLStateManager: Viewport set to ${x},${y} ${width}x${height}");
       _viewport = [x, y, width, height];
       gl.viewport(x, y, width, height);
     }
@@ -399,7 +397,6 @@ class GlStateManager {
   void bindTexture(int target, WebGLTexture? texture, {bool force = false}) {
     final currentUnit = _activeTextureUnit ?? WebGL.TEXTURE0;
     if (force || _boundTexturesByUnit[currentUnit] != texture) {
-      if (kIsWeb && texture != null) print("GLStateManager: Binding Texture ${texture.id} to Unit $currentUnit");
       _boundTexturesByUnit[currentUnit] = texture;
       gl.bindTexture(target, texture);
 
@@ -462,7 +459,6 @@ class GlStateManager {
         _clearColor[1] != g ||
         _clearColor[2] != b ||
         _clearColor[3] != a) {
-      if (kIsWeb) print("GLStateManager: Clear Color set to ($r, $g, $b, $a)");
       _clearColor = [r, g, b, a];
       gl.clearColor(r, g, b, a);
     }
@@ -541,12 +537,6 @@ class GlStateManager {
 
   // Must be called before rendering a scene
   void startFrame() {
-    if (kIsWeb) {
-      int error = gl.getError();
-      if (error != 0) {
-        print("GLStateManager: StartFrame error detected: $error");
-      }
-    }
     FSK().textureManager.bindUnboundTextures();
   }
 }

@@ -78,8 +78,8 @@ class FskQuad extends FskRenderableObject {
 
     gls.useProgram(shader!.program);
     shader!.setMatrixUniforms(pMatrix, mvMatrix);
-//print("Quad draw");
-//dumpShaderParams();
+
+
     applyShaderParams();
     gls.setBlend(true);
     gls.setTexturingEnabled(true);

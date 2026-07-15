@@ -59,9 +59,6 @@ class ShaderParamsExample extends FrameScene {
 
     modulateUniform?.value = color;
 
-    if (modulateUniform == null) {
-      print("SHIT.");
-    }
     text1?.setTextColor(color);
 
     super.drawScene();
