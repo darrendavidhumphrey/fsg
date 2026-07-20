@@ -220,8 +220,8 @@ class MeshFactory {
 
     Vector3 v0 = outline.getVector3(0);
     for (int i = 0; i < numTris; i++) {
-      Vector3 v1 = outline.getVector3(i + 2);
-      Vector3 v2 = outline.getVector3(i + 1);
+      Vector3 v1 = outline.getVector3(i + 1);
+      Vector3 v2 = outline.getVector3(i + 2);
 
       List<Vector2> texCoord = computeTexCoords(v0, v1, v2, x, y, w, h);
 

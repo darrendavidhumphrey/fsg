@@ -348,11 +348,6 @@ class FskBitmapText extends FskRenderableObject {
       // The bottom of the glyph is physically below qTop, so we subtract the visual height
       double qBottom = qTop - charInfo.region.height;
 
-      // To shift the quad anchor relative to the reference frame box,
-      // do it in unscaled coordinates so the shift scales uniformly with the ratio!
-      qTop -= unscaledBoxHeight;
-      qBottom -= unscaledBoxHeight;
-
       // Keep points configured for Y-up projection context
       final unscaledQuad = Quad.points(
         Vector3(left, qBottom, 0), // Bottom-left

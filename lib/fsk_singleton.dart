@@ -263,9 +263,9 @@ class FSK with LoggableClass {
   }
 
   /// Whether the platform's viewer flips the Y-axis.
-  /// This defaults to false and should be set to true on platforms like Android/Web 
-  /// where the Texture widget displays the buffer inverted.
-  static bool isYFlipped = false;
+  /// This defaults to true and ensures a net even number of reflections (Right-handed rotation)
+  /// on platforms that use the Texture widget.
+  static bool isYFlipped = true;
 
   @Deprecated('Use isYFlipped instead')
   static bool get viewerFlipsY => isYFlipped;

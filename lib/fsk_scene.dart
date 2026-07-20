@@ -138,8 +138,8 @@ abstract class FskScene with LoggableClass, GlContextManager {
     // Disable scissor test by default for the main scene draw
     gls.scissorEnabled(false, force: true);
 
-    // Set the winding order to CW. Since our CAD models are typically wound CW
-    // for outward normals, we use CW as the standard front-face winding.
+    // Set the winding order to CW. Since we have a Y-flip in projection to match Flutter,
+    // the standard CCW winding of our models is reversed to CW at the culling stage.
     gls.frontFace(WebGL.CW);
 
     _frameCounter++;

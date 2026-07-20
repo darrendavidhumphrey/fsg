@@ -62,13 +62,13 @@ class Solid {
       Vector3(center.x - halfWidth, center.y + halfHeight, center.z + halfDepth),
     ];
 
-    // Create faces with correct winding order for outward-facing normals
-    faces.add(Polyline.fromVector3([v[0], v[1], v[2], v[3]])); // Front face
-    faces.add(Polyline.fromVector3([v[5], v[4], v[7], v[6]])); // Back face
-    faces.add(Polyline.fromVector3([v[1], v[5], v[6], v[2]])); // Right face
-    faces.add(Polyline.fromVector3([v[4], v[0], v[3], v[7]])); // Left face
-    faces.add(Polyline.fromVector3([v[3], v[2], v[6], v[7]])); // Top face
-    faces.add(Polyline.fromVector3([v[4], v[5], v[1], v[0]])); // Bottom face
+    // Create faces with CCW winding order for outward-facing normals (Right-handed Z-up)
+    faces.add(Polyline.fromVector3([v[0], v[1], v[5], v[4]])); // Front face (-Y)
+    faces.add(Polyline.fromVector3([v[2], v[3], v[7], v[6]])); // Back face (+Y)
+    faces.add(Polyline.fromVector3([v[1], v[2], v[6], v[5]])); // Right face (+X)
+    faces.add(Polyline.fromVector3([v[3], v[0], v[4], v[7]])); // Left face (-X)
+    faces.add(Polyline.fromVector3([v[4], v[5], v[6], v[7]])); // Top face (+Z)
+    faces.add(Polyline.fromVector3([v[1], v[0], v[3], v[2]])); // Bottom face (-Z)
 
     return Solid._(faces, name, dimensions);
   }
