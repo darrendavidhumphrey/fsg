@@ -1,5 +1,5 @@
 import 'dart:ui';
-
+import 'package:fsk/fsk.dart';
 import 'package:vector_math/vector_math_64.dart';
 
 /// Creates a [Plane] from three non-collinear points.
@@ -83,7 +83,11 @@ Ray computePickRay(
 
   // Convert screen coordinates to Normalized Device Coordinates (NDC) [-1, 1].
   final double ndcX = (winX * 2.0) / viewportSize.width - 1.0;
-  // This is correct, because origin is lower left, not top left!
+
+  // The Y-axis mapping:
+  // 1. If viewer flips Y (isYFlipped=true), winY=0 (top) -> texture bottom -> NDC Y=-1.
+  // 2. If we flip Y in projection (isYFlipped=false), winY=0 (top) -> NDC Y=-1 (mapped to top).
+  // In both cases, winY=0 maps to NDC Y=-1.
   final double ndcY = (winY * 2.0) / viewportSize.height - 1.0;
 
   // Define the start and end points of the ray in NDC space.

@@ -27,9 +27,7 @@ mixin GlContextManager {
   /// This must be called once before any other methods that access `gl` are used.
   /// This method is idempotent and safe to call multiple times.
   void initializeGl(RenderingContext gl) {
-    // Make the method idempotent to prevent re-initialization.
-
-    assert(!_isInitialized, 'GL context already initialized.');
+    if (_isInitialized) return;
 
     _gl = gl;
     _isInitialized = true;

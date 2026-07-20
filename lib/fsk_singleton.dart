@@ -254,9 +254,19 @@ class FSK with LoggableClass {
   }
 
   static void normalizeUpAxis(Matrix4 mat) {
-    if ((kIsWeb) || (Platform.isAndroid)) {
-      // Multiply the Y scale component (row 1, column 1) by -1
+    if (isYFlipped) {
+      // If the viewer (Texture widget) flips the texture (e.g. Android/Web),
+      // we must counteract it in the projection matrix to keep the scene right-side up.
+      // Net effect: Projection flip (1) + Mapping flip (1) = 2 (Rotation).
       mat.scaleByVector3(Vector3(1.0, -1.0, 1.0));
     }
   }
+
+  /// Whether the platform's viewer flips the Y-axis.
+  /// This defaults to false and should be set to true on platforms like Android/Web 
+  /// where the Texture widget displays the buffer inverted.
+  static bool isYFlipped = false;
+
+  @Deprecated('Use isYFlipped instead')
+  static bool get viewerFlipsY => isYFlipped;
 }

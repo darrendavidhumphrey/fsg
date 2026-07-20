@@ -40,6 +40,7 @@ class GlStateManager {
   final Map<int, WebGLTexture?> _boundTexturesByUnit =
       {}; // Map texture unit to specific WebGLTexture
   int? _cullFaceMode;
+  int? _frontFace;
 
   List<double> _clearColor = [-1.0, -1.0, -1.0, -1.0];
 
@@ -84,6 +85,7 @@ class GlStateManager {
     _activeTextureUnit = null;
     _boundTexturesByUnit.clear();
     _cullFaceMode = null;
+    _frontFace = null;
     _clearColor = [-1.0, -1.0, -1.0, -1.0];
     _viewport = [-1, -1, -1, -1];
     _blendSrcRGB = null;
@@ -117,6 +119,9 @@ class GlStateManager {
 
     _cullFaceMode = WebGL.BACK;
     gl.cullFace(WebGL.BACK);
+
+    _frontFace = WebGL.CW;
+    gl.frontFace(WebGL.CW);
 
     _clearColor = [0.0, 0.0, 0.0, 0.0];
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -444,6 +449,13 @@ class GlStateManager {
     if (force || _cullFaceMode != mode) {
       _cullFaceMode = mode;
       gl.cullFace(mode);
+    }
+  }
+
+  void frontFace(int mode, {bool force = false}) {
+    if (force || _frontFace != mode) {
+      _frontFace = mode;
+      gl.frontFace(mode);
     }
   }
 

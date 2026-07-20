@@ -102,6 +102,11 @@ abstract class FskScene with LoggableClass, GlContextManager {
     gls = FSK().glStateManager;
     mvMatrixStack.current = Matrix4.identity();
     gl.clearColor(0, 1, 0, 1);
+
+    // Initialize any layers that were added before the scene was ready.
+    for (var layer in layers) {
+      layer.init(this);
+    }
   }
 
   /// Signals that the scene needs to be redrawn on the next frame.
@@ -126,6 +131,17 @@ abstract class FskScene with LoggableClass, GlContextManager {
   @mustCallSuper
   void drawScene() {
     gls.startFrame();
+    // Force the viewport to full texture size at the start of the frame.
+    // This prevents state leaks from layers with custom viewports (overlays).
+    gls.setViewport(0, 0, physicalTextureWidth, physicalTextureHeight, force: true);
+
+    // Disable scissor test by default for the main scene draw
+    gls.scissorEnabled(false, force: true);
+
+    // Set the winding order to CW. Since our CAD models are typically wound CW
+    // for outward normals, we use CW as the standard front-face winding.
+    gls.frontFace(WebGL.CW);
+
     _frameCounter++;
   }
 
@@ -139,7 +155,12 @@ abstract class FskScene with LoggableClass, GlContextManager {
 
   /// Adds a [FskSceneLayer] to this scene.
   void addLayer(FskSceneLayer layer) {
-    layers.add(layer);
+    if (!layers.contains(layer)) {
+      layers.add(layer);
+      if (isInitialized) {
+        layer.init(this);
+      }
+    }
   }
 
   /// Triggers a rebuild for all layers in the scene.

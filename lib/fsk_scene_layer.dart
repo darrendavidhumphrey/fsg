@@ -37,8 +37,10 @@ abstract class FskSceneLayer with GlContextManager {
   /// Initializes the layer and its GL context.
   /// This must be called before any drawing or building operations can occur.
   void init(FskScene parent) {
-    this.parent = parent;
-    initializeGl(parent.gl);
+    if (!isInitialized) {
+      this.parent = parent;
+      initializeGl(parent.gl);
+    }
   }
 
   /// Rebuilds the layer's internal state and WebGL resources.

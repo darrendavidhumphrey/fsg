@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter_angle/flutter_angle.dart';
 import 'package:fsk/fsk.dart';
 import 'package:fsk_examples/shader_params_example.dart';

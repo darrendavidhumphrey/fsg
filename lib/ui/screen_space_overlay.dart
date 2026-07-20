@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fsk/fsk.dart';
-import '../fsk_singleton.dart';
-import '../logging.dart';
-import '../fsk_scene_layer.dart';
+
 
 /// An abstract base class for a [FskSceneLayer] that is rendered in 2D screen space
 /// rather than 3D world space.
@@ -103,19 +101,31 @@ abstract class ScreenSpaceOverlay extends FskSceneLayer with LoggableClass {
     final double physicalWidth = textureToScreenX(logicalWidth);
     final double physicalHeight = textureToScreenY(logicalHeight);
     final double physicalLeft = textureToScreenX(logicalLeft);
-    final double physicalTop = textureToScreenY(logicalTop);
+    
+    double physicalY;
+    if (FSK.isYFlipped) {
+      // The viewer (Flutter Texture widget) flips the Y-axis.
+      // Logical top (0) maps to physical bottom of the texture (0).
+      physicalY = textureToScreenY(logicalTop);
+    } else {
+      // Standard OpenGL: 0 is bottom.
+      // Flutter logical Y is from TOP.
+      // Physical Y from bottom = (logicalViewportHeight - (logicalTop + logicalHeight)) * scale
+      final double logicalBottomY = viewportSize.height - (logicalTop + logicalHeight);
+      physicalY = textureToScreenY(logicalBottomY);
+    }
 
     gls.scissorEnabled(true);
 
     gl.scissor(
       physicalLeft.toInt(),
-      physicalTop.toInt(),
+      physicalY.toInt(),
       physicalWidth.toInt(),
       physicalHeight.toInt(),
     );
     gls.setViewport(
       physicalLeft.toInt(),
-      physicalTop.toInt(),
+      physicalY.toInt(),
       physicalWidth.toInt(),
       physicalHeight.toInt(),
     );
