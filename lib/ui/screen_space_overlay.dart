@@ -83,12 +83,65 @@ abstract class ScreenSpaceOverlay extends FskSceneLayer with LoggableClass {
     return (y / viewportSize.height) * parent.physicalTextureHeight;
   }
 
+
   /// Enables scissoring and sets the GL viewport to the bounds of this overlay.
   ///
   /// This is called before drawing the overlay to ensure it only renders within
   /// its designated rectangular area, clipping any content that would draw
   /// outside of it.
   void enableScissor() {
+    final origin = _topLeftInViewport;
+
+    // Logical coordinates from top-left
+    final double logicalLeft = origin.dx;
+    final double logicalTop = origin.dy;
+    final double logicalWidth = screenSpaceSize.width;
+    final double logicalHeight = screenSpaceSize.height;
+
+    // Convert to physical pixels in the texture
+    final double physicalWidth = textureToScreenX(logicalWidth);
+    final double physicalHeight = textureToScreenY(logicalHeight);
+    final double physicalLeft = textureToScreenX(logicalLeft);
+
+    double physicalY;
+    if (FSK.isYFlipped) {
+      // Platform Backend 1 (Android / Inverted Buffer Alignment):
+      // The framework flips the texture vertically under the hood.
+      // Therefore, a logical Y coordinate measuring down from the TOP
+      // corresponds directly to a physical coordinate scaling up from the BOTTOM.
+      physicalY = textureToScreenY(logicalTop);
+    } else {
+      // Platform Backend 2 (Windows / Standard Desktop OpenGL Layout):
+      // OpenGL scissor box space always measures strictly from the lower-left window corner.
+      // Flutter logical coordinates measure from the top-left corner.
+      // We must subtract the full bounding box depth from the window height.
+      final double logicalBottomY = viewportSize.height - (logicalTop + logicalHeight);
+      physicalY = textureToScreenY(logicalBottomY);
+    }
+
+    gls.scissorEnabled(true);
+
+    gl.scissor(
+      physicalLeft.toInt(),
+      physicalY.toInt(),
+      physicalWidth.toInt(),
+      physicalHeight.toInt(),
+    );
+    gls.setViewport(
+      physicalLeft.toInt(),
+      physicalY.toInt(),
+      physicalWidth.toInt(),
+      physicalHeight.toInt(),
+    );
+  }
+
+
+  /// Enables scissoring and sets the GL viewport to the bounds of this overlay.
+  ///
+  /// This is called before drawing the overlay to ensure it only renders within
+  /// its designated rectangular area, clipping any content that would draw
+  /// outside of it.
+  void enableScissorOriginal() {
     final origin = _topLeftInViewport;
     
     // Logical coordinates from top-left

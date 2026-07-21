@@ -120,8 +120,13 @@ class GlStateManager {
     _cullFaceMode = WebGL.BACK;
     gl.cullFace(WebGL.BACK);
 
-    _frontFace = WebGL.CW;
-    gl.frontFace(WebGL.CW);
+    var frontFace = WebGL.CCW;
+
+    if (FSK.isYFlipped) {
+      frontFace = WebGL.CW;
+    }
+    _frontFace = frontFace;
+    gl.frontFace(frontFace);
 
     _clearColor = [0.0, 0.0, 0.0, 0.0];
     gl.clearColor(0.0, 0.0, 0.0, 0.0);

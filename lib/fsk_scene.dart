@@ -140,8 +140,11 @@ abstract class FskScene with LoggableClass, GlContextManager {
 
     // Set the winding order to CW. Since we have a Y-flip in projection to match Flutter,
     // the standard CCW winding of our models is reversed to CW at the culling stage.
-    gls.frontFace(WebGL.CW);
-
+    if (FSK.isYFlipped) {
+      gls.frontFace(WebGL.CW);
+    } else {
+      gls.frontFace(WebGL.CCW);
+    }
     _frameCounter++;
   }
 

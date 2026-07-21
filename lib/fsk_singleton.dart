@@ -266,7 +266,4 @@ class FSK with LoggableClass {
   /// This defaults to true and ensures a net even number of reflections (Right-handed rotation)
   /// on platforms that use the Texture widget.
   static bool isYFlipped = true;
-
-  @Deprecated('Use isYFlipped instead')
-  static bool get viewerFlipsY => isYFlipped;
 }
