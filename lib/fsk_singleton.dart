@@ -135,6 +135,19 @@ class FSK with LoggableClass {
       return;
     }
 
+    // Default to true on Web
+    FSK.isYFlipped = true;
+
+    // If not web, set it on a case by case
+    if (!kIsWeb) {
+      // TODO: Set axis inversions for mac,linux, and ios
+      if (Platform.isAndroid) {
+        FSK.isYFlipped = false;
+      } else if (Platform.isWindows) {
+        FSK.isYFlipped = true;
+      }
+    }
+
     glStateManager.initializeGl(gl);
     textureManager.initializeGl(gl);
     initDefaultMaterial();
