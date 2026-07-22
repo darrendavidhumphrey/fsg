@@ -87,6 +87,7 @@ class FskBitmapText extends FskRenderableObject {
   BitmapFont? get font => _font;
 
   late double _width;
+  late double _height;
 
   // Optional max length field
   int? _maxLen;
@@ -145,6 +146,7 @@ class FskBitmapText extends FskRenderableObject {
 
     // Cache the target width from the reference box.
     _width = _screenRect.xVector.length;
+    _height = _screenRect.yVector.length;
   }
 
   FskBitmapText.origin({
@@ -153,6 +155,7 @@ class FskBitmapText extends FskRenderableObject {
     Vector3? origin,
     Color? color,
     double? width,
+    double? height,
     this._verticalJustification = TextVerticalJustification.bottom,
     this._horizontalJustification = TextHorizontalJustification.left,
     this._maxLen,
@@ -165,10 +168,16 @@ class FskBitmapText extends FskRenderableObject {
     } else {
       _width = width;
     }
+
+    if (height == null) {
+      _height = _font!.lineHeight.toDouble();
+    } else {
+      _height = height;
+    }
     _screenRect = ReferenceBox(
       origin,
       Vector3(_width, 0, 0),
-      Vector3(0, _width, 0),
+      Vector3(0, _height, 0),
       Vector3(0, 0, 1),
     );
     if (color != null) {
@@ -254,15 +263,16 @@ class FskBitmapText extends FskRenderableObject {
     // Pass 2: Pre-allocate lists and generate scaled quads
     final ratio = _allocateListsAndCalculateRatio(layoutData.length, lineLength);
 
-    // Pass 3: Horizontal Justification (Calculated in Pure Unscaled Font Space)
+    // Pass 3: Horizontal Justification
     final currentX = _calculateHorizontalJustification(ratio, lineLength);
 
-    // Pass 4: Vertical Justification (Calculated in Pure Unscaled Font Space)
+    // Pass 4: Vertical Justification
     final unscaledVAdjust = _calculateVerticalJustification(ratio);
 
-    // Pass 5: Quad Construction Loop
+    // Pass 5: Quad Construction Loop (CRITICAL: Make sure unscaledVAdjust is passed here!)
     _constructQuads(layoutData, ratio, currentX, unscaledVAdjust);
   }
+
 
   // --- Refactored Helper Methods ---
 
@@ -319,24 +329,26 @@ class FskBitmapText extends FskRenderableObject {
 
     switch (verticalJustification) {
       case TextVerticalJustification.top:
-      // Top alignment sits right beneath the local origin ceiling line (0.0)
+      // Text window sits flush with the ceiling (0.0)
         return -unscaledLineHeight;
 
       case TextVerticalJustification.center:
-      // Centers the line height block between the lower floor (-boxHeight) and top ceiling (0.0)
+      // Centers the line block cleanly within the reference space
         return (-unscaledBoxHeight / 2.0) - (unscaledLineHeight / 2.0);
 
       case TextVerticalJustification.bottom:
-      // Anchors the line block tracking floor all the way down to the lower floor boundary line
-        return -unscaledBoxHeight;
+      // Move down by a full box height step to drop it below the center horizon
+        return -unscaledLineHeight;
     }
   }
+
+
   /// Pass 5: Builds spatial transformation matrices and coordinates texture mapping vectors.
   void _constructQuads(
       List<({CharInfo char, double kerning})> layoutData,
       double ratio,
       double startX,
-      double unscaledVAdjust,
+      final double unscaledVAdjust, // Caught from Pass 4 calculation block
       ) {
     double currentX = startX;
     final double unscaledLineHeight = _font!.lineHeight.toDouble();
@@ -349,39 +361,25 @@ class FskBitmapText extends FskRenderableObject {
       final left = currentX;
       final right = left + charInfo.region.width;
 
-      // Find the top edge ceiling line of our local font line block window
       final double lineTopCeiling = unscaledVAdjust + unscaledLineHeight;
-
-      // Calculate the character's top edge.
-      // We step downward from the ceiling line to apply the font file's offset metrics.
       double qTop = lineTopCeiling - charInfo.yOffset;
-
-      // The physical bottom of the glyph is lower than its top edge, so we subtract height.
-      // This ensures your descenders hang downward properly.
       double qBottom = qTop - charInfo.region.height;
 
-      // Set up the bounding box vectors cleanly from minimum coordinates to maximum coordinates.
-      // Left and qBottom hold the minimum values; Right and qTop hold the maximum values.
       final blc = Vector2(left * ratio, qBottom * ratio);
       final trc = Vector2(right * ratio, qTop * ratio);
 
-      // Transform the 2D scaled coordinates into the 3D space of the reference box
       quads[i] = _screenRect.calcQuadFrom2DVectors(blc, trc);
 
-      // Extract standard texture UV metrics directly from the font atlas asset definition
       final tLeft = charInfo.region.left / _font!.scaleW;
       final tTop = charInfo.region.top / _font!.scaleH;
       final tRight = (charInfo.region.left + charInfo.region.width) / _font!.scaleW;
       final tBottom = (charInfo.region.top + charInfo.region.height) / _font!.scaleH;
 
-      // Pass standard texture mapping boundaries to keep your right-side up orientation intact
       textureQuads[i] = Rect.fromLTRB(tLeft, tTop, tRight, tBottom);
 
-      // Advance the cursor position for the next character
       currentX += charInfo.xAdvance + kerning;
     }
   }
-
 
 
   /// Rebuilds the list of geometry and texture quads for the current text string.
