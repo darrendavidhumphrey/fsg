@@ -127,50 +127,7 @@ abstract class FskScene with LoggableClass, GlContextManager {
   }
 
   /// The core drawing logic to be implemented by subclasses.
-  /// This method is called within the rendering loop when a repaint is needed.
-
-  void drawScene2() {
-    gls.startFrame();
-
-    // 1. CALCULATE CONFINED PHYSICAL BOUNDS FROM FLUTTER METRICS
-    // We ignore the global allocated texture width/height extents. Instead,
-    // we use the actual, active logical bounds passed down from your ResizableContainer
-    // and convert them to exact physical drawing coordinate pixels.
-    final double activeDpr = renderToTextureId?.options.dpr ?? FSK.devicePixelRatio;
-    final int confinedPhysicalWidth = (viewportSize.width).toInt();
-    final int confinedPhysicalHeight = (viewportSize.height).toInt();
-
-    // 2. CONVERT VERTICAL ORIGIN COORDINATES FOR THE CANVAS FLIP
-    // WebGL tracks its scissor/viewport origin starting from the LOWER-LEFT corner (0,0).
-    // Flutter logical layouts track constraints starting from the TOP-LEFT corner.
-    // If your pipeline uses a flipped vertical axis configuration, we calculate
-    // the precise bottom-offset boundary to stop rendering overflow.
-    int scissorY = 0;
-    if (!FSK.isYFlipped) {
-      final int maxPhysicalHeight = physicalTextureHeight;
-      scissorY = maxPhysicalHeight - confinedPhysicalHeight;
-    }
-
-    // 3. SECURE THE RENDERING WINDOW VIEWPORT
-    // We override the default full-texture configuration. This forces WebGL's
-    // vertex transformation pipeline to align cleanly inside your panel.
-    gls.setViewport(0, scissorY, confinedPhysicalWidth, confinedPhysicalHeight, force: true);
-
-    // 4. LOCK DOWN THE BOUNDARY WALLS VIA THE SCISSOR TEST
-    // We tell the GPU to throw away any pixel fragments that try to write outside
-    // the active panel slice, instantly un-breaking your ResizableContainer layout.
-    gls.scissorEnabled(true, force: true);
-    gl.scissor(0, scissorY, confinedPhysicalWidth, confinedPhysicalHeight);
-
-    // Set the winding order to CW/CCW based on system flags
-    if (FSK.isYFlipped) {
-      gls.frontFace(WebGL.CW);
-    } else {
-      gls.frontFace(WebGL.CCW);
-    }
-    _frameCounter++;
-  }
-
+  /// This method is called within the rendering loop when a repaint is needed
   @mustCallSuper
   void drawScene() {
     gls.startFrame();
