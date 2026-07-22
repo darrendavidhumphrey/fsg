@@ -56,8 +56,6 @@ enum TextHorizontalJustification {
   }
 }
 
-
-
 /// A class that manages the geometry and rendering for a single line of text
 /// using a [BitmapFont].
 ///
@@ -142,7 +140,6 @@ class FskBitmapText extends FskRenderableObject {
     this._horizontalJustification = TextHorizontalJustification.left,
     this._maxLen,
   }) {
-
     // Default to the bitmap texture shader if not set.
     setShader(FSK().shaders.getShader<BitmapTextShader>());
 
@@ -195,7 +192,6 @@ class FskBitmapText extends FskRenderableObject {
 
   /// Sets a new text string and flags the text for a rebuild.
   void setText(String text) {
-
     if (_maxLen != null) {
       text = text.substring(0, min(_maxLen!, text.length));
     }
@@ -217,8 +213,6 @@ class FskBitmapText extends FskRenderableObject {
     }
     rebuild(gls);
   }
-
-
 
   /// Rebuilds the vertex buffer object if the text or font has changed.
   @override
@@ -247,6 +241,151 @@ class FskBitmapText extends FskRenderableObject {
 
   /// Rebuilds the list of geometry and texture quads for the current text string.
   void rebuildQuads() {
+    if ((text.isEmpty) || (font == null)) {
+      quads = [];
+      textureQuads = [];
+      return;
+    }
+
+    // Pass 1: Gather layout information and calculate total width
+    final (layoutData, lineLength) = _gatherLayoutData();
+    if (lineLength == 0) return;
+
+    // Pass 2: Pre-allocate lists and generate scaled quads
+    final ratio = _allocateListsAndCalculateRatio(layoutData.length, lineLength);
+
+    // Pass 3: Horizontal Justification (Calculated in Pure Unscaled Font Space)
+    final currentX = _calculateHorizontalJustification(ratio, lineLength);
+
+    // Pass 4: Vertical Justification (Calculated in Pure Unscaled Font Space)
+    final unscaledVAdjust = _calculateVerticalJustification(ratio);
+
+    // Pass 5: Quad Construction Loop
+    _constructQuads(layoutData, ratio, currentX, unscaledVAdjust);
+  }
+
+  // --- Refactored Helper Methods ---
+
+  /// Pass 1: Gathers character bounding information and computes unscaled text line length.
+  (List<({CharInfo char, double kerning})>, double) _gatherLayoutData() {
+    final layoutData = <({CharInfo char, double kerning})>[];
+    double lineLength = 0;
+
+    for (int i = 0; i < _text.length; i++) {
+      final charInfo = _font!.chars[_text[i]];
+      if (charInfo == null) continue;
+
+      double kerning = 0.0;
+      if ((i + 1) < _text.length) {
+        kerning = _font!.kerningForPair(
+          _text.codeUnitAt(i),
+          _text.codeUnitAt(i + 1),
+        );
+      }
+      layoutData.add((char: charInfo, kerning: kerning));
+      lineLength += charInfo.xAdvance + kerning;
+    }
+
+    return (layoutData, lineLength);
+  }
+
+  /// Pass 2: Initializes backing collections and limits scale bounds to container constraints.
+  double _allocateListsAndCalculateRatio(int characterCount, double lineLength) {
+    quads = List<Quad>.filled(characterCount, Quad());
+    textureQuads = List<Rect>.filled(characterCount, Rect.zero);
+
+    double ratio = (lineLength > 0) ? _width / lineLength : 1.0;
+    return min(1.0, ratio);
+  }
+
+  /// Pass 3: Computes the starting horizontal offset inside unscaled canvas bounds.
+  double _calculateHorizontalJustification(double ratio, double lineLength) {
+    final double unscaledBoxWidth = _width / ratio;
+
+    switch (horizontalJustification) {
+      case TextHorizontalJustification.left:
+        return 0.0;
+      case TextHorizontalJustification.center:
+        return (unscaledBoxWidth - lineLength) / 2;
+      case TextHorizontalJustification.right:
+        return unscaledBoxWidth - lineLength;
+    }
+  }
+  /// Pass 4: Computes the vertical layout anchor corrected for the box origin.
+  double _calculateVerticalJustification(double ratio) {
+    final double boxHeight = _screenRect.yVector.length;
+    final double unscaledLineHeight = _font!.lineHeight.toDouble();
+    final double unscaledBoxHeight = boxHeight / ratio;
+
+    switch (verticalJustification) {
+      case TextVerticalJustification.top:
+      // Top alignment sits right beneath the local origin ceiling line (0.0)
+        return -unscaledLineHeight;
+
+      case TextVerticalJustification.center:
+      // Centers the line height block between the lower floor (-boxHeight) and top ceiling (0.0)
+        return (-unscaledBoxHeight / 2.0) - (unscaledLineHeight / 2.0);
+
+      case TextVerticalJustification.bottom:
+      // Anchors the line block tracking floor all the way down to the lower floor boundary line
+        return -unscaledBoxHeight;
+    }
+  }
+  /// Pass 5: Builds spatial transformation matrices and coordinates texture mapping vectors.
+  void _constructQuads(
+      List<({CharInfo char, double kerning})> layoutData,
+      double ratio,
+      double startX,
+      double unscaledVAdjust,
+      ) {
+    double currentX = startX;
+    final double unscaledLineHeight = _font!.lineHeight.toDouble();
+
+    for (int i = 0; i < layoutData.length; i++) {
+      final data = layoutData[i];
+      final charInfo = data.char;
+      final kerning = data.kerning;
+
+      final left = currentX;
+      final right = left + charInfo.region.width;
+
+      // Find the top edge ceiling line of our local font line block window
+      final double lineTopCeiling = unscaledVAdjust + unscaledLineHeight;
+
+      // Calculate the character's top edge.
+      // We step downward from the ceiling line to apply the font file's offset metrics.
+      double qTop = lineTopCeiling - charInfo.yOffset;
+
+      // The physical bottom of the glyph is lower than its top edge, so we subtract height.
+      // This ensures your descenders hang downward properly.
+      double qBottom = qTop - charInfo.region.height;
+
+      // Set up the bounding box vectors cleanly from minimum coordinates to maximum coordinates.
+      // Left and qBottom hold the minimum values; Right and qTop hold the maximum values.
+      final blc = Vector2(left * ratio, qBottom * ratio);
+      final trc = Vector2(right * ratio, qTop * ratio);
+
+      // Transform the 2D scaled coordinates into the 3D space of the reference box
+      quads[i] = _screenRect.calcQuadFrom2DVectors(blc, trc);
+
+      // Extract standard texture UV metrics directly from the font atlas asset definition
+      final tLeft = charInfo.region.left / _font!.scaleW;
+      final tTop = charInfo.region.top / _font!.scaleH;
+      final tRight = (charInfo.region.left + charInfo.region.width) / _font!.scaleW;
+      final tBottom = (charInfo.region.top + charInfo.region.height) / _font!.scaleH;
+
+      // Pass standard texture mapping boundaries to keep your right-side up orientation intact
+      textureQuads[i] = Rect.fromLTRB(tLeft, tTop, tRight, tBottom);
+
+      // Advance the cursor position for the next character
+      currentX += charInfo.xAdvance + kerning;
+    }
+  }
+
+
+
+  /// Rebuilds the list of geometry and texture quads for the current text string.
+  void rebuildQuadsOld() {
     if ((text.isEmpty) || (font == null)) {
       quads = [];
       textureQuads = [];
@@ -290,6 +429,7 @@ class FskBitmapText extends FskRenderableObject {
 
     // --- Pass 3: Horizontal Justification (Calculated in Pure Unscaled Font Space) ---
     // Bring target width into unscaled font space to prevent drift on small ratios
+
     final double unscaledBoxWidth = _width / ratio;
     double currentX = 0.0;
 
@@ -405,12 +545,14 @@ class FskBitmapText extends FskRenderableObject {
       WebGL.ONE,
       WebGL.ONE_MINUS_SRC_ALPHA,
     );
-
   }
 
   @override
   void draw(GlStateManager gls) {
     if ((font == null) || (!font!.isInitialized) || (shader == null)) return;
+
+    // TODO: TEST FORCE always rebuild
+    rebuild(gls);
 
     gls.bindTexture(WebGL.TEXTURE_2D, font!.textureInfo!.texture);
 

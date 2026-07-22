@@ -136,7 +136,7 @@ class FSK with LoggableClass {
     }
 
     // Default to true on Web
-    FSK.isYFlipped = true;
+    FSK.isYFlipped = false;
 
     // If not web, set it on a case by case
     if (!kIsWeb) {
@@ -243,6 +243,7 @@ class FSK with LoggableClass {
       return;
     }
 
+    print("Angle resize called");
     // The flutter_angle plugin currently does not support resizing textures on Android.
     // We skip the resize and metadata update to prevent viewport mismatches.
     if (!kIsWeb && Platform.isAndroid) {
