@@ -8,17 +8,15 @@ class IndexedSceneViewer extends StatefulWidget {
   const IndexedSceneViewer({super.key, required this.scene});
 
   @override
-  State<IndexedSceneViewer> createState() => _IndexedSceneViewerState();
+  State<IndexedSceneViewer> createState() => IndexedSceneViewerState();
 }
 
-class _IndexedSceneViewerState extends State<IndexedSceneViewer> {
+class IndexedSceneViewerState extends State<IndexedSceneViewer> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: widget.scene,
       builder: (BuildContext context, Widget? child) {
-
-
         // 2. Refresh and cleanly render the Texture view once initialized
         return RenderToTexture(
           scene: widget.scene.currentScene(),

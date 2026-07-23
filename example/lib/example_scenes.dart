@@ -13,6 +13,14 @@ class ExampleScenes extends IndexedStackScene {
 
   ExampleScenes();
 
+  final List<String> menuLabels = [
+    'Low Level Hello World',
+    'Low Level Animated Shader Uniforms',
+    'Orbit View Delegate',
+    'Bitmap Text from XML',
+    'Shader Uniforms From XML',
+  ];
+
   @override
   void init(RenderingContext gl) {
     super.init(gl);
