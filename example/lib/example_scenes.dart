@@ -33,4 +33,10 @@ class ExampleScenes extends IndexedStackScene {
 
     setCurrentScene(0);
   }
+
+  void pauseAll() {
+    for (var scene in scenes) {
+      scene.isPaused = true;
+    }
+  }
 }

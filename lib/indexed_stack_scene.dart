@@ -36,7 +36,9 @@ class IndexedStackScene extends FskScene with ChangeNotifier {
   void setCurrentScene(int index) {
     if (index < scenes.length) {
       _currentScene = scenes[index];
+      _currentScene.isPaused = true;
       _currentIndex = index;
+      scenes[index].isPaused = false;
       _currentScene.requestRepaint();
       requestRepaint();
       notifyListeners();

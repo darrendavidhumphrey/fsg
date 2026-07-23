@@ -76,6 +76,8 @@ class TestAppState extends State<TestApp> {
       _isExtendedScene = newIndex >= _basicExampleSceneCount;
       _pageIndex = newIndex;
       if (_isExtendedScene) {
+        // Ensure basic scenes are paused
+        _exampleScenes!.pauseAll();
         _extendedSceneIndex = _pageIndex - _basicExampleSceneCount;
       } else {
         _exampleScenes!.setCurrentScene(_pageIndex);
@@ -111,6 +113,7 @@ class TestAppState extends State<TestApp> {
                     children: [
                       IndexedSceneViewer(scene: _exampleScenes!),
                       ExtendedExampleScenes(
+                        isPaused: !_isExtendedScene,
                         extendedSceneIndex: _extendedSceneIndex,
                       ),
                     ],
