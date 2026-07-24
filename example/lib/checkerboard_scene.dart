@@ -74,6 +74,7 @@ class CheckerBoardScene extends FskScene {
       drawVBO(pMatrix, mvMatrix);
     });
 
+    drawLayers();
     requestRepaint();
   }
 }

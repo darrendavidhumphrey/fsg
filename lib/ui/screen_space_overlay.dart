@@ -83,7 +83,6 @@ abstract class ScreenSpaceOverlay extends FskSceneLayer with LoggableClass {
     return (y / viewportSize.height) * parent.physicalTextureHeight;
   }
 
-
   /// Enables scissoring and sets the GL viewport to the bounds of this overlay.
   ///
   /// This is called before drawing the overlay to ensure it only renders within
@@ -115,55 +114,6 @@ abstract class ScreenSpaceOverlay extends FskSceneLayer with LoggableClass {
       // OpenGL scissor box space always measures strictly from the lower-left window corner.
       // Flutter logical coordinates measure from the top-left corner.
       // We must subtract the full bounding box depth from the window height.
-      final double logicalBottomY = viewportSize.height - (logicalTop + logicalHeight);
-      physicalY = textureToScreenY(logicalBottomY);
-    }
-
-    gls.scissorEnabled(true);
-
-    gl.scissor(
-      physicalLeft.toInt(),
-      physicalY.toInt(),
-      physicalWidth.toInt(),
-      physicalHeight.toInt(),
-    );
-    gls.setViewport(
-      physicalLeft.toInt(),
-      physicalY.toInt(),
-      physicalWidth.toInt(),
-      physicalHeight.toInt(),
-    );
-  }
-
-
-  /// Enables scissoring and sets the GL viewport to the bounds of this overlay.
-  ///
-  /// This is called before drawing the overlay to ensure it only renders within
-  /// its designated rectangular area, clipping any content that would draw
-  /// outside of it.
-  void enableScissorOriginal() {
-    final origin = _topLeftInViewport;
-    
-    // Logical coordinates from top-left
-    final double logicalLeft = origin.dx;
-    final double logicalTop = origin.dy;
-    final double logicalWidth = screenSpaceSize.width;
-    final double logicalHeight = screenSpaceSize.height;
-
-    // Convert to physical pixels in the texture
-    final double physicalWidth = textureToScreenX(logicalWidth);
-    final double physicalHeight = textureToScreenY(logicalHeight);
-    final double physicalLeft = textureToScreenX(logicalLeft);
-    
-    double physicalY;
-    if (FSK.isYFlipped) {
-      // The viewer (Flutter Texture widget) flips the Y-axis.
-      // Logical top (0) maps to physical bottom of the texture (0).
-      physicalY = textureToScreenY(logicalTop);
-    } else {
-      // Standard OpenGL: 0 is bottom.
-      // Flutter logical Y is from TOP.
-      // Physical Y from bottom = (logicalViewportHeight - (logicalTop + logicalHeight)) * scale
       final double logicalBottomY = viewportSize.height - (logicalTop + logicalHeight);
       physicalY = textureToScreenY(logicalBottomY);
     }

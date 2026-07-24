@@ -1,8 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:fsk/fsk.dart';
-
+import 'package:flutter_angle/flutter_angle.dart';
 import 'checkerboard_scene.dart';
 import 'orbitview_scene.dart';
+
+class Pip extends ScreenSpaceOverlay {
+  
+  Pip({super.left,super.right,super.top,super.bottom,required super.screenSpaceSize});
+
+  @override
+  void draw(Matrix4 pMatrix, Matrix4 mvMatrix) {
+    enableScissor();
+    gls.clearColor(0,0,1,0.1);
+   // TODO: Draw content
+
+    gls.scissorEnabled(false);
+  }
+
+  @override
+  void init(FskScene parent) {
+      super.init(parent);
+      // TODO: Load content
+    print("Pip Init");
+  }
+
+  @override
+  void rebuild(DateTime now) {
+    print("PIP Rebuild.");
+  }
+}
+
 
 class MultipleSceneExample extends StatefulWidget {
   final bool isPaused;
@@ -24,6 +51,9 @@ class MultipleSceneExampleState extends State<MultipleSceneExample> {
     scene2!.isPaused = widget.isPaused;
     await FSK().registerSceneAndAllocateTexture(scene1!, dpr: dpr);
     await FSK().registerSceneAndAllocateTexture(scene2!, dpr: dpr);
+
+    var pip = Pip(right: 10,top: 10,screenSpaceSize: Size(100,100));
+    scene2!.addLayer(pip);
 
     // Trigger a rebuild of the widget
     setState(() {

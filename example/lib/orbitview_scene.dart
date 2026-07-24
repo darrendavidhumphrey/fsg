@@ -78,7 +78,7 @@ class OrbitViewScene extends FskScene {
     withPushedMatrix(() {
       drawVBO(pMatrix, mvMatrix);
     });
-
+    drawLayers();
     requestRepaint();
   }
 }
